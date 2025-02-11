@@ -41,8 +41,8 @@
 5. Tạo một Pull Request để đóng góp.
 
 ## 📩 Liên hệ
-📧 Email: your-email@example.com  
-🌐 Website: [your-website.com](https://your-website.com)  
+📧 Email: duytu1232@gmail.com  
+🌐 Website: 
 
 ---
 Cảm ơn bạn đã quan tâm đến **Flower Shopping App**! 💐
