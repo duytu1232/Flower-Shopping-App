@@ -13,7 +13,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 public class Account_User extends AppCompatActivity {
 
-    Button signOutButton;
+    Button signOutButton, OrderButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,7 +29,7 @@ public class Account_User extends AppCompatActivity {
         });
 
         // Ánh xạ nút đăng xuất
-        signOutButton = findViewById(R.id.sign_out);
+        signOutButton = findViewById(R.id.sign_out_btn);
         signOutButton.setOnClickListener(v -> {
             // Chuyển sang màn hình đăng nhập
             Intent intent = new Intent(Account_User.this, DangNhap.class);
@@ -37,6 +37,14 @@ public class Account_User extends AppCompatActivity {
             finish(); // Kết thúc Activity hiện tại
         });
 
+        // Ánh xạ nút xem đơn hàng
+        OrderButton = findViewById(R.id.order_btn);
+        OrderButton.setOnClickListener(v -> {
+            // Chuyển sang màn hình xem đơn hàng
+            Intent intent = new Intent(Account_User.this, XemDonHang.class);
+            startActivity(intent);
+            finish(); // Kết thúc Activity hiện tại
+        });
         // Ánh xạ các nút trên thanh navigation
         ImageView cartIcon = findViewById(R.id.cart_icon);
         ImageView favoriteIcon = findViewById(R.id.favorite_icon);

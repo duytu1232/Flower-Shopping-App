@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#E1F0DA"
+    android:orientation="vertical"
+    tools:context=".GioiThieu">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/Back_btn_account_page"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentStart="true"
+            android:src="@drawable/left_arrow_back_green" />
+
+        <ImageView
+            android:id="@+id/daisy_Intro_page"
+            android:layout_width="81dp"
+            android:layout_height="47dp"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/daisy" />
+
+    </RelativeLayout>
+</LinearLayout>

@@ -16,14 +16,14 @@
         android:padding="16dp">
 
         <ImageView
-            android:id="@+id/back_btn"
+            android:id="@+id/back_account_page_btn"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_alignParentStart="true"
             android:src="@drawable/left_arrow_back_green" />
 
         <ImageView
-            android:id="@+id/daisy_account_page"
+            android:id="@+id/daisy_Intro_page"
             android:layout_width="81dp"
             android:layout_height="47dp"
             android:layout_centerHorizontal="true"
@@ -82,7 +82,7 @@
             android:padding="16dp">
 
             <Button
-                android:id="@+id/order"
+                android:id="@+id/order_btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:backgroundTint="#98BB84"
@@ -90,7 +90,7 @@
                 android:textSize="16sp" />
 
             <Button
-                android:id="@+id/settings"
+                android:id="@+id/settings_btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:backgroundTint="#98BB84"
@@ -98,7 +98,7 @@
                 android:textSize="16sp" />
 
             <Button
-                android:id="@+id/about_us"
+                android:id="@+id/about_us_btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:backgroundTint="#98BB84"
@@ -106,7 +106,7 @@
                 android:textSize="16sp" />
 
             <Button
-                android:id="@+id/sign_out"
+                android:id="@+id/sign_out_btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:backgroundTint="#98BB84"

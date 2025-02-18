@@ -10,15 +10,14 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-public class TimKiem extends AppCompatActivity {
+public class XemDonHang extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_tim_kiem);
+        setContentView(R.layout.activity_xem_don_hang);
 
-        // Cập nhật insets để tránh che mất UI
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -28,7 +27,7 @@ public class TimKiem extends AppCompatActivity {
         // Ánh xạ nút Back
         ImageView backBtn = findViewById(R.id.back_account_page_btn);
         backBtn.setOnClickListener(v -> {
-            Intent intent = new Intent(TimKiem.this, MainActivity.class);
+            Intent intent = new Intent(XemDonHang.this, Account_User.class);
             startActivity(intent);
             finish(); // Đóng màn hình tìm kiếm
         });

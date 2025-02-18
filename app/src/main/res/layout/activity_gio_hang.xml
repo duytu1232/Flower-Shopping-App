@@ -11,11 +11,11 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="139dp"
+        android:layout_height="90dp"
         android:padding="16dp">
 
         <ImageView
-            android:id="@+id/back_btn"
+            android:id="@+id/back_account_page_btn"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_alignParentStart="true"
@@ -25,28 +25,32 @@
             android:id="@+id/Textview_Cart"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginStart="100dp"
-            android:layout_marginBottom="60dp"
+            android:layout_centerInParent="true"
             android:fontFamily="@font/merriweather"
             android:text="Cart"
-            android:textSize="32dp" />
+            android:textColor="#333333"
+            android:textSize="24sp"
+            android:textStyle="bold" />
 
     </RelativeLayout>
 
-    <LinearLayout
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="210dp"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
-        android:orientation="horizontal">
+        android:layout_height="555dp"
+        android:fillViewport="true">
 
-        <androidx.recyclerview.widget.RecyclerView
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="454dp"
-            android:background="#FFFFFF" />
-    </LinearLayout>
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/listProductCart"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/white" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
     <RelativeLayout
         android:layout_width="match_parent"
