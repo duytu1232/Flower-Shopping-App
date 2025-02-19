@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -8,161 +9,90 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <!-- Logo and Notification Icon -->
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="78dp"
-        android:padding="16dp">
-
-        <ImageView
-            android:id="@+id/daisy_main_page"
-            android:layout_width="81dp"
-            android:layout_height="47dp"
-            android:contentDescription="@null"
-            app:srcCompat="@drawable/daisy" />
-
-        <ImageView
-            android:id="@+id/notificationIcon"
-            android:layout_width="30dp"
-            android:layout_height="40dp"
-            android:layout_alignParentEnd="true"
-            android:layout_marginEnd="5dp"
-            android:src="@drawable/notification_icon" />
-    </RelativeLayout>
-
-    <!-- Search Bar -->
+    <!-- Header: Logo, Notification, Search Bar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:background="@drawable/rounded_search"
-        android:orientation="horizontal"
-        android:padding="10dp"
-        android:gravity="center_vertical">
+        android:orientation="vertical">
 
-        <ImageView
-            android:id="@+id/Search_bar_icon"
-            android:layout_width="30dp"
-            android:layout_height="35dp"
-            android:layout_gravity="center"
-            android:src="@drawable/search_icon" />
+        <!-- Logo and Notification Icon -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="78dp"
+            android:padding="16dp">
 
-        <EditText
-            android:id="@+id/EditText_Searching_Bar"
-            android:layout_width="10dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@null"
-            android:hint="Search all..."
-            android:minHeight="48dp"
-            android:padding="8dp"
-            android:textSize="16sp" />
+            <ImageView
+                android:id="@+id/daisy_main_page"
+                android:layout_width="81dp"
+                android:layout_height="47dp"
+                android:contentDescription="@null"
+                app:srcCompat="@drawable/daisy" />
 
-        <ImageView
-            android:id="@+id/filter_icon"
-            android:layout_width="30dp"
-            android:layout_height="35dp"
-            android:layout_gravity="center"
-            android:src="@drawable/filter_icon" />
-    </LinearLayout>
+            <ImageView
+                android:id="@+id/notificationIcon"
+                android:layout_width="30dp"
+                android:layout_height="40dp"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="5dp"
+                android:src="@drawable/notification_icon" />
+        </RelativeLayout>
 
-    <!-- Nội dung có thể kéo xuống -->
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="true">
-
+        <!-- Search Bar -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_margin="10dp"
+            android:background="@drawable/rounded_search"
+            android:orientation="horizontal"
+            android:padding="10dp"
+            android:gravity="center_vertical">
 
-            <ViewFlipper
-                android:id="@+id/viewFlipper"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:background="#717171" />
+            <ImageView
+                android:id="@+id/Search_bar_icon"
+                android:layout_width="30dp"
+                android:layout_height="35dp"
+                android:layout_gravity="center"
+                android:src="@drawable/search_icon" />
 
-            <!-- Categories Section -->
-            <TextView
-                android:layout_width="wrap_content"
+            <EditText
+                android:id="@+id/EditText_Searching_Bar"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:paddingStart="16dp"
-                android:text="Categories"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:layout_weight="1"
+                android:background="@null"
+                android:hint="Search all..."
+                android:minHeight="48dp"
+                android:padding="8dp"
+                android:textSize="16sp" />
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/listnewProduct"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="5dp"
-                android:layout_marginTop="10dp"
-                android:background="@color/white"
-                android:orientation="horizontal" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingStart="16dp"
-                android:text="Popular"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/listsaleProduct"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="5dp"
-                android:layout_marginTop="10dp"
-                android:background="@color/white"
-                android:orientation="horizontal" />
+            <ImageView
+                android:id="@+id/filter_icon"
+                android:layout_width="30dp"
+                android:layout_height="35dp"
+                android:layout_gravity="center"
+                android:src="@drawable/filter_icon" />
         </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
+
+    <!-- Fragment Container: Chứa nội dung của FragmentHome -->
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#FFFFFF" />
+
+
 
     <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavMain"
         android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:background="#99BC85">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="70dp"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:padding="8dp">
-
-            <ImageView
-                android:id="@+id/home_icon"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
-                android:src="@drawable/home_color" />
-
-            <ImageView
-                android:id="@+id/cart_icon"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
-                android:src="@drawable/cart" />
-
-            <ImageView
-                android:id="@+id/favorite_icon"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
-                android:src="@drawable/favorite" />
-
-            <ImageView
-                android:id="@+id/account_icon"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
-                android:src="@drawable/account" />
-        </LinearLayout>
-    </com.google.android.material.bottomnavigation.BottomNavigationView>
+        android:layout_height="wrap_content"
+        android:background="#99BC85"
+        app:itemIconTint="@color/tab_item_color"
+        app:itemTextColor="@color/bottom_navi_color"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/menu_home_bottom" />
 
 </LinearLayout>

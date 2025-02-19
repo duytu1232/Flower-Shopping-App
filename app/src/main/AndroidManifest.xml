@@ -21,16 +21,16 @@
             android:name=".XemDonHang"
             android:exported="false" />
         <activity
-            android:name=".TimKiem"
+            android:name=".Fragments.TimKiem"
             android:exported="false" />
         <activity
-            android:name=".GioHang"
+            android:name=".Fragments.GioHang"
             android:exported="false" />
         <activity
-            android:name=".Favorite"
+            android:name=".Fragments.Favorite"
             android:exported="false" />
         <activity
-            android:name=".Account_User"
+            android:name=".Fragments.Account_User"
             android:exported="false" />
         <activity
             android:name=".DangKy"

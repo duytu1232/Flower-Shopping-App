@@ -39,7 +39,8 @@ dependencies {
     implementation(libs.legacy.support.v4)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
-
+    implementation(libs.mediarouter)
+//    implementation(libs.fragment)
     annotationProcessor(libs.glide.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

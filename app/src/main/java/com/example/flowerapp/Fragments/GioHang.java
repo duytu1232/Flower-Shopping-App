@@ -1,4 +1,4 @@
-package com.example.flowerapp;
+package com.example.flowerapp.Fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,15 +10,16 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.example.flowerapp.Fragments.FragmentAccountUser;
+import com.example.flowerapp.MainActivity;
+import com.example.flowerapp.R;
 
-public class XemDonHang extends AppCompatActivity {
+public class GioHang extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_xem_don_hang);
+        setContentView(R.layout.activity_gio_hang);
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -26,12 +27,5 @@ public class XemDonHang extends AppCompatActivity {
             return insets;
         });
 
-        // Ánh xạ nút Back
-        ImageView backBtn = findViewById(R.id.back_account_page_btn);
-        backBtn.setOnClickListener(v -> {
-            Intent intent = new Intent(XemDonHang.this, FragmentAccountUser.class);
-            startActivity(intent);
-            finish(); // Đóng màn hình tìm kiếm
-        });
     }
 }
