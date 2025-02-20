@@ -11,6 +11,13 @@
 
     <!-- Header: Logo, Notification, Search Bar -->
     <LinearLayout
+        android:id="@+id/khoang_trong_menu"
+        android:layout_width="match_parent"
+        android:layout_height="35dp"
+        android:orientation="vertical"></LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/header_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
@@ -43,9 +50,9 @@
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
             android:background="@drawable/rounded_search"
+            android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:padding="10dp"
-            android:gravity="center_vertical">
+            android:padding="10dp">
 
             <ImageView
                 android:id="@+id/Search_bar_icon"

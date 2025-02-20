@@ -4,4 +4,28 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#BFD8AF"
-    tools:context=".Fragments.FragmentFavorite" />
+    tools:context=".Fragments.FragmentFavorite" >
+
+    <LinearLayout
+        android:id="@+id/khoang_trong_menu"
+        android:layout_width="match_parent"
+        android:layout_height="35dp"
+        android:orientation="vertical"></LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/Textview_Favorite"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:fontFamily="@font/merriweather"
+            android:text="Favorite"
+            android:textColor="#333333"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+</FrameLayout>

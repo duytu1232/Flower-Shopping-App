@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -15,22 +16,16 @@
         android:theme="@style/Theme.FlowerApp"
         tools:targetApi="31">
         <activity
+            android:name=".AboutUsActivity"
+            android:exported="false" />
+        <activity
             android:name=".GioiThieu"
             android:exported="false" />
         <activity
             android:name=".XemDonHang"
             android:exported="false" />
         <activity
-            android:name=".Fragments.TimKiem"
-            android:exported="false" />
-        <activity
-            android:name=".Fragments.GioHang"
-            android:exported="false" />
-        <activity
-            android:name=".Fragments.Favorite"
-            android:exported="false" />
-        <activity
-            android:name=".Fragments.Account_User"
+            android:name=".TimKiem"
             android:exported="false" />
         <activity
             android:name=".DangKy"

@@ -26,12 +26,15 @@ public class XemDonHang extends AppCompatActivity {
             return insets;
         });
 
-        // Ánh xạ nút Back
+        // Xử lý nút Back để quay lại FragmentAccountUser
         ImageView backBtn = findViewById(R.id.back_account_page_btn);
         backBtn.setOnClickListener(v -> {
-            Intent intent = new Intent(XemDonHang.this, FragmentAccountUser.class);
+            Intent intent = new Intent(XemDonHang.this, MainActivity.class);
+            intent.putExtra("openFragment", "account"); // Gửi dữ liệu để mở đúng fragment
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             startActivity(intent);
-            finish(); // Đóng màn hình tìm kiếm
+            finish(); // Đóng trang hiện tại
         });
     }
+
 }

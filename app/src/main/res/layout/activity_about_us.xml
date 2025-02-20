@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#BFD8AF"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Nút Quay Lại -->
+    <ImageView
+        android:id="@+id/back_button"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginBottom="16dp"
+        android:clickable="true"
+        android:contentDescription="Back"
+        android:focusable="true"
+        android:padding="8dp"
+        android:src="@drawable/left_arrow_back_green"
+        tools:ignore="TouchTargetSizeCheck" />
+
+    <!-- Tiêu đề -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingBottom="16dp"
+        android:text="About Us"
+        android:textColor="#4CAF50"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <!-- Nội dung giới thiệu -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="Ứng dụng FlowerApp giúp bạn dễ dàng mua sắm các loại hoa tươi với giao diện thân thiện và tiện lợi."
+        android:textColor="#333333"
+        android:textSize="16sp" />
+
+    <!-- Thêm hình ảnh sau này -->
+    <!-- Để ẩn trước, thêm hình sau -->
+
+</LinearLayout>

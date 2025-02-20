@@ -1,4 +1,4 @@
-package com.example.flowerapp.Fragments;
+package com.example.flowerapp;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,10 +10,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.example.flowerapp.MainActivity;
-import com.example.flowerapp.R;
-
 public class TimKiem extends AppCompatActivity {
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,5 +26,14 @@ public class TimKiem extends AppCompatActivity {
             return insets;
         });
 
+        // Xử lý nút quay lại trang chủ
+        ImageView backButton = findViewById(R.id.back_account_page_btn);
+        backButton.setOnClickListener(v -> {
+            Intent intent = new Intent(TimKiem.this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish(); // Kết thúc Activity hiện tại
+        });
     }
+
 }

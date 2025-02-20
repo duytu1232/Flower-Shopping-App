@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="#E1F0DA"
     android:orientation="vertical"
-    tools:context=".Fragments.TimKiem">
+    tools:context=".TimKiem">
 
     <!-- Header -->
     <RelativeLayout
