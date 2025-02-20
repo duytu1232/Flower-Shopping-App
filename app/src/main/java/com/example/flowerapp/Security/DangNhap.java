@@ -1,9 +1,10 @@
-package com.example.flowerapp;
+package com.example.flowerapp.Security;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -11,6 +12,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+import com.example.flowerapp.MainActivity;
+import com.example.flowerapp.R;
 
 public class DangNhap extends AppCompatActivity {
 
@@ -51,6 +55,14 @@ public class DangNhap extends AppCompatActivity {
             startActivity(intent);
             finish(); // Thoát màn hình đăng nhập
         });
+
+        // Sự kiện nhấn vào dòng "Forgot Password?"
+        TextView forgotPasswordText = findViewById(R.id.textView2);
+        forgotPasswordText.setOnClickListener(v -> {
+            Intent intent = new Intent(DangNhap.this, QuenMatKhau.class);
+            startActivity(intent);
+        });
+
 
         // Cập nhật insets để tránh che mất UI
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {

@@ -1,7 +1,6 @@
 package com.example.flowerapp.Fragments;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts.GetContent;
@@ -13,9 +12,9 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import com.example.flowerapp.AboutUsActivity;
-import com.example.flowerapp.DangNhap;
+import com.example.flowerapp.Security.DangNhap;
 import com.example.flowerapp.R;
-import com.example.flowerapp.XemDonHang;
+import com.example.flowerapp.Class.XemDonHang;
 
 public class FragmentAccountUser extends Fragment {
 

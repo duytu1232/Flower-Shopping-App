@@ -91,6 +91,7 @@
                 android:backgroundTint="#98BB84"
                 android:text="Sign Out"
                 android:textSize="16sp" />
+
         </LinearLayout>
     </LinearLayout>
 

@@ -40,7 +40,7 @@ dependencies {
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
     implementation(libs.mediarouter)
-//    implementation(libs.fragment)
+    implementation(libs.viewpager2)
     annotationProcessor(libs.glide.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

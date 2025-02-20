@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="#E1F0DA"
     android:orientation="vertical"
-    tools:context=".DangKy">
+    tools:context=".Security.DangKy">
 
     <ImageView
         android:id="@+id/daisy3"

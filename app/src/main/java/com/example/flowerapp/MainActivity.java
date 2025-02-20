@@ -90,8 +90,7 @@ public class MainActivity extends AppCompatActivity {
         if (headerLayout != null && khoangTrongMenu != null) {
             if (newFragment instanceof FragmentAccountUser ||
                     newFragment instanceof FragmentFavorite ||
-                    newFragment instanceof FragmentCart ||
-                    newFragment instanceof FragmentShop) {
+                    newFragment instanceof FragmentCart) {
 
                 headerLayout.setVisibility(View.GONE);
                 khoangTrongMenu.setVisibility(View.GONE);

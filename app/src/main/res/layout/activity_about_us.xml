@@ -8,6 +8,14 @@
     android:padding="16dp">
 
     <!-- Nút Quay Lại -->
+
+    <!-- Tiêu đề -->
+    <LinearLayout
+        android:id="@+id/khoang_trong_menu"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:orientation="vertical"></LinearLayout>
+
     <ImageView
         android:id="@+id/back_button"
         android:layout_width="40dp"
@@ -20,7 +28,6 @@
         android:src="@drawable/left_arrow_back_green"
         tools:ignore="TouchTargetSizeCheck" />
 
-    <!-- Tiêu đề -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
