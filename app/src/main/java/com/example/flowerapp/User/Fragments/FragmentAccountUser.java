@@ -1,4 +1,4 @@
-package com.example.flowerapp.Fragments;
+package com.example.flowerapp.User.Fragments;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -16,7 +16,7 @@ import androidx.activity.result.contract.ActivityResultContracts.GetContent;
 import androidx.fragment.app.Fragment;
 
 import com.example.flowerapp.AboutUsActivity;
-import com.example.flowerapp.Class.XemDonHang;
+import com.example.flowerapp.User.Fragments.Class.XemDonHang;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.DangNhap;
 

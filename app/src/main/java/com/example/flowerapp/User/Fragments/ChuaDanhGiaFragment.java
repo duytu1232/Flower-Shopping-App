@@ -1,4 +1,4 @@
-package com.example.flowerapp.Fragments;
+package com.example.flowerapp.User.Fragments;
 
 import android.os.Bundle;
 
@@ -12,10 +12,10 @@ import com.example.flowerapp.R;
 
 /**
  * A simple {@link Fragment} subclass.
- * Use the {@link ChoVanChuyenFragment#newInstance} factory method to
+ * Use the {@link ChuaDanhGiaFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class ChoVanChuyenFragment extends Fragment {
+public class ChuaDanhGiaFragment extends Fragment {
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -26,7 +26,7 @@ public class ChoVanChuyenFragment extends Fragment {
     private String mParam1;
     private String mParam2;
 
-    public ChoVanChuyenFragment() {
+    public ChuaDanhGiaFragment() {
         // Required empty public constructor
     }
 
@@ -36,11 +36,11 @@ public class ChoVanChuyenFragment extends Fragment {
      *
      * @param param1 Parameter 1.
      * @param param2 Parameter 2.
-     * @return A new instance of fragment ChoVanChuyenFragment.
+     * @return A new instance of fragment ChuaDanhGiaFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static ChoVanChuyenFragment newInstance(String param1, String param2) {
-        ChoVanChuyenFragment fragment = new ChoVanChuyenFragment();
+    public static ChuaDanhGiaFragment newInstance(String param1, String param2) {
+        ChuaDanhGiaFragment fragment = new ChuaDanhGiaFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -61,6 +61,6 @@ public class ChoVanChuyenFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_cho_van_chuyen, container, false);
+        return inflater.inflate(R.layout.fragment_chua_danh_gia, container, false);
     }
 }

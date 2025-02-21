@@ -1,5 +1,4 @@
-package com.example.flowerapp.Fragments;
-
+package com.example.flowerapp.User.Fragments;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -10,24 +9,32 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.ViewFlipper;
+
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
+import com.example.flowerapp.Adapters.ProductAdapter;
+import com.example.flowerapp.Models.Product;
 import com.example.flowerapp.R;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class FragmentHome extends Fragment {
 
     private ViewFlipper viewFlipper;
+    private RecyclerView recyclerNewProducts, recyclerSaleProducts;
 
     private String mParam1;
     private String mParam2;
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+
     public FragmentHome() {
         // Required empty public constructor
     }
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -37,13 +44,43 @@ public class FragmentHome extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
     }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
         // Khởi tạo ViewFlipper
         viewFlipper = view.findViewById(R.id.viewFlipper);
-        setupViewFlipper(); // Chạy animation cho ViewFlipper
+        setupViewFlipper();
+
+        // Khởi tạo RecyclerView cho sản phẩm mới và sản phẩm sale
+        recyclerNewProducts = view.findViewById(R.id.listnewProduct);
+        recyclerSaleProducts = view.findViewById(R.id.listsaleProduct);
+
+        // Cấu hình RecyclerView cho danh sách ngang
+        LinearLayoutManager newLayoutManager = new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false);
+        LinearLayoutManager saleLayoutManager = new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false);
+
+        recyclerNewProducts.setLayoutManager(newLayoutManager);
+        recyclerSaleProducts.setLayoutManager(saleLayoutManager);
+
+        // Thêm dữ liệu mẫu cứng (hardcoded)
+        List<Product> newProducts = new ArrayList<>();
+        newProducts.add(new Product("Rose", "$10.00", R.drawable.rose));
+        newProducts.add(new Product("Lily", "$15.00", R.drawable.lily));
+        newProducts.add(new Product("Tulip", "$12.00", R.drawable.tulip));
+
+        List<Product> saleProducts = new ArrayList<>();
+        saleProducts.add(new Product("Orchid (Sale)", "$8.00", R.drawable.orchid));
+        saleProducts.add(new Product("Sunflower (Sale)", "$9.00", R.drawable.sunflower));
+        saleProducts.add(new Product("Daisy (Sale)", "$7.00", R.drawable.daisy));
+
+        // Khởi tạo và gán adapter
+        ProductAdapter newProductAdapter = new ProductAdapter(newProducts, requireContext());
+        ProductAdapter saleProductAdapter = new ProductAdapter(saleProducts, requireContext());
+
+        recyclerNewProducts.setAdapter(newProductAdapter);
+        recyclerSaleProducts.setAdapter(saleProductAdapter);
 
         return view;
     }
@@ -77,5 +114,4 @@ public class FragmentHome extends Fragment {
         viewFlipper.setFlipInterval(3000);
         viewFlipper.setAutoStart(true);
     }
-
 }

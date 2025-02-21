@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#BFD8AF"
+    tools:context=".Admin.AdminActivity">
+
+    <!-- Header: Tiêu đề "Admin Dashboard" -->
+    <LinearLayout
+        android:id="@+id/admin_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-black"
+            android:gravity="center"
+            android:text="Admin Dashboard"
+            android:textColor="#99BC85"
+            android:textSize="24sp" />
+    </LinearLayout>
+
+    <!-- Fragment Container: Chứa nội dung của các trang quản lý -->
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragment_container_admin"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="#FFFFFF"
+        app:layout_constraintTop_toBottomOf="@id/admin_header"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavAdmin" />
+
+    <!-- Bottom Navigation: Chuyển đổi giữa các trang quản lý, cố định ở đáy -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavAdmin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#99BC85"
+        app:itemIconTint="@color/tab_item_color"
+        app:itemTextColor="@color/bottom_navi_color"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/menu_admin_bottom"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

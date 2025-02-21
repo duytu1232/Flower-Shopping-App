@@ -1,7 +1,6 @@
 package com.example.flowerapp.Security;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Patterns;
@@ -16,14 +15,21 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.example.flowerapp.R;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class DangKy extends AppCompatActivity {
 
     private EditText editTxtUsername, editTxtFullName, editTxtEmail, editTxtPhone, editTxtPassword, editTxtConfirmPassword;
     private CheckBox checkboxTerms;
     private Button signupBtn;
-    private SharedPreferences sharedPreferences;
+    private FirebaseAuth mAuth = FirebaseAuth.getInstance();
+    private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +51,6 @@ public class DangKy extends AppCompatActivity {
         editTxtConfirmPassword = findViewById(R.id.edit_txt_ConfirmPassword);
         checkboxTerms = findViewById(R.id.checkbox_terms);
         signupBtn = findViewById(R.id.Sign_Up_btn);
-        sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
     }
 
     private void setupWindowInsets() {
@@ -77,14 +82,30 @@ public class DangKy extends AppCompatActivity {
             return;
         }
 
-        if (sharedPreferences.contains(email)) {
-            showToast("Email đã được đăng ký!");
-            return;
-        }
+        mAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        if (user != null) {
+                            String userId = user.getUid();
+                            Map<String, Object> userData = new HashMap<>();
+                            userData.put("username", fullName);
+                            userData.put("email", email);
+                            userData.put("phone", phone);
+                            userData.put("role", "customer");  // Mặc định là customer
+                            userData.put("status", "active");
 
-        saveUserData(username, fullName, email, phone, password);
-        showToast("Đăng ký thành công!");
-        navigateToLogin();
+                            db.collection("users").document(userId).set(userData)
+                                    .addOnSuccessListener(aVoid -> {
+                                        showToast("Đăng ký thành công!");
+                                        navigateToLogin();
+                                    })
+                                    .addOnFailureListener(e -> showToast("Đăng ký thất bại: " + e.getMessage()));
+                        }
+                    } else {
+                        showToast("Đăng ký thất bại: " + task.getException().getMessage());
+                    }
+                });
     }
 
     private boolean validateInput(String username, String fullName, String email, String phone,
@@ -122,16 +143,6 @@ public class DangKy extends AppCompatActivity {
         }
 
         return isValid;
-    }
-
-    private void saveUserData(String username, String fullName, String email, String phone, String password) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("username", fullName); // Lưu fullName làm username chính để hiển thị
-        editor.putString("email", email);
-        editor.putString("phone", phone);
-        editor.putString("password", password);
-        editor.putString("loginUsername", username); // Lưu username riêng để đăng nhập
-        editor.apply();
     }
 
     private void showToast(String message) {

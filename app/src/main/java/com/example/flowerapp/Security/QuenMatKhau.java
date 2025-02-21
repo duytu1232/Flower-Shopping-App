@@ -1,7 +1,6 @@
 package com.example.flowerapp.Security;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Patterns;
@@ -16,12 +15,14 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.flowerapp.R;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class QuenMatKhau extends AppCompatActivity {
 
     private EditText emailEditText;
     private Button resetPasswordBtn, backToLoginBtn;
-    private SharedPreferences sharedPreferences;
+    private FirebaseAuth mAuth = FirebaseAuth.getInstance();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,13 +33,13 @@ public class QuenMatKhau extends AppCompatActivity {
         initViews();
         setupWindowInsets();
         setupListeners();
+
     }
 
     private void initViews() {
         emailEditText = findViewById(R.id.email_edit_text);
         resetPasswordBtn = findViewById(R.id.reset_password_btn);
         backToLoginBtn = findViewById(R.id.back_to_login_btn);
-        sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
     }
 
     private void setupWindowInsets() {
@@ -67,18 +68,16 @@ public class QuenMatKhau extends AppCompatActivity {
             return;
         }
 
-        if (!sharedPreferences.contains(email)) {
-            showToast("Email này chưa được đăng ký!");
-            return;
-        }
-
-        // Giả lập gửi email reset mật khẩu (có thể thay bằng API thực tế sau)
-        showToast("Đã gửi email đặt lại mật khẩu tới " + email);
-        navigateToLogin();
-    }
-
-    private void showToast(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        // Sử dụng Firebase Authentication để gửi email reset password
+        mAuth.sendPasswordResetEmail(email)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(QuenMatKhau.this, "Đã gửi email đặt lại mật khẩu tới " + email, Toast.LENGTH_SHORT).show();
+                        navigateToLogin();
+                    } else {
+                        Toast.makeText(QuenMatKhau.this, "Gửi email thất bại: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void navigateToLogin() {

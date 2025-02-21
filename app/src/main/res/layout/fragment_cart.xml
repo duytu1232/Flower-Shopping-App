@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#BFD8AF"
-    tools:context=".Fragments.FragmentCart">
+    tools:context=".User.Fragments.FragmentCart">
 
     <LinearLayout
         android:id="@+id/khoang_trong_menu"

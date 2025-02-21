@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_product"
+        android:icon="@drawable/product_labbel"
+        android:title="Products" />
+    <item
+        android:id="@+id/menu_users"
+        android:icon="@drawable/admin_labbel"
+        android:title="Users" />
+    <item
+        android:id="@+id/menu_coupons"
+        android:icon="@drawable/coupon"
+        android:title="Coupons" />
+    <item
+        android:id="@+id/menu_orders"
+        android:icon="@drawable/order_labbel"
+        android:title="Orders" />
+</menu>

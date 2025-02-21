@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "910778971894",
+    "project_id": "login-pages-bb826",
+    "storage_bucket": "login-pages-bb826.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:910778971894:android:03ed66d2dc539f60239ed7",
+        "android_client_info": {
+          "package_name": "com.example.flowerapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "910778971894-rggamq62ujmve7mn9nv02gfhct3067pr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBD_QeaVR2eDwpjzEev3P0QeRrxsMcgWcU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "910778971894-rggamq62ujmve7mn9nv02gfhct3067pr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

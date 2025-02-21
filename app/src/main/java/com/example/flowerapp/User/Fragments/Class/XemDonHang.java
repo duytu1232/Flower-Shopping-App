@@ -1,4 +1,4 @@
-package com.example.flowerapp.Class;
+package com.example.flowerapp.User.Fragments.Class;
 
 import android.content.Intent;
 import android.os.Bundle;

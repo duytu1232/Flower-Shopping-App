@@ -15,11 +15,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
-import com.example.flowerapp.Fragments.FragmentAccountUser;
-import com.example.flowerapp.Fragments.FragmentCart;
-import com.example.flowerapp.Fragments.FragmentFavorite;
-import com.example.flowerapp.Fragments.FragmentHome;
-import com.example.flowerapp.Fragments.FragmentShop;
+import com.example.flowerapp.User.Fragments.FragmentAccountUser;
+import com.example.flowerapp.User.Fragments.FragmentCart;
+import com.example.flowerapp.User.Fragments.FragmentFavorite;
+import com.example.flowerapp.User.Fragments.FragmentHome;
+import com.example.flowerapp.User.Fragments.FragmentShop;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.HashMap;

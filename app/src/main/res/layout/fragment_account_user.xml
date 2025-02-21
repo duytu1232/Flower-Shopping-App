@@ -4,9 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#BFD8AF"
-    tools:context=".Fragments.FragmentAccountUser">
+    tools:context=".User.Fragments.FragmentAccountUser">
 
-    <!-- TODO: Update blank fragment layout -->
     <!-- Header -->
 
     <!-- Nội dung chính, chiếm toàn bộ phần còn lại -->
