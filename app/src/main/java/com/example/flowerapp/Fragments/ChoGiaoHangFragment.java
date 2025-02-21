@@ -1,66 +1,48 @@
 package com.example.flowerapp.Fragments;
 
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.flowerapp.Adapters.OrderAdapter;
+import com.example.flowerapp.Models.Order;
 import com.example.flowerapp.R;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link ChoGiaoHangFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.util.ArrayList;
+import java.util.List;
+
 public class ChoGiaoHangFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    private RecyclerView orderRecyclerView;
+    private OrderAdapter orderAdapter;
+    private List<Order> orderList;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
-    public ChoGiaoHangFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment ChoGiaoHangFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static ChoGiaoHangFragment newInstance(String param1, String param2) {
-        ChoGiaoHangFragment fragment = new ChoGiaoHangFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
+    @Nullable
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_cho_giao_hang, container, false);
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_cho_giao_hang, container, false);
+        // Khởi tạo RecyclerView
+        orderRecyclerView = view.findViewById(R.id.orderRecyclerView);
+        orderRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        // Khởi tạo dữ liệu mẫu
+        orderList = new ArrayList<>();
+        // Thêm dữ liệu đơn hàng vào orderList (ví dụ)
+        orderList.add(new Order("Hoa hồng", "Chờ giao hàng", "20/02/2025", R.drawable.order_base_line));
+        // ... Thêm các đơn hàng khác
+
+        // Khởi tạo và gắn adapter
+        orderAdapter = new OrderAdapter(orderList);
+        orderRecyclerView.setAdapter(orderAdapter);
+
+        return view;
     }
 }

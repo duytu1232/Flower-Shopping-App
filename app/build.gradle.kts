@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "com.example.flowerapp"
-    compileSdk = 34
+    compileSdk = 35
 
 
     defaultConfig {
@@ -41,6 +41,7 @@ dependencies {
     implementation(libs.navigation.ui)
     implementation(libs.mediarouter)
     implementation(libs.viewpager2)
+    implementation(libs.recyclerview)
     annotationProcessor(libs.glide.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

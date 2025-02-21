@@ -58,7 +58,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
                 android:background="@android:color/transparent"
-                android:hint="First Name"
+                android:hint="Username"
                 android:inputType="text"
                 tools:ignore="TouchTargetSizeCheck" />
         </LinearLayout>
@@ -81,12 +81,12 @@
                 app:srcCompat="@drawable/user" />
 
             <EditText
-                android:id="@+id/edit_txt_Last_Name"
+                android:id="@+id/edit_txt_Full_Name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
                 android:background="@android:color/transparent"
-                android:hint="Last Name"
+                android:hint="Full Name"
                 android:inputType="text"
                 tools:ignore="TouchTargetSizeCheck" />
         </LinearLayout>

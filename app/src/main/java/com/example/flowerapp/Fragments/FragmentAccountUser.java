@@ -1,20 +1,24 @@
 package com.example.flowerapp.Fragments;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts.GetContent;
-import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.TextView;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts.GetContent;
+import androidx.fragment.app.Fragment;
+
 import com.example.flowerapp.AboutUsActivity;
-import com.example.flowerapp.Security.DangNhap;
-import com.example.flowerapp.R;
 import com.example.flowerapp.Class.XemDonHang;
+import com.example.flowerapp.R;
+import com.example.flowerapp.Security.DangNhap;
 
 public class FragmentAccountUser extends Fragment {
 
@@ -47,6 +51,12 @@ public class FragmentAccountUser extends Fragment {
         // Lấy tham chiếu đến các view trong layout
         userAvatar = view.findViewById(R.id.UserAvatar);
         editAvatar = view.findViewById(R.id.editAvatar);
+
+        // Thêm phần hiển thị tên người dùng
+        TextView userNameTextView = view.findViewById(R.id.User_name);
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("MyPrefs", getActivity().MODE_PRIVATE);
+        String username = sharedPreferences.getString("username", "User");
+        userNameTextView.setText(username);
 
         // Khi nhấn editAvatar, mở thư viện để chọn ảnh
         editAvatar.setOnClickListener(v -> imagePickerLauncher.launch("image/*"));

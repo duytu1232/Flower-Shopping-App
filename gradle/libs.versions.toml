@@ -13,6 +13,7 @@ navigation = "2.5.1"
 mediarouter = "1.7.0"
 fragmentKtx = "1.6.2"
 viewpager2 = "1.0.0"
+recyclerview = "1.3.0"
 
 
 
@@ -32,6 +33,7 @@ navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version
 mediarouter = { group = "androidx.mediarouter", name = "mediarouter", version.ref = "mediarouter" }
 fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtx" }
 viewpager2 = { group = "androidx.viewpager2", name = "viewpager2", version.ref = "viewpager2" }
+recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
