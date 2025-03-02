@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/edit_order_user_id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="ID Người Dùng"
+        android:inputType="number"
+        android:minHeight="48dp" />
+
+    <EditText
+        android:id="@+id/edit_order_date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Ngày đặt (YYYY-MM-DD)"
+        android:inputType="text"
+        android:minHeight="48dp" />
+
+    <EditText
+        android:id="@+id/edit_order_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Trạng thái (pending/processing/shipped/delivered/canceled)"
+        android:inputType="text"
+        android:minHeight="48dp" />
+
+    <EditText
+        android:id="@+id/edit_order_total"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Tổng tiền (USD)"
+        android:inputType="numberDecimal"
+        android:minHeight="48dp" />
+
+    <EditText
+        android:id="@+id/edit_order_address"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Địa chỉ giao hàng"
+        android:inputType="text"
+        android:minHeight="48dp" />
+
+</LinearLayout>

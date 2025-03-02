@@ -1,106 +1,125 @@
 package com.example.flowerapp.Security;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
+import android.util.Patterns;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.example.flowerapp.Admin.AdminActivity;
 import com.example.flowerapp.MainActivity;
 import com.example.flowerapp.R;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.example.flowerapp.Security.Helper.DatabaseHelper;
 
 public class DangNhap extends AppCompatActivity {
-
+    private static final String TAG = "DangNhap";
     private EditText edit_txt_Username, edit_txt_Password;
     private Button Login_btn, Signup_btn;
-    private FirebaseAuth mAuth = FirebaseAuth.getInstance();
-    private FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private DatabaseHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_dang_nhap);
 
-        // Ánh xạ các thành phần trong layout
+        dbHelper = new DatabaseHelper(this);
+
         edit_txt_Username = findViewById(R.id.edit_txt_Username);
         edit_txt_Password = findViewById(R.id.edit_txt_Password);
         Login_btn = findViewById(R.id.Login_btn);
         Signup_btn = findViewById(R.id.Sign_Up_btn);
 
-        // Sự kiện nhấn Login
         Login_btn.setOnClickListener(v -> loginUser());
-
-        // Sự kiện nhấn Sign Up
-        Signup_btn.setOnClickListener(v -> {
-            Intent intent = new Intent(DangNhap.this, DangKy.class);
-            startActivity(intent);
-        });
-
-        // Sự kiện nhấn "Forgot Password?"
-        TextView forgotPasswordText = findViewById(R.id.textView2);
-        forgotPasswordText.setOnClickListener(v -> {
-            Intent intent = new Intent(DangNhap.this, QuenMatKhau.class);
-            startActivity(intent);
-        });
-
-        // Cập nhật insets để tránh che mất UI
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
-
+        Signup_btn.setOnClickListener(v -> startActivity(new Intent(this, DangKy.class)));
     }
 
     private void loginUser() {
-        String email = edit_txt_Username.getText().toString().trim();  // Sử dụng email thay vì username
+        String email = edit_txt_Username.getText().toString().trim();
         String password = edit_txt_Password.getText().toString().trim();
 
-        if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(DangNhap.this, "Vui lòng nhập đầy đủ thông tin!", Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "Đăng nhập với Email: " + email + ", Password: " + password);
+
+        if (TextUtils.isEmpty(email)) {
+            edit_txt_Username.setError("Vui lòng nhập email");
+            return;
+        }
+        if (TextUtils.isEmpty(password)) {
+            edit_txt_Password.setError("Vui lòng nhập mật khẩu");
             return;
         }
 
-        mAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        FirebaseUser user = mAuth.getCurrentUser();
-                        if (user != null) {
-                            String userId = user.getUid();
-                            db.collection("users").document(userId).get()
-                                    .addOnSuccessListener(documentSnapshot -> {
-                                        if (documentSnapshot.exists()) {
-                                            String role = documentSnapshot.getString("role");
-                                            Toast.makeText(DangNhap.this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
-                                            Intent intent;
-                                            if ("admin".equals(role)) {
-                                                intent = new Intent(DangNhap.this, AdminActivity.class);  // Chuyển đến giao diện Admin
-                                            } else {
-                                                intent = new Intent(DangNhap.this, MainActivity.class);  // Chuyển đến giao diện User
-                                            }
-                                            startActivity(intent);
-                                            finish();
-                                        } else {
-                                            Toast.makeText(DangNhap.this, "Không tìm thấy thông tin người dùng!", Toast.LENGTH_SHORT).show();
-                                        }
-                                    })
-                                    .addOnFailureListener(e -> Toast.makeText(DangNhap.this, "Lỗi kiểm tra vai trò: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-                        }
-                    } else {
-                        Toast.makeText(DangNhap.this, "Đăng nhập thất bại: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            edit_txt_Username.setError("Email không hợp lệ");
+            return;
+        }
+
+        try (SQLiteDatabase db = dbHelper.openDatabase()) {
+            // So sánh trực tiếp plaintext password (không dùng hash vì giữ nguyên plaintext)
+            Cursor cursor = db.rawQuery("SELECT user_id, username, email, role, status FROM Users WHERE email = ? AND password = ?", new String[]{email, password});
+
+            try {
+                if (cursor.moveToFirst()) {
+                    int roleIndex = cursor.getColumnIndex("role");
+                    int statusIndex = cursor.getColumnIndex("status");
+
+                    if (roleIndex == -1 || statusIndex == -1) {
+                        Log.e(TAG, "Cột 'role' hoặc 'status' không tồn tại trong kết quả!");
+                        Toast.makeText(this, "Lỗi cơ sở dữ liệu: Thiếu cột cần thiết!", Toast.LENGTH_SHORT).show();
+                        return;
                     }
-                });
+
+                    String role = cursor.getString(roleIndex);
+                    String status = cursor.getString(statusIndex);
+
+                    Log.d(TAG, "Đăng nhập thành công - Email: " + email + ", Role: " + role + ", Status: " + status);
+
+                    if ("locked".equals(status.toLowerCase())) {
+                        Toast.makeText(this, "Tài khoản bị khóa!", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    // Ngoại lệ đặc biệt cho tài khoản admin: luôn cho phép đăng nhập vào AdminActivity
+                    if ("admin".equals(role.toLowerCase()) || email.equals("admin123")) { // Kiểm tra email cố định cho admin
+                        Toast.makeText(this, "Đăng nhập thành công với vai trò Admin!", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(this, AdminActivity.class));
+                        finish();
+                        return;
+                    }
+
+                    // Cho các vai trò khác (customer, staff) chuyển đến MainActivity
+                    Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(this, MainActivity.class));
+                    finish();
+                } else {
+                    Log.d(TAG, "Không tìm thấy người dùng với email: " + email + ", password: " + password);
+                    Toast.makeText(this, "Đăng nhập thất bại: Email hoặc mật khẩu không đúng!", Toast.LENGTH_SHORT).show();
+                }
+            } finally {
+                cursor.close();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Lỗi khi truy vấn cơ sở dữ liệu: " + e.getMessage());
+            Toast.makeText(this, "Lỗi hệ thống, vui lòng thử lại!", Toast.LENGTH_SHORT).show();
+
+            // Ngoại lệ đặc biệt cho tài khoản admin: cho phép đăng nhập mặc định nếu có lỗi cơ sở dữ liệu
+            if (email.equals("admin123") && password.equals("admin")) {
+                Log.w(TAG, "Đăng nhập admin bằng ngoại lệ do lỗi cơ sở dữ liệu");
+                Toast.makeText(this, "Đăng nhập Admin thành công (ngoại lệ do lỗi hệ thống)!", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(this, AdminActivity.class));
+                finish();
+            }
+        }
     }
+
+    // Loại bỏ hàm hashPassword vì không cần mã hóa (giữ plaintext)
+    /* private String hashPassword(String password) {
+        return password; // Không cần hàm này nữa
+    } */
 }

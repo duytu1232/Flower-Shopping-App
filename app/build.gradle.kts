@@ -7,7 +7,6 @@ android {
     namespace = "com.example.flowerapp"
     compileSdk = 35
 
-
     defaultConfig {
         applicationId = "com.example.flowerapp"
         minSdk = 26
@@ -29,11 +28,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
-
 }
 
 dependencies {
-
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
@@ -45,16 +42,15 @@ dependencies {
     implementation(libs.mediarouter)
     implementation(libs.viewpager2)
     implementation(libs.recyclerview)
+    implementation(libs.cardview)  // Thêm CardView
     // Thêm Firebase dependencies
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(platform(libs.firebase.bom))
 //    implementation(libs.firebase.analytics)
 
-
     annotationProcessor(libs.glide.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-
 }

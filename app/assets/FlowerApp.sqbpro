@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="D:/Project/Java code/FlowerApp/app/assets/FlowerApp.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="browser pragmas query structure" current="0"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="250"/><column_width id="3" width="6423"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><current_table name="4,5:mainUsers"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="Carts" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths/><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Discount_Codes" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="213"/><column index="2" value="101"/><column index="3" value="272"/><column index="4" value="195"/><column index="5" value="178"/><column index="6" value="300"/><column index="7" value="123"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Notifications" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="262"/><column index="2" value="161"/><column index="3" value="144"/><column index="4" value="166"/><column index="5" value="188"/><column index="6" value="150"/><column index="7" value="123"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Order_Tracking" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="209"/><column index="2" value="161"/><column index="3" value="123"/><column index="4" value="233"/><column index="5" value="101"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Orders" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="161"/><column index="2" value="144"/><column index="3" value="205"/><column index="4" value="123"/><column index="5" value="246"/><column index="6" value="300"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Payments" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="218"/><column index="2" value="161"/><column index="3" value="300"/><column index="4" value="147"/><column index="5" value="262"/><column index="6" value="123"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Products" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="200"/><column index="2" value="112"/><column index="3" value="300"/><column index="4" value="102"/><column index="5" value="108"/><column index="6" value="188"/><column index="7" value="165"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Reviews" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="184"/><column index="2" value="144"/><column index="3" value="200"/><column index="4" value="120"/><column index="5" value="174"/><column index="6" value="228"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Users" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort><column index="1" mode="0"/></sort><column_widths><column index="1" value="255"/><column index="2" value="385"/><column index="3" value="398"/><column index="4" value="447"/><column index="5" value="321"/><column index="6" value="374"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="sqlite_sequence" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="370"/><column index="2" value="169"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1">-- Bảng Users
+CREATE TABLE Users (
+    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL,
+    password TEXT NOT NULL,
+    email TEXT NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('customer', 'admin', 'staff')),
+    status TEXT NOT NULL CHECK(status IN ('active', 'locked'))
+);
+
+-- Bảng Products
+CREATE TABLE Products (
+    product_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT,
+    price REAL NOT NULL,
+    stock INTEGER NOT NULL,
+    image_url TEXT,
+    category TEXT
+);
+
+-- Bảng Orders
+CREATE TABLE Orders (
+    order_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    order_date TEXT NOT NULL,
+    status TEXT NOT NULL CHECK(status IN ('pending', 'processing', 'shipped', 'delivered', 'canceled')),
+    total_amount REAL NOT NULL,
+    shipping_address TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id)
+);
+
+-- Bảng Order_Items
+CREATE TABLE Order_Items (
+    order_item_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL,
+    unit_price REAL NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES Orders(order_id),
+    FOREIGN KEY (product_id) REFERENCES Products(product_id)
+);
+
+-- Bảng Carts
+CREATE TABLE Carts (
+    cart_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id),
+    FOREIGN KEY (product_id) REFERENCES Products(product_id)
+);
+
+-- Bảng Discount_Codes
+CREATE TABLE Discount_Codes (
+    discount_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT NOT NULL UNIQUE,
+    discount_value REAL NOT NULL,
+    start_date TEXT NOT NULL,
+    end_date TEXT NOT NULL,
+    min_order_value REAL,
+    status TEXT NOT NULL CHECK(status IN ('active', 'expired'))
+);
+
+-- Bảng Payments
+CREATE TABLE Payments (
+    payment_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL,
+    payment_method TEXT NOT NULL CHECK(payment_method IN ('credit_card', 'e_wallet', 'cod')),
+    amount REAL NOT NULL,
+    payment_date TEXT NOT NULL,
+    status TEXT NOT NULL CHECK(status IN ('success', 'failed')),
+    FOREIGN KEY (order_id) REFERENCES Orders(order_id)
+);
+
+-- Bảng Reviews
+CREATE TABLE Reviews (
+    review_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 5),
+    comment TEXT,
+    review_date TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id),
+    FOREIGN KEY (product_id) REFERENCES Products(product_id)
+);
+
+-- Bảng Order_Tracking
+CREATE TABLE Order_Tracking (
+    tracking_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL,
+    status TEXT NOT NULL,
+    update_time TEXT NOT NULL,
+    note TEXT,
+    FOREIGN KEY (order_id) REFERENCES Orders(order_id)
+);
+
+-- Bảng Notifications
+CREATE TABLE Notifications (
+    notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    message TEXT NOT NULL,
+    sent_time TEXT NOT NULL,
+    channel TEXT NOT NULL CHECK(channel IN ('email', 'sms', 'app')),
+    status TEXT NOT NULL CHECK(status IN ('sent', 'failed')),
+    FOREIGN KEY (order_id) REFERENCES Orders(order_id),
+    FOREIGN KEY (user_id) REFERENCES Users(user_id)
+);
+--------------------------------------------------------------------------------------------------------
+-- Xóa các bảng con trước
+DROP TABLE IF EXISTS Notifications;
+DROP TABLE IF EXISTS Order_Tracking;
+DROP TABLE IF EXISTS Reviews;
+DROP TABLE IF EXISTS Order_Items;
+DROP TABLE IF EXISTS Payments;
+DROP TABLE IF EXISTS Carts;
+DROP TABLE IF EXISTS Orders;
+
+-- Sau đó xóa bảng cha
+DROP TABLE IF EXISTS Discount_Codes;
+DROP TABLE IF EXISTS Products;
+DROP TABLE IF EXISTS Users;
+
+-- Tắt kiểm tra khóa ngoại
+PRAGMA foreign_keys = OFF;
+
+-- Xóa các bảng (theo bất kỳ thứ tự nào)
+DROP TABLE IF EXISTS Users;
+DROP TABLE IF EXISTS Products;
+DROP TABLE IF EXISTS Orders;
+DROP TABLE IF EXISTS Order_Items;
+DROP TABLE IF EXISTS Carts;
+DROP TABLE IF EXISTS Discount_Codes;
+DROP TABLE IF EXISTS Payments;
+DROP TABLE IF EXISTS Reviews;
+DROP TABLE IF EXISTS Order_Tracking;
+DROP TABLE IF EXISTS Notifications;
+
+-- Bật lại kiểm tra khóa ngoại
+PRAGMA foreign_keys = ON;
+
+-- Kiểm tra các bản ghi trong Orders tham chiếu đến Users
+SELECT * FROM Orders WHERE user_id IN (SELECT user_id FROM Users);
+
+-- Kiểm tra các bản ghi trong Carts tham chiếu đến Users
+SELECT * FROM Carts WHERE user_id IN (SELECT user_id FROM Users);
+
+-- Kiểm tra các bản ghi trong Notifications tham chiếu đến Users
+SELECT * FROM Notifications WHERE user_id IN (SELECT user_id FROM Users);
+-----------------------------------------------------------------------------------
+-- Sau đó chạy lại các lệnh CREATE TABLE và INSERT ở trên.
+
+-- Dữ liệu cho Users (giữ nguyên plaintext password)
+INSERT INTO Users (username, password, email, role, status)
+VALUES ('haki', 'duytu1232', 'duytu1232@gmail.com', 'customer', 'active');
+INSERT INTO Users (username, password, email, role, status)
+VALUES ('admin', 'admin', 'admin123', 'admin', 'active');
+UPDATE Users SET role = 'admin' WHERE email = 'admin123';
+-- Dữ liệu cho Products
+INSERT INTO Products (name, description, price, stock, image_url, category)
+VALUES ('Rose', 'Red rose bouquet', 50.0, 100, 'rose.jpg', 'Flowers');
+INSERT INTO Products (name, description, price, stock, image_url, category)
+VALUES ('Lily', 'White lily arrangement', 75.0, 50, 'lily.jpg', 'Flowers');
+INSERT INTO Products (name, description, price, stock, image_url, category)
+VALUES ('Tulip', 'Yellow tulip bouquet', 60.0, 80, 'tulip.jpg', 'Flowers');
+
+-- Dữ liệu cho Orders
+INSERT INTO Orders (user_id, order_date, status, total_amount, shipping_address)
+VALUES (1, '2025-03-02', 'pending', 150.0, '123 Flower Street, Hanoi');
+INSERT INTO Orders (user_id, order_date, status, total_amount, shipping_address)
+VALUES (2, '2025-03-01', 'shipped', 200.0, '456 Blossom Road, Ho Chi Minh');
+
+-- Dữ liệu cho Order_Items
+INSERT INTO Order_Items (order_id, product_id, quantity, unit_price)
+VALUES (1, 1, 2, 50.0); -- 2 Rose với giá 50.0 mỗi cái
+INSERT INTO Order_Items (order_id, product_id, quantity, unit_price)
+VALUES (2, 2, 1, 75.0); -- 1 Lily với giá 75.0
+
+-- Dữ liệu cho Carts
+INSERT INTO Carts (user_id, product_id, quantity)
+VALUES (1, 1, 1); -- User haki có 1 Rose trong giỏ
+INSERT INTO Carts (user_id, product_id, quantity)
+VALUES (1, 2, 2); -- User haki có 2 Lily trong giỏ
+
+-- Dữ liệu cho Discount_Codes
+INSERT INTO Discount_Codes (code, discount_value, start_date, end_date, status)
+VALUES ('FLOWER10', 10.0, '2025-03-01', '2025-03-31', 'active');
+INSERT INTO Discount_Codes (code, discount_value, start_date, end_date, status)
+VALUES ('SPRING20', 20.0, '2025-03-01', '2025-04-01', 'active');
+
+-- Dữ liệu cho Payments
+INSERT INTO Payments (order_id, payment_method, amount, payment_date, status)
+VALUES (1, 'credit_card', 150.0, '2025-03-02', 'success');
+INSERT INTO Payments (order_id, payment_method, amount, payment_date, status)
+VALUES (2, 'e_wallet', 200.0, '2025-03-01', 'success');
+
+-- Dữ liệu cho Reviews
+INSERT INTO Reviews (user_id, product_id, rating, comment, review_date)
+VALUES (1, 1, 5, 'Beautiful roses!', '2025-03-02');
+INSERT INTO Reviews (user_id, product_id, rating, comment, review_date)
+VALUES (2, 2, 4, 'Nice lilies, but delivery was late.', '2025-03-01');
+
+-- Dữ liệu cho Order_Tracking
+INSERT INTO Order_Tracking (order_id, status, update_time, note)
+VALUES (1, 'processing', '2025-03-02 10:00:00', 'Order is being prepared');
+INSERT INTO Order_Tracking (order_id, status, update_time, note)
+VALUES (2, 'shipped', '2025-03-01 15:00:00', 'Shipped via express delivery');
+
+-- Dữ liệu cho Notifications
+INSERT INTO Notifications (order_id, user_id, message, sent_time, channel, status)
+VALUES (1, 1, 'Your order is being processed.', '2025-03-02 09:00:00', 'app', 'sent');
+INSERT INTO Notifications (order_id, user_id, message, sent_time, channel, status)
+VALUES (2, 2, 'Your order has been shipped.', '2025-03-01 16:00:00', 'email', 'sent');
+
+</sql><current_tab id="0"/></tab_sql></sqlb_project>
