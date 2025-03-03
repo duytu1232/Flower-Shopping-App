@@ -1,16 +1,21 @@
 package com.example.flowerapp.Admin;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
+import androidx.core.view.GravityCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 
 import com.example.flowerapp.Admin.Fragments.CouponManagementFragment;
@@ -20,14 +25,20 @@ import com.example.flowerapp.Admin.Fragments.RevenueManagementFragment;
 import com.example.flowerapp.Admin.Fragments.UserManagementFragment;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.DangNhap;
+import com.example.flowerapp.Security.Helper.DatabaseHelper;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationView;
 
 import java.util.HashMap;
 
 public class AdminActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavAdmin;
+    private DrawerLayout drawerLayout;
+    private NavigationView navView;
     private final HashMap<Integer, Fragment> fragmentMap = new HashMap<>();
     private ImageView logOutButton;
+    private ImageView sideMenuButton;
+    private DatabaseHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,11 +46,15 @@ public class AdminActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_admin);
 
+        // Khởi tạo DatabaseHelper
+        dbHelper = new DatabaseHelper(this);
+
         initViews();
         setupBottomNav();
+        setupDrawer();
         setupLogOutButton();
+        setupUserInfo();  // Thêm hàm để hiển thị thông tin người dùng
 
-        // Mở Fragment mặc định (Quản lý hàng hóa)
         if (savedInstanceState == null) {
             bottomNavAdmin.setSelectedItemId(R.id.menu_product);
         }
@@ -53,14 +68,22 @@ public class AdminActivity extends AppCompatActivity {
 
     private void initViews() {
         bottomNavAdmin = findViewById(R.id.bottomNavAdmin);
+        drawerLayout = findViewById(R.id.drawer_layout);
+        navView = findViewById(R.id.nav_view);
         logOutButton = findViewById(R.id.LogOut);
+        sideMenuButton = findViewById(R.id.side_menu);
 
-        // Khởi tạo các fragment cho từng trang quản lý (sử dụng SQLite)
         fragmentMap.put(R.id.menu_product, new ProductManagementFragment());
         fragmentMap.put(R.id.menu_users, new UserManagementFragment());
         fragmentMap.put(R.id.menu_coupons, new CouponManagementFragment());
         fragmentMap.put(R.id.menu_orders, new OrderManagementFragment());
         fragmentMap.put(R.id.menu_revenue, new RevenueManagementFragment());
+
+        fragmentMap.put(R.id.nav_product, fragmentMap.get(R.id.menu_product));
+        fragmentMap.put(R.id.nav_users, fragmentMap.get(R.id.menu_users));
+        fragmentMap.put(R.id.nav_coupons, fragmentMap.get(R.id.menu_coupons));
+        fragmentMap.put(R.id.nav_orders, fragmentMap.get(R.id.menu_orders));
+        fragmentMap.put(R.id.nav_revenue, fragmentMap.get(R.id.menu_revenue));
     }
 
     private void setupBottomNav() {
@@ -79,16 +102,26 @@ public class AdminActivity extends AppCompatActivity {
         });
     }
 
+    private void setupDrawer() {
+        sideMenuButton.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
+        navView.setNavigationItemSelectedListener(item -> {
+            Fragment selectedFragment = fragmentMap.get(item.getItemId());
+            if (selectedFragment != null) {
+                replaceFragment(selectedFragment);
+                drawerLayout.closeDrawer(GravityCompat.START);
+                return true;
+            }
+            return false;
+        });
+    }
+
     private void setupLogOutButton() {
         logOutButton.setOnClickListener(v -> {
-            // Hiển thị thông báo xác nhận trước khi logout
             new AlertDialog.Builder(this)
                     .setTitle("Xác nhận đăng xuất")
                     .setMessage("Bạn có chắc muốn đăng xuất?")
                     .setPositiveButton("Đăng xuất", (dialog, which) -> {
-                        // Xóa thông tin đăng nhập (nếu có, ví dụ: SharedPreferences)
                         clearSession();
-                        // Quay về màn hình đăng nhập
                         Intent intent = new Intent(AdminActivity.this, DangNhap.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
@@ -100,30 +133,49 @@ public class AdminActivity extends AppCompatActivity {
         });
     }
 
+    private void setupUserInfo() {
+        // Lấy tham chiếu đến TextView trong header
+        TextView userNameTextView = navView.getHeaderView(0).findViewById(R.id.user_name);
+
+        // Giả định lấy thông tin người dùng đã đăng nhập (ví dụ: admin)
+        SQLiteDatabase db = dbHelper.openDatabase();
+        Cursor cursor = db.rawQuery("SELECT username FROM Users WHERE role = 'admin' LIMIT 1", null);
+        if (cursor.moveToFirst()) {
+            String username = cursor.getString(0);
+            userNameTextView.setText(username);
+        } else {
+            userNameTextView.setText("Admin"); // Giá trị mặc định nếu không tìm thấy
+        }
+        cursor.close();
+        dbHelper.closeDatabase(db);
+    }
+
     private void replaceFragment(Fragment newFragment) {
         try {
             getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.fragment_container_admin, newFragment)
-                    .commitNow(); // Sử dụng commitNow để đảm bảo giao diện cập nhật ngay lập tức
+                    .commitNow();
         } catch (Exception e) {
             Toast.makeText(this, "Lỗi thay thế fragment: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
     private void clearSession() {
-        // Xóa thông tin đăng nhập (nếu bạn sử dụng SharedPreferences hoặc Firebase Auth)
-        // Ví dụ:
-        /*
-        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.clear().apply();
-        */
+        // Xóa thông tin đăng nhập nếu cần
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Đảm bảo đóng các tài nguyên nếu cần
     }
 }

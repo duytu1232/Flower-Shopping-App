@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#99BC85"
+    android:padding="40dp"
+    android:paddingTop="56dp"
+    android:gravity="center_horizontal">
+
+    <!-- Avatar người dùng -->
+    <ImageView
+    android:id="@+id/user_avatar"
+    android:layout_width="64dp"
+    android:layout_height="64dp"
+    android:background="@drawable/circle_background"
+    android:contentDescription="User Avatar"
+    android:scaleType="centerCrop"
+    android:src="@drawable/rabbit_avatar" />
+
+    <!-- Tên người dùng -->
+    <TextView
+    android:id="@+id/user_name"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="16dp"
+    android:text="Admin"
+    android:textColor="#FFFFFF"
+    android:textSize="18sp"
+    android:textStyle="bold" />
+
+    <!-- Tiêu đề "Admin Menu" -->
+    <TextView
+    android:id="@+id/admin_menu_title"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="4dp"
+    android:text="Admin Menu"
+    android:textColor="#E0E0E0"
+    android:textSize="14sp" />
+
+</LinearLayout>
