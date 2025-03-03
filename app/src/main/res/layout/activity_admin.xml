@@ -36,7 +36,7 @@
             android:layout_width="44dp"
             android:layout_height="46dp"
             android:padding="8dp"
-            app:srcCompat="@drawable/logout_24dp" />
+            app:srcCompat="@drawable/logout_26dp" />
     </LinearLayout>
 
     <!-- Fragment Container: Chứa nội dung của các trang quản lý -->

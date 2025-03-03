@@ -16,6 +16,7 @@ import androidx.fragment.app.Fragment;
 import com.example.flowerapp.Admin.Fragments.CouponManagementFragment;
 import com.example.flowerapp.Admin.Fragments.OrderManagementFragment;
 import com.example.flowerapp.Admin.Fragments.ProductManagementFragment;
+import com.example.flowerapp.Admin.Fragments.RevenueManagementFragment;
 import com.example.flowerapp.Admin.Fragments.UserManagementFragment;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.DangNhap;
@@ -59,6 +60,7 @@ public class AdminActivity extends AppCompatActivity {
         fragmentMap.put(R.id.menu_users, new UserManagementFragment());
         fragmentMap.put(R.id.menu_coupons, new CouponManagementFragment());
         fragmentMap.put(R.id.menu_orders, new OrderManagementFragment());
+        fragmentMap.put(R.id.menu_revenue, new RevenueManagementFragment());
     }
 
     private void setupBottomNav() {
