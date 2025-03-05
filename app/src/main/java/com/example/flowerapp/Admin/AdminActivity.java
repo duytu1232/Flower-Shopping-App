@@ -46,17 +46,17 @@ public class AdminActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_admin);
 
-        // Khởi tạo DatabaseHelper
         dbHelper = new DatabaseHelper(this);
 
         initViews();
         setupBottomNav();
         setupDrawer();
         setupLogOutButton();
-        setupUserInfo();  // Thêm hàm để hiển thị thông tin người dùng
+        setupUserInfo();
 
         if (savedInstanceState == null) {
             bottomNavAdmin.setSelectedItemId(R.id.menu_product);
+            navView.setCheckedItem(R.id.nav_product); // Đồng bộ mặc định với drawer
         }
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -89,9 +89,13 @@ public class AdminActivity extends AppCompatActivity {
     private void setupBottomNav() {
         bottomNavAdmin.setOnItemSelectedListener(item -> {
             try {
-                Fragment selectedFragment = fragmentMap.get(item.getItemId());
+                int itemId = item.getItemId();
+                Fragment selectedFragment = fragmentMap.get(itemId);
                 if (selectedFragment != null) {
                     replaceFragment(selectedFragment);
+                    // Đồng bộ với NavigationView
+                    int navItemId = getNavItemIdFromBottomItemId(itemId);
+                    navView.setCheckedItem(navItemId);
                     return true;
                 }
                 return false;
@@ -105,13 +109,22 @@ public class AdminActivity extends AppCompatActivity {
     private void setupDrawer() {
         sideMenuButton.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
         navView.setNavigationItemSelectedListener(item -> {
-            Fragment selectedFragment = fragmentMap.get(item.getItemId());
-            if (selectedFragment != null) {
-                replaceFragment(selectedFragment);
-                drawerLayout.closeDrawer(GravityCompat.START);
-                return true;
+            try {
+                int itemId = item.getItemId();
+                Fragment selectedFragment = fragmentMap.get(itemId);
+                if (selectedFragment != null) {
+                    replaceFragment(selectedFragment);
+                    // Đồng bộ với BottomNavigationView
+                    int bottomItemId = getBottomItemIdFromNavItemId(itemId);
+                    bottomNavAdmin.setSelectedItemId(bottomItemId);
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                    return true;
+                }
+                return false;
+            } catch (Exception e) {
+                Toast.makeText(this, "Lỗi chuyển đổi fragment: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                return false;
             }
-            return false;
         });
     }
 
@@ -134,17 +147,14 @@ public class AdminActivity extends AppCompatActivity {
     }
 
     private void setupUserInfo() {
-        // Lấy tham chiếu đến TextView trong header
         TextView userNameTextView = navView.getHeaderView(0).findViewById(R.id.user_name);
-
-        // Giả định lấy thông tin người dùng đã đăng nhập (ví dụ: admin)
         SQLiteDatabase db = dbHelper.openDatabase();
         Cursor cursor = db.rawQuery("SELECT username FROM Users WHERE role = 'admin' LIMIT 1", null);
         if (cursor.moveToFirst()) {
             String username = cursor.getString(0);
             userNameTextView.setText(username);
         } else {
-            userNameTextView.setText("Admin"); // Giá trị mặc định nếu không tìm thấy
+            userNameTextView.setText("Admin");
         }
         cursor.close();
         dbHelper.closeDatabase(db);
@@ -159,6 +169,26 @@ public class AdminActivity extends AppCompatActivity {
         } catch (Exception e) {
             Toast.makeText(this, "Lỗi thay thế fragment: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    // Ánh xạ từ BottomNavigationView sang NavigationView (sử dụng if-else thay vì switch)
+    private int getNavItemIdFromBottomItemId(int bottomItemId) {
+        if (bottomItemId == R.id.menu_revenue) return R.id.nav_revenue;
+        if (bottomItemId == R.id.menu_product) return R.id.nav_product;
+        if (bottomItemId == R.id.menu_users) return R.id.nav_users;
+        if (bottomItemId == R.id.menu_coupons) return R.id.nav_coupons;
+        if (bottomItemId == R.id.menu_orders) return R.id.nav_orders;
+        return R.id.nav_product; // Mặc định
+    }
+
+    // Ánh xạ từ NavigationView sang BottomNavigationView (sử dụng if-else thay vì switch)
+    private int getBottomItemIdFromNavItemId(int navItemId) {
+        if (navItemId == R.id.nav_revenue) return R.id.menu_revenue;
+        if (navItemId == R.id.nav_product) return R.id.menu_product;
+        if (navItemId == R.id.nav_users) return R.id.menu_users;
+        if (navItemId == R.id.nav_coupons) return R.id.menu_coupons;
+        if (navItemId == R.id.nav_orders) return R.id.menu_orders;
+        return R.id.menu_product; // Mặc định
     }
 
     private void clearSession() {

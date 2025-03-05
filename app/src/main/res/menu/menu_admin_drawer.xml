@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
+        android:id="@+id/nav_revenue"
+        android:icon="@drawable/revenue"
+        android:title="Quản lý doanh thu" />
+    <item
         android:id="@+id/nav_product"
         android:icon="@drawable/product_labbel"
         android:title="Quản lý hàng hóa" />
@@ -16,8 +20,4 @@
         android:id="@+id/nav_orders"
         android:icon="@drawable/order_labbel"
         android:title="Quản lý đơn hàng" />
-    <item
-        android:id="@+id/nav_revenue"
-        android:icon="@drawable/revenue"
-        android:title="Quản lý doanh thu" />
 </menu>

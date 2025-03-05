@@ -29,11 +29,11 @@ public class OrderPagerAdapter extends FragmentStateAdapter {
             case 2:
                 return new ChoGiaoHangFragment();
             case 3:
-                return new ChuaDanhGiaFragment();
-            case 4:
                 return new TraHangFragment();
-            case 5:
+            case 4:
                 return new HuyDonFragment();
+            case 5:
+                return new ChuaDanhGiaFragment();
             default:
                 return new ChoThanhToanFragment();
         }

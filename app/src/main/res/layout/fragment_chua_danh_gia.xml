@@ -8,15 +8,6 @@
     android:padding="16dp"
     tools:context=".User.Fragments.ChuaDanhGiaFragment">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Chưa Đánh Giá"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="#333333"
-        android:paddingBottom="8dp" />
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/orderRecyclerView"
         android:layout_width="match_parent"
