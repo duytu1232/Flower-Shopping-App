@@ -102,5 +102,12 @@
         app:itemTextColor="@color/bottom_navi_color"
         app:labelVisibilityMode="labeled"
         app:menu="@menu/menu_home_bottom" />
+    <Button
+        android:id="@+id/btnNotification"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/notification_text"
+        android:onClick="openNotification"
+        tools:ignore="OnClick" />
 
 </LinearLayout>

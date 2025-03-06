@@ -116,4 +116,12 @@ public class MainActivity extends AppCompatActivity {
         headerLayout.setVisibility(hideHeader ? View.GONE : View.VISIBLE);
         khoangTrongMenu.setVisibility(hideHeader ? View.GONE : View.VISIBLE);
     }
+
+    public void openNotification(View view) {
+        Intent intent = new Intent(MainActivity.this, NotificationActivity.class);
+        startActivity(intent);
+    }
+
 }
+
+
