@@ -91,8 +91,6 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:background="#FFFFFF" />
-
-
     <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavMain"
@@ -103,6 +101,5 @@
         app:itemTextColor="@color/bottom_navi_color"
         app:labelVisibilityMode="labeled"
         app:menu="@menu/menu_home_bottom" />
-
 
 </LinearLayout>
