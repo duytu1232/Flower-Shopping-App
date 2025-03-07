@@ -28,6 +28,7 @@
         app:layout_constraintTop_toBottomOf="@id/tvTitle"
         app:layout_constraintBottom_toBottomOf="parent"
         tools:listitem="@layout/item_notification"/>
+
     <TextView
         android:id="@+id/tvNotification"
         android:layout_width="wrap_content"
@@ -37,7 +38,4 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-
-
 </androidx.constraintlayout.widget.ConstraintLayout>
-
