@@ -17,4 +17,3 @@ public class NotificationActivity extends AppCompatActivity {
         textView.setText("welcome to my notification page");
     }
 }
-
