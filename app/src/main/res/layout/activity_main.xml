@@ -14,7 +14,8 @@
         android:id="@+id/khoang_trong_menu"
         android:layout_width="match_parent"
         android:layout_height="35dp"
-        android:orientation="vertical"></LinearLayout>
+        android:orientation="vertical">
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/header_layout"
