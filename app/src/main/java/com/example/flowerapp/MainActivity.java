@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final HashMap<Integer, Fragment> fragmentMap = new HashMap<>();
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +43,11 @@ public class MainActivity extends AppCompatActivity {
         setupBottomNav();
         setupSearch();
         setupFilter();
+        ImageView notificationIcon = findViewById(R.id.notificationIcon);
+        notificationIcon.setOnClickListener(view -> {
+            Intent intent = new Intent(MainActivity.this, NotificationActivity.class);
+            startActivity(intent);
+        });
 
         // Mở Fragment mặc định
         String openFragment = getIntent().getStringExtra("openFragment");
@@ -57,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
     private void initViews() {
         headerLayout = findViewById(R.id.header_layout);
         khoangTrongMenu = findViewById(R.id.khoang_trong_menu);
-        bottomNav = findViewById(R.id.bottomNavMain);
         searchEditText = findViewById(R.id.EditText_Searching_Bar);
         filterIcon = findViewById(R.id.filter_icon);
 
@@ -69,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupBottomNav() {
+        BottomNavigationView bottomNav = findViewById(R.id.bottomNavMain);
         bottomNav.setOnItemSelectedListener(item -> {
             Fragment selectedFragment = fragmentMap.get(item.getItemId());
             if (selectedFragment != null) {
@@ -116,6 +122,13 @@ public class MainActivity extends AppCompatActivity {
         headerLayout.setVisibility(hideHeader ? View.GONE : View.VISIBLE);
         khoangTrongMenu.setVisibility(hideHeader ? View.GONE : View.VISIBLE);
     }
+
+    public void openNotification(View view) {
+        Intent intent = new Intent(MainActivity.this, NotificationActivity.class);
+        startActivity(intent);
+    }
+
+
 
 }
 
