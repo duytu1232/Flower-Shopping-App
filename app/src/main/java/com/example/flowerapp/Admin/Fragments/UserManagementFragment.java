@@ -22,6 +22,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.Helper.DatabaseHelper;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,11 +43,9 @@ public class UserManagementFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recycler_user_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // Khởi tạo adapter
         adapter = new UserAdapter(userList, requireContext(), this);
         recyclerView.setAdapter(adapter);
 
-        // Load dữ liệu từ SQLite
         loadUsers();
 
         Button addButton = view.findViewById(R.id.btn_add_user);
@@ -60,20 +60,12 @@ public class UserManagementFragment extends Fragment {
             userList.clear();
 
             while (cursor.moveToNext()) {
-                int idIndex = cursor.getColumnIndex("user_id");
-                int usernameIndex = cursor.getColumnIndex("username");
-                int emailIndex = cursor.getColumnIndex("email");
-                int roleIndex = cursor.getColumnIndex("role");
-                int statusIndex = cursor.getColumnIndex("status");
-
-                if (idIndex >= 0 && usernameIndex >= 0 && emailIndex >= 0 && roleIndex >= 0 && statusIndex >= 0) {
-                    int id = cursor.getInt(idIndex);
-                    String username = cursor.getString(usernameIndex);
-                    String email = cursor.getString(emailIndex);
-                    String role = cursor.getString(roleIndex);
-                    String status = cursor.getString(statusIndex);
-                    userList.add(new User(id, username, email, role, status));
-                }
+                int id = cursor.getInt(cursor.getColumnIndexOrThrow("user_id"));
+                String username = cursor.getString(cursor.getColumnIndexOrThrow("username"));
+                String email = cursor.getString(cursor.getColumnIndexOrThrow("email"));
+                String role = cursor.getString(cursor.getColumnIndexOrThrow("role"));
+                String status = cursor.getString(cursor.getColumnIndexOrThrow("status"));
+                userList.add(new User(id, username, email, role, status));
             }
             cursor.close();
             adapter.notifyDataSetChanged();
@@ -106,7 +98,8 @@ public class UserManagementFragment extends Fragment {
                         return;
                     }
 
-                    addUser(username, password, email, role, status);
+                    String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+                    addUser(username, hashedPassword, email, role, status);
                     loadUsers();
                     Toast.makeText(requireContext(), "Thêm người dùng thành công", Toast.LENGTH_SHORT).show();
                 })
@@ -126,8 +119,14 @@ public class UserManagementFragment extends Fragment {
 
     private void updateUser(int id, String username, String password, String email, String role, String status) {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            db.execSQL("UPDATE Users SET username = ?, password = ?, email = ?, role = ?, status = ? WHERE user_id = ?",
-                    new Object[]{username, password, email, role, status, id});
+            if (password == null || password.isEmpty()) {
+                db.execSQL("UPDATE Users SET username = ?, email = ?, role = ?, status = ? WHERE user_id = ?",
+                        new Object[]{username, email, role, status, id});
+            } else {
+                String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+                db.execSQL("UPDATE Users SET username = ?, password = ?, email = ?, role = ?, status = ? WHERE user_id = ?",
+                        new Object[]{username, hashedPassword, email, role, status, id});
+            }
             loadUsers();
             Toast.makeText(requireContext(), "Cập nhật người dùng thành công", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
@@ -145,7 +144,6 @@ public class UserManagementFragment extends Fragment {
         }
     }
 
-    // Class User (model)
     public static class User {
         int id;
         String username, email, role, status;
@@ -159,7 +157,6 @@ public class UserManagementFragment extends Fragment {
         }
     }
 
-    // Adapter (cập nhật để hỗ trợ sửa, xóa)
     public static class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder> {
         private List<User> users;
         private Context context;
@@ -222,7 +219,7 @@ public class UserManagementFragment extends Fragment {
 
         editUsername.setText(user.username);
         editEmail.setText(user.email);
-        editPassword.setText(""); // Không hiển thị mật khẩu cũ để bảo mật
+        editPassword.setText("");
         editRole.setText(user.role);
         editStatus.setText(user.status);
 
@@ -239,12 +236,7 @@ public class UserManagementFragment extends Fragment {
                         return;
                     }
 
-                    if (password.isEmpty()) {
-                        // Nếu không nhập mật khẩu mới, giữ nguyên mật khẩu cũ
-                        updateUser(user.id, username, null, email, role, status);
-                    } else {
-                        updateUser(user.id, username, password, email, role, status);
-                    }
+                    updateUser(user.id, username, password.isEmpty() ? null : password, email, role, status);
                 })
                 .setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss());
 

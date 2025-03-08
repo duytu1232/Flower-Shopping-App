@@ -2,20 +2,16 @@
 <androidx.drawerlayout.widget.DrawerLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".Admin.AdminActivity">
+    android:layout_height="match_parent">
 
-    <!-- Nội dung chính -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#BFD8AF">
 
-        <!-- Header -->
         <LinearLayout
             android:id="@+id/admin_header"
             android:layout_width="match_parent"
@@ -28,6 +24,7 @@
                 android:id="@+id/side_menu"
                 android:layout_width="32dp"
                 android:layout_height="40dp"
+                android:contentDescription="Open side menu"
                 app:srcCompat="@drawable/menu_side_bar" />
 
             <TextView
@@ -44,11 +41,11 @@
                 android:id="@+id/LogOut"
                 android:layout_width="44dp"
                 android:layout_height="46dp"
+                android:contentDescription="Log out"
                 android:padding="8dp"
                 app:srcCompat="@drawable/logout_26dp" />
         </LinearLayout>
 
-        <!-- Fragment Container -->
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/fragment_container_admin"
             android:layout_width="match_parent"
@@ -57,7 +54,6 @@
             app:layout_constraintTop_toBottomOf="@id/admin_header"
             app:layout_constraintBottom_toTopOf="@id/bottomNavAdmin" />
 
-        <!-- Bottom Navigation -->
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottomNavAdmin"
             android:layout_width="match_parent"
@@ -70,7 +66,6 @@
             app:layout_constraintBottom_toBottomOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Menu bên trái -->
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
@@ -78,5 +73,4 @@
         android:layout_gravity="start"
         app:menu="@menu/menu_admin_drawer"
         app:headerLayout="@layout/nav_header_admin" />
-
 </androidx.drawerlayout.widget.DrawerLayout>

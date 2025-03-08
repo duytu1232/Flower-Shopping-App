@@ -41,11 +41,9 @@ public class ProductManagementFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recycler_product_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // Khởi tạo adapter
         adapter = new ProductAdapter(productList, requireContext(), this);
         recyclerView.setAdapter(adapter);
 
-        // Load dữ liệu từ SQLite
         loadProducts();
 
         Button addButton = view.findViewById(R.id.btn_add_product);
@@ -56,22 +54,16 @@ public class ProductManagementFragment extends Fragment {
 
     private void loadProducts() {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            Cursor cursor = db.rawQuery("SELECT product_id, name, price, stock FROM Products", null);
+            Cursor cursor = db.rawQuery("SELECT product_id, name, price, stock, image_url FROM Products", null);
             productList.clear();
 
             while (cursor.moveToNext()) {
-                int idIndex = cursor.getColumnIndex("product_id");
-                int nameIndex = cursor.getColumnIndex("name");
-                int priceIndex = cursor.getColumnIndex("price");
-                int quantityIndex = cursor.getColumnIndex("stock");
-
-                if (idIndex >= 0 && nameIndex >= 0 && priceIndex >= 0 && quantityIndex >= 0) {
-                    int id = cursor.getInt(idIndex);
-                    String name = cursor.getString(nameIndex);
-                    double price = cursor.getDouble(priceIndex);
-                    int quantity = cursor.getInt(quantityIndex);
-                    productList.add(new Product(id, name, price, quantity));
-                }
+                int id = cursor.getInt(cursor.getColumnIndexOrThrow("product_id"));
+                String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
+                double price = cursor.getDouble(cursor.getColumnIndexOrThrow("price"));
+                int stock = cursor.getInt(cursor.getColumnIndexOrThrow("stock"));
+                String imageUrl = cursor.getString(cursor.getColumnIndexOrThrow("image_url"));
+                productList.add(new Product(id, name, price, stock, imageUrl));
             }
             cursor.close();
             adapter.notifyDataSetChanged();
@@ -88,14 +80,16 @@ public class ProductManagementFragment extends Fragment {
         EditText editName = view.findViewById(R.id.edit_product_name);
         EditText editPrice = view.findViewById(R.id.edit_product_price);
         EditText editStock = view.findViewById(R.id.edit_product_stock);
+        EditText editImageUrl = view.findViewById(R.id.edit_product_image_url);
 
         builder.setView(view)
                 .setPositiveButton("Thêm", (dialog, which) -> {
                     String name = editName.getText().toString().trim();
                     double price = Double.parseDouble(editPrice.getText().toString().trim());
                     int stock = Integer.parseInt(editStock.getText().toString().trim());
+                    String imageUrl = editImageUrl.getText().toString().trim();
 
-                    addProduct(name, price, stock);
+                    addProduct(name, price, stock, imageUrl);
                     loadProducts();
                     Toast.makeText(requireContext(), "Thêm sản phẩm thành công", Toast.LENGTH_SHORT).show();
                 })
@@ -104,19 +98,19 @@ public class ProductManagementFragment extends Fragment {
         builder.show();
     }
 
-    private void addProduct(String name, double price, int stock) {
+    private void addProduct(String name, double price, int stock, String imageUrl) {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            db.execSQL("INSERT INTO Products (name, price, stock) VALUES (?, ?, ?)",
-                    new Object[]{name, price, stock});
+            db.execSQL("INSERT INTO Products (name, price, stock, image_url) VALUES (?, ?, ?, ?)",
+                    new Object[]{name, price, stock, imageUrl});
         } catch (Exception e) {
             Toast.makeText(requireContext(), "Lỗi thêm sản phẩm: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void updateProduct(int id, String name, double price, int stock) {
+    private void updateProduct(int id, String name, double price, int stock, String imageUrl) {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            db.execSQL("UPDATE Products SET name = ?, price = ?, stock = ? WHERE product_id = ?",
-                    new Object[]{name, price, stock, id});
+            db.execSQL("UPDATE Products SET name = ?, price = ?, stock = ?, image_url = ? WHERE product_id = ?",
+                    new Object[]{name, price, stock, imageUrl, id});
             loadProducts();
             Toast.makeText(requireContext(), "Cập nhật sản phẩm thành công", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
@@ -134,22 +128,22 @@ public class ProductManagementFragment extends Fragment {
         }
     }
 
-    // Class Product (model)
     public static class Product {
         int id;
         String name;
         double price;
         int stock;
+        String imageUrl;
 
-        public Product(int id, String name, double price, int stock) {
+        public Product(int id, String name, double price, int stock, String imageUrl) {
             this.id = id;
             this.name = name;
             this.price = price;
             this.stock = stock;
+            this.imageUrl = imageUrl;
         }
     }
 
-    // Adapter (cập nhật để hỗ trợ sửa, xóa)
     public static class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHolder> {
         private List<Product> products;
         private Context context;
@@ -207,18 +201,21 @@ public class ProductManagementFragment extends Fragment {
         EditText editName = view.findViewById(R.id.edit_product_name);
         EditText editPrice = view.findViewById(R.id.edit_product_price);
         EditText editStock = view.findViewById(R.id.edit_product_stock);
+        EditText editImageUrl = view.findViewById(R.id.edit_product_image_url);
 
         editName.setText(product.name);
         editPrice.setText(String.valueOf(product.price));
         editStock.setText(String.valueOf(product.stock));
+        editImageUrl.setText(product.imageUrl);
 
         builder.setView(view)
                 .setPositiveButton("Cập nhật", (dialog, which) -> {
                     String name = editName.getText().toString().trim();
                     double price = Double.parseDouble(editPrice.getText().toString().trim());
                     int stock = Integer.parseInt(editStock.getText().toString().trim());
+                    String imageUrl = editImageUrl.getText().toString().trim();
 
-                    updateProduct(product.id, name, price, stock);
+                    updateProduct(product.id, name, price, stock, imageUrl);
                 })
                 .setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss());
 

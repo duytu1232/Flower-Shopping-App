@@ -29,4 +29,11 @@
         android:inputType="number"
         android:minHeight="48dp" />
 
+    <EditText
+        android:id="@+id/edit_product_image_url"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="URL hình ảnh"
+        android:inputType="textUri"
+        android:minHeight="48dp" />
 </LinearLayout>

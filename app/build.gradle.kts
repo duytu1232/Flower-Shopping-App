@@ -13,7 +13,6 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -35,7 +34,7 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.glide)
-    annotationProcessor(libs.glide.compiler)  // Đảm bảo Glide annotation processor
+    annotationProcessor(libs.glide.compiler)
     implementation(libs.legacy.support.v4)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
@@ -46,7 +45,12 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(platform(libs.firebase.bom))
-    // implementation(libs.firebase.analytics)  // Uncomment nếu cần Firebase Analytics
+    // Thêm các thư viện mới
+    implementation(libs.jbcrypt)  // Bắt buộc cho BCrypt
+    implementation(libs.firebase.storage)  // Tùy chọn cho hình ảnh
+    implementation(libs.room.runtime)  // Tùy chọn cho Room
+    annotationProcessor(libs.room.compiler)  // Tùy chọn cho Room
+    implementation(libs.lifecycle.livedata)  // Tùy chọn cho LiveData
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

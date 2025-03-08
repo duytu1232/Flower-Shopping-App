@@ -1,6 +1,7 @@
 package com.example.flowerapp.Admin;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -8,7 +9,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -43,7 +43,6 @@ public class AdminActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_admin);
 
         dbHelper = new DatabaseHelper(this);
@@ -56,7 +55,7 @@ public class AdminActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
             bottomNavAdmin.setSelectedItemId(R.id.menu_product);
-            navView.setCheckedItem(R.id.nav_product); // Đồng bộ mặc định với drawer
+            navView.setCheckedItem(R.id.nav_product);
         }
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -93,7 +92,6 @@ public class AdminActivity extends AppCompatActivity {
                 Fragment selectedFragment = fragmentMap.get(itemId);
                 if (selectedFragment != null) {
                     replaceFragment(selectedFragment);
-                    // Đồng bộ với NavigationView
                     int navItemId = getNavItemIdFromBottomItemId(itemId);
                     navView.setCheckedItem(navItemId);
                     return true;
@@ -114,7 +112,6 @@ public class AdminActivity extends AppCompatActivity {
                 Fragment selectedFragment = fragmentMap.get(itemId);
                 if (selectedFragment != null) {
                     replaceFragment(selectedFragment);
-                    // Đồng bộ với BottomNavigationView
                     int bottomItemId = getBottomItemIdFromNavItemId(itemId);
                     bottomNavAdmin.setSelectedItemId(bottomItemId);
                     drawerLayout.closeDrawer(GravityCompat.START);
@@ -139,7 +136,7 @@ public class AdminActivity extends AppCompatActivity {
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
                         finish();
-                        Toast.makeText(AdminActivity.this, "Đã đăng xuất thành công!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Đã đăng xuất thành công!", Toast.LENGTH_SHORT).show();
                     })
                     .setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss())
                     .show();
@@ -171,28 +168,27 @@ public class AdminActivity extends AppCompatActivity {
         }
     }
 
-    // Ánh xạ từ BottomNavigationView sang NavigationView (sử dụng if-else thay vì switch)
     private int getNavItemIdFromBottomItemId(int bottomItemId) {
         if (bottomItemId == R.id.menu_revenue) return R.id.nav_revenue;
         if (bottomItemId == R.id.menu_product) return R.id.nav_product;
         if (bottomItemId == R.id.menu_users) return R.id.nav_users;
         if (bottomItemId == R.id.menu_coupons) return R.id.nav_coupons;
         if (bottomItemId == R.id.menu_orders) return R.id.nav_orders;
-        return R.id.nav_product; // Mặc định
+        return R.id.nav_product;
     }
 
-    // Ánh xạ từ NavigationView sang BottomNavigationView (sử dụng if-else thay vì switch)
     private int getBottomItemIdFromNavItemId(int navItemId) {
         if (navItemId == R.id.nav_revenue) return R.id.menu_revenue;
         if (navItemId == R.id.nav_product) return R.id.menu_product;
         if (navItemId == R.id.nav_users) return R.id.menu_users;
         if (navItemId == R.id.nav_coupons) return R.id.menu_coupons;
         if (navItemId == R.id.nav_orders) return R.id.menu_orders;
-        return R.id.menu_product; // Mặc định
+        return R.id.menu_product;
     }
 
     private void clearSession() {
-        // Xóa thông tin đăng nhập nếu cần
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        prefs.edit().clear().apply();
     }
 
     @Override
@@ -207,5 +203,8 @@ public class AdminActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (dbHelper != null) {
+            dbHelper.closeDatabase(dbHelper.openDatabase());
+        }
     }
 }
