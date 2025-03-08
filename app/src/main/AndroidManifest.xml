@@ -3,7 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
     <application
@@ -16,6 +17,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FlowerApp"
         tools:targetApi="31">
+        <activity
+            android:name=".User.Fragments.MyOrder_Fragment.ReviewActivity"
+            android:exported="false" />
+        <activity
+            android:name=".User.Fragments.MyOrder_Fragment.OrderDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false" />
         <activity
             android:name=".Admin.AdminActivity"
             android:exported="true">
@@ -38,7 +48,7 @@
             android:name=".AboutUsActivity"
             android:exported="false" />
         <activity
-            android:name=".User.Fragments.Class.XemDonHang"
+            android:name=".User.Fragments.XemDonHang"
             android:exported="false" />
         <activity
             android:name=".TimKiem"
@@ -64,11 +74,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".NotificationActivity"
-            android:label="Notifications" />
-        <!-- <activity -->
+            android:label="Notifications" /> <!-- <activity -->
         <!-- android:name=".Class.MyApplication" -->
         <!-- android:exported="false" /> -->
         <meta-data

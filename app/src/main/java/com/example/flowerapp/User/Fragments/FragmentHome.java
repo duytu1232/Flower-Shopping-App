@@ -18,11 +18,17 @@ import com.bumptech.glide.Glide;
 import com.example.flowerapp.Adapters.ProductAdapter;
 import com.example.flowerapp.Models.Product;
 import com.example.flowerapp.R;
+import com.example.flowerapp.Security.Helper.DatabaseHelper;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+
 public class FragmentHome extends Fragment {
+
+    private static final String TAG = "FragmentHome";
 
     private ViewFlipper viewFlipper;
     private RecyclerView recyclerNewProducts, recyclerSaleProducts;
@@ -53,27 +59,62 @@ public class FragmentHome extends Fragment {
         viewFlipper = view.findViewById(R.id.viewFlipper);
         setupViewFlipper();
 
-        // Khởi tạo RecyclerView cho sản phẩm mới và sản phẩm sale
+        // Khởi tạo RecyclerView
         recyclerNewProducts = view.findViewById(R.id.listnewProduct);
         recyclerSaleProducts = view.findViewById(R.id.listsaleProduct);
 
-        // Cấu hình RecyclerView cho danh sách ngang
         LinearLayoutManager newLayoutManager = new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false);
         LinearLayoutManager saleLayoutManager = new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false);
 
         recyclerNewProducts.setLayoutManager(newLayoutManager);
         recyclerSaleProducts.setLayoutManager(saleLayoutManager);
 
-        // Thêm dữ liệu mẫu cứng (hardcoded)
-        List<Product> newProducts = new ArrayList<>();
-        newProducts.add(new Product("Rose", "$10.00", R.drawable.rose));
-        newProducts.add(new Product("Lily", "$15.00", R.drawable.lily));
-        newProducts.add(new Product("Tulip", "$12.00", R.drawable.tulip));
+        // Lấy dữ liệu từ cơ sở dữ liệu
+        DatabaseHelper dbHelper = new DatabaseHelper(requireContext());
+        SQLiteDatabase db = dbHelper.openDatabase();
 
+        List<Product> allProducts = new ArrayList<>();
+        Cursor cursor = db.rawQuery("SELECT * FROM Products", null);
+        if (cursor != null) {
+            int idIndex = cursor.getColumnIndex("product_id");
+            int nameIndex = cursor.getColumnIndex("name");
+            int descriptionIndex = cursor.getColumnIndex("description");
+            int priceIndex = cursor.getColumnIndex("price");
+            int stockIndex = cursor.getColumnIndex("stock");
+            int imageUrlIndex = cursor.getColumnIndex("image_url");
+            int categoryIndex = cursor.getColumnIndex("category");
+
+            if (idIndex == -1 || nameIndex == -1 || descriptionIndex == -1 || priceIndex == -1 ||
+                    stockIndex == -1 || imageUrlIndex == -1 || categoryIndex == -1) {
+                Log.e(TAG, "Một hoặc nhiều cột không tồn tại trong bảng Products!");
+            } else {
+                while (cursor.moveToNext()) {
+                    int id = cursor.getInt(idIndex);
+                    String name = cursor.getString(nameIndex);
+                    String description = cursor.getString(descriptionIndex);
+                    double price = cursor.getDouble(priceIndex);
+                    int stock = cursor.getInt(stockIndex);
+                    String imageUrl = cursor.getString(imageUrlIndex);
+                    String category = cursor.getString(categoryIndex);
+                    allProducts.add(new Product(id, name, description, price, stock, imageUrl, category));
+                }
+            }
+            cursor.close();
+        } else {
+            Log.e(TAG, "Cursor is null! Kiểm tra truy vấn SQL.");
+        }
+        dbHelper.closeDatabase(db);
+
+        // Phân loại sản phẩm (giả lập: sản phẩm mới và sản phẩm sale)
+        List<Product> newProducts = new ArrayList<>();
         List<Product> saleProducts = new ArrayList<>();
-        saleProducts.add(new Product("Orchid (Sale)", "$8.00", R.drawable.orchid));
-        saleProducts.add(new Product("Sunflower (Sale)", "$9.00", R.drawable.sunflower));
-        saleProducts.add(new Product("Daisy (Sale)", "$7.00", R.drawable.daisy));
+        for (Product product : allProducts) {
+            if (product.getPrice() < 70) {
+                saleProducts.add(product);
+            } else {
+                newProducts.add(product);
+            }
+        }
 
         // Khởi tạo và gán adapter
         ProductAdapter newProductAdapter = new ProductAdapter(newProducts, requireContext());
@@ -85,9 +126,8 @@ public class FragmentHome extends Fragment {
         return view;
     }
 
-    // Cấu hình ViewFlipper
     private void setupViewFlipper() {
-        if (getContext() == null) return; // Tránh lỗi nếu context null
+        if (getContext() == null) return;
 
         List<String> mangqc = new ArrayList<>();
         mangqc.add("https://dichvutanghoa.com/wp-content/uploads/2019/12/hoa-mau-tim-4.jpg");
@@ -102,7 +142,6 @@ public class FragmentHome extends Fragment {
             Log.d("ViewFlipper", "Đã thêm ảnh: " + url);
         }
 
-        // Chỉ chạy animation nếu getContext() không null
         if (getContext() != null) {
             Animation slide_in = AnimationUtils.loadAnimation(getContext(), R.anim.slide_in_right);
             Animation slide_out = AnimationUtils.loadAnimation(getContext(), R.anim.slide_out_left);
@@ -110,7 +149,6 @@ public class FragmentHome extends Fragment {
             viewFlipper.setOutAnimation(slide_out);
         }
 
-        // Cấu hình hiển thị
         viewFlipper.setFlipInterval(3000);
         viewFlipper.setAutoStart(true);
     }

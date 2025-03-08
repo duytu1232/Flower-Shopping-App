@@ -5,12 +5,12 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
-import com.example.flowerapp.User.Fragments.ChoThanhToanFragment;
-import com.example.flowerapp.User.Fragments.ChoVanChuyenFragment;
-import com.example.flowerapp.User.Fragments.ChoGiaoHangFragment;
-import com.example.flowerapp.User.Fragments.ChuaDanhGiaFragment;
-import com.example.flowerapp.User.Fragments.TraHangFragment;
-import com.example.flowerapp.User.Fragments.HuyDonFragment;
+import com.example.flowerapp.User.Fragments.MyOrder_Fragment.ChoThanhToanFragment;
+import com.example.flowerapp.User.Fragments.MyOrder_Fragment.ChoVanChuyenFragment;
+import com.example.flowerapp.User.Fragments.MyOrder_Fragment.ChoGiaoHangFragment;
+import com.example.flowerapp.User.Fragments.MyOrder_Fragment.ChuaDanhGiaFragment;
+import com.example.flowerapp.User.Fragments.MyOrder_Fragment.TraHangFragment;
+import com.example.flowerapp.User.Fragments.MyOrder_Fragment.HuyDonFragment;
 
 public class OrderPagerAdapter extends FragmentStateAdapter {
 

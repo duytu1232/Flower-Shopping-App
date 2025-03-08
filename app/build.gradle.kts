@@ -10,7 +10,6 @@ android {
     defaultConfig {
         applicationId = "com.example.flowerapp"
         minSdk = 26
-        //noinspection EditedTargetSdkVersion
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -36,20 +35,19 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.glide)
+    annotationProcessor(libs.glide.compiler)  // Đảm bảo Glide annotation processor
     implementation(libs.legacy.support.v4)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
     implementation(libs.mediarouter)
     implementation(libs.viewpager2)
     implementation(libs.recyclerview)
-    implementation(libs.cardview)  // Thêm CardView
-    // Thêm Firebase dependencies
+    implementation(libs.cardview)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(platform(libs.firebase.bom))
-//    implementation(libs.firebase.analytics)
+    // implementation(libs.firebase.analytics)  // Uncomment nếu cần Firebase Analytics
 
-    annotationProcessor(libs.glide.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

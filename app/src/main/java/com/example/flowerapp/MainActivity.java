@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initViews() {
         headerLayout = findViewById(R.id.header_layout);
-        khoangTrongMenu = findViewById(R.id.khoang_trong_menu);
+        khoangTrongMenu = findViewById(R.id.status_bar_spacer);
         bottomNav = findViewById(R.id.bottomNavMain); // Khởi tạo bottomNav
         searchEditText = findViewById(R.id.EditText_Searching_Bar);
         filterIcon = findViewById(R.id.filter_icon);

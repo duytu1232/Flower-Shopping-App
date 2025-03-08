@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="#BFD8AF"
     android:orientation="vertical"
-    tools:context=".User.Fragments.Class.XemDonHang">
+    tools:context=".User.Fragments.XemDonHang">
 
     <!-- Thanh tiêu đề -->
     <RelativeLayout

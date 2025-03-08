@@ -1,25 +1,39 @@
 package com.example.flowerapp.Models;
 
 public class Product {
-    private String name;
-    private String price;
-    private int imageResId;
+    private int id;           // product_id
+    private String name;      // name
+    private String description; // description
+    private double price;     // price
+    private int stock;        // stock
+    private String imageUrl;  // image_url
+    private String category;  // category
 
-    public Product(String name, String price, int imageResId) {
+    // Constructor
+    public Product(int id, String name, String description, double price, int stock, String imageUrl, String category) {
+        this.id = id;
         this.name = name;
+        this.description = description;
         this.price = price;
-        this.imageResId = imageResId;
+        this.stock = stock;
+        this.imageUrl = imageUrl;
+        this.category = category;
     }
 
-    public String getName() {
-        return name;
-    }
+    // Getters and setters
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public String getDescription() { return description; }
+    public double getPrice() { return price; }
+    public int getStock() { return stock; }
+    public String getImageUrl() { return imageUrl; }
+    public String getCategory() { return category; }
 
-    public String getPrice() {
-        return price;
-    }
-
-    public int getImageResId() {
-        return imageResId;
-    }
+    public void setId(int id) { this.id = id; }
+    public void setName(String name) { this.name = name; }
+    public void setDescription(String description) { this.description = description; }
+    public void setPrice(double price) { this.price = price; }
+    public void setStock(int stock) { this.stock = stock; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    public void setCategory(String category) { this.category = category; }
 }

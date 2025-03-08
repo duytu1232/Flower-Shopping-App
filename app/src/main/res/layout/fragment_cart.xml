@@ -8,7 +8,7 @@
     tools:context=".User.Fragments.FragmentCart">
 
     <LinearLayout
-        android:id="@+id/khoang_trong_menu"
+        android:id="@+id/status_bar_spacer"
         android:layout_width="match_parent"
         android:layout_height="35dp"
         android:orientation="vertical"></LinearLayout>

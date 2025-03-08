@@ -1,4 +1,4 @@
-package com.example.flowerapp.User.Fragments.Class;
+package com.example.flowerapp.User.Fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,11 +12,11 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.flowerapp.MainActivity;
 import com.example.flowerapp.R;
-
-import androidx.viewpager2.widget.ViewPager2;
 import com.example.flowerapp.Adapters.OrderPagerAdapter;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+
+import androidx.viewpager2.widget.ViewPager2;
 
 public class XemDonHang extends AppCompatActivity {
     private TabLayout tabLayout;
@@ -39,10 +39,10 @@ public class XemDonHang extends AppCompatActivity {
         ImageView backBtn = findViewById(R.id.back_account_page_btn);
         backBtn.setOnClickListener(v -> {
             Intent intent = new Intent(XemDonHang.this, MainActivity.class);
-            intent.putExtra("openFragment", "account"); // Gửi dữ liệu để mở đúng fragment
+            intent.putExtra("openFragment", "account");
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             startActivity(intent);
-            finish(); // Đóng trang hiện tại
+            finish();
         });
 
         // Khởi tạo ViewPager và TabLayout
@@ -57,28 +57,28 @@ public class XemDonHang extends AppCompatActivity {
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
             switch (position) {
                 case 0:
-                    tab.setText("Chờ thanh toán");
-                    tab.view.setContentDescription("Tab chờ thanh toán");
+                    tab.setText(getString(R.string.tab_pending_payment));
+                    tab.view.setContentDescription("Pending Payment Tab");
                     break;
                 case 1:
-                    tab.setText("Chờ vận chuyển");
-                    tab.view.setContentDescription("Tab chờ vận chuyển");
+                    tab.setText(getString(R.string.tab_shipping));
+                    tab.view.setContentDescription("Shipping Tab");
                     break;
                 case 2:
-                    tab.setText("Chờ giao hàng");
-                    tab.view.setContentDescription("Tab chờ giao hàng");
+                    tab.setText(getString(R.string.tab_delivered));
+                    tab.view.setContentDescription("Delivered Tab");
                     break;
                 case 3:
-                    tab.setText("Chưa đánh giá");
-                    tab.view.setContentDescription("Tab chưa đánh giá");
+                    tab.setText(getString(R.string.tab_not_reviewed));
+                    tab.view.setContentDescription("Not Reviewed Tab");
                     break;
                 case 4:
-                    tab.setText("Trả hàng/Hoàn tiền");
-                    tab.view.setContentDescription("Tab trả hàng hoặc hoàn tiền");
+                    tab.setText(getString(R.string.tab_returned));
+                    tab.view.setContentDescription("Returned Tab");
                     break;
                 case 5:
-                    tab.setText("Hủy đơn");
-                    tab.view.setContentDescription("Tab hủy đơn");
+                    tab.setText(getString(R.string.tab_canceled));
+                    tab.view.setContentDescription("Canceled Tab");
                     break;
             }
         }).attach();

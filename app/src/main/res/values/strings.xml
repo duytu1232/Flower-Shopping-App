@@ -7,4 +7,11 @@
     <string name="new_message">You have a new message from John Doe.</string>
     <string name="notifications_title">Notifications</string>
     <string name="notification">Notification</string>
+    <string name="no_orders">You have no orders yet</string>
+    <string name="tab_pending_payment">Pending Payment</string>
+    <string name="tab_shipping">Shipping</string>
+    <string name="tab_delivered">Delivered</string>
+    <string name="tab_not_reviewed">Not Reviewed</string>
+    <string name="tab_returned">Returned</string>
+    <string name="tab_canceled">Canceled</string>
 </resources>

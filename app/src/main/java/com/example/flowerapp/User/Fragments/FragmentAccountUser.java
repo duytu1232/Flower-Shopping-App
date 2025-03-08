@@ -16,9 +16,9 @@ import androidx.activity.result.contract.ActivityResultContracts.GetContent;
 import androidx.fragment.app.Fragment;
 
 import com.example.flowerapp.AboutUsActivity;
-import com.example.flowerapp.User.Fragments.Class.XemDonHang;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.DangNhap;
+import com.example.flowerapp.SettingsActivity;
 
 public class FragmentAccountUser extends Fragment {
 
@@ -81,6 +81,11 @@ public class FragmentAccountUser extends Fragment {
             startActivity(intent);
         });
 
+        Button settingsBtn = view.findViewById(R.id.settings_btn);
+        settingsBtn.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), SettingsActivity.class);
+            startActivity(intent);
+        });
         return view;
     }
 }
