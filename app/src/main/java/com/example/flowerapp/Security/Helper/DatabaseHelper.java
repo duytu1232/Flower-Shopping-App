@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -13,7 +14,7 @@ import java.io.OutputStream;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "FlowerApp.db";
-    private static final int DATABASE_VERSION = 2; // Tăng version để áp dụng nâng cấp
+    private static final int DATABASE_VERSION = 2;
     private static final String TAG = "DatabaseHelper";
     private final Context context;
 
@@ -25,8 +26,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // Tạo các bảng nếu cơ sở dữ liệu chưa có sẵn
-        createTables(db);
+        // Không tạo bảng, vì cơ sở dữ liệu đã được sao chép từ assets
+        Log.d(TAG, "Cơ sở dữ liệu đã được sao chép từ assets, không tạo bảng mới.");
     }
 
     @Override
@@ -34,49 +35,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Log.d(TAG, "Nâng cấp cơ sở dữ liệu từ phiên bản " + oldVersion + " lên " + newVersion);
         try {
             if (oldVersion < 2) {
-                // Thêm bảng products và các bảng khác nếu chưa có
-                createTables(db);
+                // Thêm cột product_name vào Orders mà không xóa dữ liệu
+                db.execSQL("ALTER TABLE Orders ADD COLUMN product_name TEXT DEFAULT NULL");
+                Log.d(TAG, "Đã thêm cột product_name vào bảng Orders.");
             }
-            // Tăng dần version và thêm logic tương ứng
         } catch (Exception e) {
             Log.e(TAG, "Lỗi khi nâng cấp cơ sở dữ liệu: " + e.getMessage());
+            Toast.makeText(context, "Lỗi nâng cấp cơ sở dữ liệu", Toast.LENGTH_SHORT).show();
             throw new RuntimeException("Không thể nâng cấp cơ sở dữ liệu: " + e.getMessage());
         }
-    }
-
-    private void createTables(SQLiteDatabase db) {
-        // Tạo bảng Users (giả định đã có trong FlowerApp.db, không tạo lại)
-        // Tạo bảng Products
-        db.execSQL("CREATE TABLE IF NOT EXISTS products (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "name TEXT, " +
-                "price REAL, " +
-                "quantity INTEGER)");
-
-        // Tạo bảng Orders (nếu cần)
-        db.execSQL("CREATE TABLE IF NOT EXISTS orders (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "user_id INTEGER, " +
-                "product_id INTEGER, " +
-                "quantity INTEGER, " +
-                "total REAL, " +
-                "status TEXT, " +
-                "order_date TEXT, " +
-                "FOREIGN KEY (user_id) REFERENCES Users(id), " +
-                "FOREIGN KEY (product_id) REFERENCES products(id))");
-
-        // Tạo bảng Coupons (nếu cần)
-        db.execSQL("CREATE TABLE IF NOT EXISTS coupons (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "code TEXT, " +
-                "discount REAL, " +
-                "expiry_date TEXT)");
-
-        // Tạo bảng Favorites (nếu cần)
-        db.execSQL("CREATE TABLE IF NOT EXISTS favorites (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "product_id INTEGER, " +
-                "FOREIGN KEY (product_id) REFERENCES products(id))");
     }
 
     public SQLiteDatabase openDatabase() {
@@ -86,12 +53,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         try {
             SQLiteDatabase db = SQLiteDatabase.openDatabase(dbFile.getPath(), null, SQLiteDatabase.OPEN_READWRITE);
-            // Kiểm tra xem bảng Users có tồn tại không
-            db.rawQuery("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='Users'", null);
+            db.rawQuery("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='Users'", null).close();
             Log.d(TAG, "Mở cơ sở dữ liệu thành công: " + dbFile.getPath());
             return db;
         } catch (Exception e) {
             Log.e(TAG, "Lỗi mở cơ sở dữ liệu: " + e.getMessage());
+            Toast.makeText(context, "Không thể mở cơ sở dữ liệu", Toast.LENGTH_SHORT).show();
             throw new RuntimeException("Không thể mở cơ sở dữ liệu: " + e.getMessage());
         }
     }
@@ -108,7 +75,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (!dbFile.exists()) {
             try {
                 InputStream inputStream = context.getAssets().open(DATABASE_NAME);
-                // Kiểm tra kích thước file để đảm bảo không rỗng
                 if (inputStream.available() == 0) {
                     throw new IOException("Cơ sở dữ liệu trong assets trống!");
                 }
@@ -130,6 +96,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 Log.d(TAG, "Sao chép cơ sở dữ liệu từ assets thành công");
             } catch (IOException e) {
                 Log.e(TAG, "Lỗi sao chép cơ sở dữ liệu: " + e.getMessage());
+                Toast.makeText(context, "Lỗi sao chép cơ sở dữ liệu", Toast.LENGTH_SHORT).show();
                 throw new RuntimeException("Không thể sao chép cơ sở dữ liệu từ assets: " + e.getMessage());
             }
         } else {

@@ -63,7 +63,12 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity> <!-- <activity -->
+        </activity>
+
+        <activity
+            android:name=".NotificationActivity"
+            android:label="Notifications" />
+        <!-- <activity -->
         <!-- android:name=".Class.MyApplication" -->
         <!-- android:exported="false" /> -->
         <meta-data
