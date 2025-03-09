@@ -18,7 +18,6 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.example.flowerapp.User.Fragments.FragmentAccountUser;
 import com.example.flowerapp.User.Fragments.FragmentCart;
-import com.example.flowerapp.User.Fragments.FragmentFavorite;
 import com.example.flowerapp.User.Fragments.FragmentHome;
 import com.example.flowerapp.User.Fragments.FragmentShop;
 import com.example.flowerapp.Security.DangNhap;
@@ -102,7 +101,6 @@ public class MainActivity extends AppCompatActivity {
 
         fragmentMap.put(R.id.bottomItemHome, new FragmentHome());
         fragmentMap.put(R.id.bottomItemShop, fragmentShop = new FragmentShop());
-        fragmentMap.put(R.id.bottomItemFavorite, new FragmentFavorite());
         fragmentMap.put(R.id.bottomItemCart, new FragmentCart());
         fragmentMap.put(R.id.bottomItemAccount, new FragmentAccountUser());
     }
@@ -161,7 +159,6 @@ public class MainActivity extends AppCompatActivity {
         transaction.commit();
 
         boolean hideHeader = newFragment instanceof FragmentAccountUser ||
-                newFragment instanceof FragmentFavorite ||
                 newFragment instanceof FragmentCart;
         headerLayout.setVisibility(hideHeader ? View.GONE : View.VISIBLE);
         khoangTrongMenu.setVisibility(hideHeader ? View.GONE : View.VISIBLE);

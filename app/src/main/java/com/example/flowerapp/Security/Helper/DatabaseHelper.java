@@ -14,7 +14,7 @@ import java.io.OutputStream;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "FlowerApp.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3; // Tăng lên 3 để xóa bảng Favorites
     private static final String TAG = "DatabaseHelper";
     private final Context context;
 
@@ -26,7 +26,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // Không tạo bảng, vì cơ sở dữ liệu đã được sao chép từ assets
         Log.d(TAG, "Cơ sở dữ liệu đã được sao chép từ assets, không tạo bảng mới.");
     }
 
@@ -35,9 +34,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Log.d(TAG, "Nâng cấp cơ sở dữ liệu từ phiên bản " + oldVersion + " lên " + newVersion);
         try {
             if (oldVersion < 2) {
-                // Thêm cột product_name vào Orders mà không xóa dữ liệu
                 db.execSQL("ALTER TABLE Orders ADD COLUMN product_name TEXT DEFAULT NULL");
                 Log.d(TAG, "Đã thêm cột product_name vào bảng Orders.");
+            }
+            if (oldVersion < 3) {
+                db.execSQL("DROP TABLE IF EXISTS Favorites");
+                Log.d(TAG, "Đã xóa bảng Favorites.");
             }
         } catch (Exception e) {
             Log.e(TAG, "Lỗi khi nâng cấp cơ sở dữ liệu: " + e.getMessage());

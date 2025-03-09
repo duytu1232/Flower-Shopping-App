@@ -43,17 +43,10 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         if (holder.imageView != null) {
             Glide.with(context)
                     .load(product.getImageUrl())
-                    .placeholder(R.drawable.shop) // Thay placeholder tạm thời
-                    .error(R.drawable.shop)      // Thay error tạm thời
+                    .placeholder(R.drawable.shop)
+                    .error(R.drawable.shop)
                     .into(holder.imageView);
         }
-
-        // Tạm thời bỏ sự kiện click cho đến khi có ProductDetailActivity
-        // holder.itemView.setOnClickListener(v -> {
-        //     Intent intent = new Intent(context, ProductDetailActivity.class);
-        //     intent.putExtra("product_id", product.getId());
-        //     context.startActivity(intent);
-        // });
     }
 
     @Override
