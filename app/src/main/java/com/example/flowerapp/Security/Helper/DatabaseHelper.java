@@ -74,33 +74,40 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         File dbFile = context.getDatabasePath(DATABASE_NAME);
         if (!dbFile.exists()) {
             try {
+                Log.d(TAG, "Bắt đầu sao chép cơ sở dữ liệu từ assets...");
                 InputStream inputStream = context.getAssets().open(DATABASE_NAME);
-                if (inputStream.available() == 0) {
-                    throw new IOException("Cơ sở dữ liệu trong assets trống!");
+                int size = inputStream.available();
+                Log.d(TAG, "Kích thước tệp trong assets: " + size + " bytes");
+                if (size == 0) {
+                    throw new IOException("Tệp cơ sở dữ liệu trong assets trống!");
                 }
+
                 File outDir = dbFile.getParentFile();
                 if (!outDir.exists()) {
-                    outDir.mkdirs();
+                    boolean created = outDir.mkdirs();
+                    Log.d(TAG, "Tạo thư mục " + outDir.getPath() + ": " + (created ? "Thành công" : "Thất bại"));
                 }
-                OutputStream outputStream = new FileOutputStream(dbFile);
 
+                OutputStream outputStream = new FileOutputStream(dbFile);
                 byte[] buffer = new byte[1024];
                 int length;
+                int totalBytes = 0;
                 while ((length = inputStream.read(buffer)) > 0) {
                     outputStream.write(buffer, 0, length);
+                    totalBytes += length;
                 }
 
                 outputStream.flush();
                 outputStream.close();
                 inputStream.close();
-                Log.d(TAG, "Sao chép cơ sở dữ liệu từ assets thành công");
+                Log.d(TAG, "Sao chép thành công, tổng bytes: " + totalBytes);
             } catch (IOException e) {
-                Log.e(TAG, "Lỗi sao chép cơ sở dữ liệu: " + e.getMessage());
-                Toast.makeText(context, "Lỗi sao chép cơ sở dữ liệu", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Lỗi sao chép cơ sở dữ liệu: " + e.getMessage(), e);
+                Toast.makeText(context, "Lỗi sao chép cơ sở dữ liệu: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 throw new RuntimeException("Không thể sao chép cơ sở dữ liệu từ assets: " + e.getMessage());
             }
         } else {
-            Log.d(TAG, "Cơ sở dữ liệu đã tồn tại: " + dbFile.getPath());
+            Log.d(TAG, "Cơ sở dữ liệu đã tồn tại tại: " + dbFile.getPath());
         }
     }
 }
