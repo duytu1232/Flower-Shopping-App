@@ -36,6 +36,20 @@
         android:text="Date: 2025-03-02"
         android:textSize="16sp" />
 
+    <TextView
+        android:id="@+id/order_total"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Total: $0.00"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/order_address"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Address: Not specified"
+        android:textSize="16sp" />
+
     <ImageView
         android:id="@+id/order_image"
         android:layout_width="100dp"

@@ -1,8 +1,8 @@
 package com.example.flowerapp;
 
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,6 +16,10 @@ public class AboutUsActivity extends AppCompatActivity {
 
         // Xử lý nút quay lại
         ImageView backButton = findViewById(R.id.back_button);
-        backButton.setOnClickListener(v -> finish()); // Đóng Activity và quay lại FragmentAccountUser
+        if (backButton != null) {
+            backButton.setOnClickListener(v -> finish());
+        } else {
+            Toast.makeText(this, "Back button not found", Toast.LENGTH_SHORT).show();
+        }
     }
 }

@@ -1,4 +1,4 @@
-package com.example.flowerapp.User.Fragments.Class;
+package com.example.flowerapp.Models;
 
 public class NotificationItem {
     private String title;

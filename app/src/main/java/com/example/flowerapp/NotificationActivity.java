@@ -6,11 +6,12 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import android.widget.TextView;
 import android.util.Log;
 
 import com.example.flowerapp.Adapters.NotificationAdapter;
-import com.example.flowerapp.User.Fragments.Class.NotificationItem;
+import com.example.flowerapp.Models.NotificationItem;
 import com.example.flowerapp.Security.Helper.DatabaseHelper;
 
 import java.util.ArrayList;
@@ -80,5 +81,6 @@ public class NotificationActivity extends AppCompatActivity {
         } else {
             Log.e(TAG, "recyclerViewNotifications is null! Check activity_notification.xml");
         }
+
     }
 }

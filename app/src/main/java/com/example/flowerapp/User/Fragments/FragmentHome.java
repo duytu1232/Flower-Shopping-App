@@ -1,5 +1,7 @@
 package com.example.flowerapp.User.Fragments;
 
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,33 +25,11 @@ import com.example.flowerapp.Security.Helper.DatabaseHelper;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-
 public class FragmentHome extends Fragment {
-
     private static final String TAG = "FragmentHome";
 
     private ViewFlipper viewFlipper;
     private RecyclerView recyclerNewProducts, recyclerSaleProducts;
-
-    private String mParam1;
-    private String mParam2;
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    public FragmentHome() {
-        // Required empty public constructor
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -74,7 +54,7 @@ public class FragmentHome extends Fragment {
         SQLiteDatabase db = dbHelper.openDatabase();
 
         List<Product> allProducts = new ArrayList<>();
-        Cursor cursor = db.rawQuery("SELECT * FROM Products", null);
+        Cursor cursor = db.rawQuery("SELECT * FROM Products LIMIT 10", null); // Giới hạn số lượng
         if (cursor != null) {
             int idIndex = cursor.getColumnIndex("product_id");
             int nameIndex = cursor.getColumnIndex("name");
@@ -100,8 +80,6 @@ public class FragmentHome extends Fragment {
                 }
             }
             cursor.close();
-        } else {
-            Log.e(TAG, "Cursor is null! Kiểm tra truy vấn SQL.");
         }
         dbHelper.closeDatabase(db);
 
@@ -109,7 +87,8 @@ public class FragmentHome extends Fragment {
         List<Product> newProducts = new ArrayList<>();
         List<Product> saleProducts = new ArrayList<>();
         for (Product product : allProducts) {
-            if (product.getPrice() < 70) {
+            // Cần thêm cột 'is_sale' hoặc 'discount' trong bảng Products để phân loại chính xác
+            if (product.getPrice() < 70) { // Giả lập, cần thay bằng logic thực tế
                 saleProducts.add(product);
             } else {
                 newProducts.add(product);
@@ -127,27 +106,23 @@ public class FragmentHome extends Fragment {
     }
 
     private void setupViewFlipper() {
-        if (getContext() == null) return;
-
         List<String> mangqc = new ArrayList<>();
         mangqc.add("https://dichvutanghoa.com/wp-content/uploads/2019/12/hoa-mau-tim-4.jpg");
         mangqc.add("https://cdn.tgdd.vn/Files/2021/07/23/1370357/top-20-loai-hoa-dep-nhat-the-gioi-co-1-loai-moc-day-o-viet-nam-202107231836110639.jpg");
         mangqc.add("https://cdn-media.sforum.vn/storage/app/media/cac-loai-hoa-1.jpg");
 
         for (String url : mangqc) {
-            ImageView imgView = new ImageView(getContext());
+            ImageView imgView = new ImageView(requireContext());
             Glide.with(this).load(url).into(imgView);
             imgView.setScaleType(ImageView.ScaleType.FIT_XY);
             viewFlipper.addView(imgView);
             Log.d("ViewFlipper", "Đã thêm ảnh: " + url);
         }
 
-        if (getContext() != null) {
-            Animation slide_in = AnimationUtils.loadAnimation(getContext(), R.anim.slide_in_right);
-            Animation slide_out = AnimationUtils.loadAnimation(getContext(), R.anim.slide_out_left);
-            viewFlipper.setInAnimation(slide_in);
-            viewFlipper.setOutAnimation(slide_out);
-        }
+        Animation slide_in = AnimationUtils.loadAnimation(requireContext(), R.anim.slide_in_right);
+        Animation slide_out = AnimationUtils.loadAnimation(requireContext(), R.anim.slide_out_left);
+        viewFlipper.setInAnimation(slide_in);
+        viewFlipper.setOutAnimation(slide_out);
 
         viewFlipper.setFlipInterval(3000);
         viewFlipper.setAutoStart(true);

@@ -26,7 +26,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Ngày bắt đầu (YYYY-MM-DD)"
-        android:inputType="text"
+        android:inputType="date"
         android:minHeight="48dp" />
 
     <EditText
@@ -34,7 +34,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Ngày kết thúc (YYYY-MM-DD)"
-        android:inputType="text"
+        android:inputType="date"
         android:minHeight="48dp" />
 
     <EditText

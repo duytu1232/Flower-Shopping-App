@@ -41,9 +41,9 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
         Order order = orderList.get(position);
         holder.orderTitle.setText(order.getTitle() != null ? order.getTitle() : "No Title");
         holder.orderStatus.setText(order.getStatus() != null ? order.getStatus() : "Unknown");
-        holder.orderDate.setText(order.getDate() != null ? order.getDate() : "N/A");
+        holder.orderDate.setText(order.getOrderDate() != null ? order.getOrderDate() : "N/A"); // Sửa getDate() thành getOrderDate()
         Glide.with(context)
-                .load(order.getImageUrl())  // Thêm getter getImageUrl() vào Order
+                .load(order.getImageUrl())
                 .placeholder(R.drawable.shop)
                 .error(R.drawable.shop)
                 .into(holder.orderImage);

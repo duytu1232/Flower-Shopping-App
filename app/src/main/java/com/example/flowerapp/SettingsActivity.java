@@ -8,9 +8,6 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 public class SettingsActivity extends AppCompatActivity {
     @Override
@@ -21,20 +18,24 @@ public class SettingsActivity extends AppCompatActivity {
         Switch notificationsSwitch = findViewById(R.id.notifications_switch);
         Button changePasswordBtn = findViewById(R.id.change_password_btn);
 
-        // Lưu trạng thái thông báo
-        SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
-        boolean notificationsEnabled = sharedPreferences.getBoolean("notifications_enabled", true);
-        notificationsSwitch.setChecked(notificationsEnabled);
+        if (notificationsSwitch != null && changePasswordBtn != null) {
+            // Lưu trạng thái thông báo
+            SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+            boolean notificationsEnabled = sharedPreferences.getBoolean("notifications_enabled", true);
+            notificationsSwitch.setChecked(notificationsEnabled);
 
-        notificationsSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putBoolean("notifications_enabled", isChecked);
-            editor.apply();
-        });
+            notificationsSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putBoolean("notifications_enabled", isChecked);
+                editor.apply();
+            });
 
-        changePasswordBtn.setOnClickListener(v -> {
-            // Chuyển đến activity đổi mật khẩu (tạo sau nếu cần)
-            Toast.makeText(this, "Change Password clicked", Toast.LENGTH_SHORT).show();
-        });
+            changePasswordBtn.setOnClickListener(v -> {
+                // Chuyển đến activity đổi mật khẩu (tạo sau nếu cần)
+                Toast.makeText(this, "Change Password clicked", Toast.LENGTH_SHORT).show();
+            });
+        } else {
+            Toast.makeText(this, "Settings components not found", Toast.LENGTH_SHORT).show();
+        }
     }
 }

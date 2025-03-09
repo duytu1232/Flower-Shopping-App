@@ -13,7 +13,6 @@ import com.example.flowerapp.User.Fragments.MyOrder_Fragment.TraHangFragment;
 import com.example.flowerapp.User.Fragments.MyOrder_Fragment.HuyDonFragment;
 
 public class OrderPagerAdapter extends FragmentStateAdapter {
-
     public OrderPagerAdapter(@NonNull FragmentActivity fragmentActivity) {
         super(fragmentActivity);
     }
@@ -23,17 +22,17 @@ public class OrderPagerAdapter extends FragmentStateAdapter {
     public Fragment createFragment(int position) {
         switch (position) {
             case 0:
-                return new ChoThanhToanFragment();
+                return new ChoThanhToanFragment(); // Pending Payment
             case 1:
-                return new ChoVanChuyenFragment();
+                return new ChoVanChuyenFragment(); // Shipping
             case 2:
-                return new ChoGiaoHangFragment();
+                return new ChoGiaoHangFragment(); // Delivered
             case 3:
-                return new TraHangFragment();
+                return new ChuaDanhGiaFragment(); // Not Reviewed
             case 4:
-                return new HuyDonFragment();
+                return new TraHangFragment(); // Returned
             case 5:
-                return new ChuaDanhGiaFragment();
+                return new HuyDonFragment(); // Canceled
             default:
                 return new ChoThanhToanFragment();
         }

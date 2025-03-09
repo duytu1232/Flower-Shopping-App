@@ -6,12 +6,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.flowerapp.Models.Product;
 import com.example.flowerapp.R;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHolder> {
@@ -19,7 +21,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
     private Context context;
 
     public ProductAdapter(List<Product> productList, Context context) {
-        this.productList = productList;
+        this.productList = productList != null ? productList : new ArrayList<>();
         this.context = context;
     }
 
@@ -32,9 +34,26 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
     @Override
     public void onBindViewHolder(ProductViewHolder holder, int position) {
         Product product = productList.get(position);
-        holder.nameTextView.setText(product.getName());
-        holder.priceTextView.setText(String.format("$%.2f", product.getPrice()));
-        Glide.with(context).load(product.getImageUrl()).into(holder.imageView);
+        if (holder.nameTextView != null) {
+            holder.nameTextView.setText(product.getName() != null ? product.getName() : "No Name");
+        }
+        if (holder.priceTextView != null) {
+            holder.priceTextView.setText(String.format("$%.2f", product.getPrice()));
+        }
+        if (holder.imageView != null) {
+            Glide.with(context)
+                    .load(product.getImageUrl())
+                    .placeholder(R.drawable.shop) // Thay placeholder tạm thời
+                    .error(R.drawable.shop)      // Thay error tạm thời
+                    .into(holder.imageView);
+        }
+
+        // Tạm thời bỏ sự kiện click cho đến khi có ProductDetailActivity
+        // holder.itemView.setOnClickListener(v -> {
+        //     Intent intent = new Intent(context, ProductDetailActivity.class);
+        //     intent.putExtra("product_id", product.getId());
+        //     context.startActivity(intent);
+        // });
     }
 
     @Override

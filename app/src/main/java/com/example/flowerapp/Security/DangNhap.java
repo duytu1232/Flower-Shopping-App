@@ -1,6 +1,7 @@
 package com.example.flowerapp.Security;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -66,15 +67,19 @@ public class DangNhap extends AppCompatActivity {
 
             try {
                 if (cursor.moveToFirst()) {
+                    int userIdIndex = cursor.getColumnIndex("user_id");
+                    int usernameIndex = cursor.getColumnIndex("username");
                     int roleIndex = cursor.getColumnIndex("role");
                     int statusIndex = cursor.getColumnIndex("status");
 
-                    if (roleIndex == -1 || statusIndex == -1) {
-                        Log.e(TAG, "Cột 'role' hoặc 'status' không tồn tại trong kết quả!");
+                    if (userIdIndex == -1 || usernameIndex == -1 || roleIndex == -1 || statusIndex == -1) {
+                        Log.e(TAG, "Cột 'user_id', 'username', 'role' hoặc 'status' không tồn tại trong kết quả!");
                         Toast.makeText(this, "Lỗi cơ sở dữ liệu: Thiếu cột cần thiết!", Toast.LENGTH_SHORT).show();
                         return;
                     }
 
+                    int userId = cursor.getInt(userIdIndex);
+                    String username = cursor.getString(usernameIndex);
                     String role = cursor.getString(roleIndex);
                     String status = cursor.getString(statusIndex);
 
@@ -85,8 +90,15 @@ public class DangNhap extends AppCompatActivity {
                         return;
                     }
 
+                    // Lưu thông tin người dùng vào SharedPreferences
+                    SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putInt("user_id", userId);
+                    editor.putString("username", username);
+                    editor.apply();
+
                     // Ngoại lệ đặc biệt cho tài khoản admin: luôn cho phép đăng nhập vào AdminActivity
-                    if ("admin".equals(role.toLowerCase()) || email.equals("admin123")) { // Kiểm tra email cố định cho admin
+                    if ("admin".equals(role.toLowerCase()) || email.equals("admin123")) {
                         Toast.makeText(this, "Đăng nhập thành công với vai trò Admin!", Toast.LENGTH_SHORT).show();
                         startActivity(new Intent(this, AdminActivity.class));
                         finish();
@@ -95,7 +107,9 @@ public class DangNhap extends AppCompatActivity {
 
                     // Cho các vai trò khác (customer, staff) chuyển đến MainActivity
                     Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(this, MainActivity.class));
+                    Intent intent = new Intent(this, MainActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
                     finish();
                 } else {
                     Log.d(TAG, "Không tìm thấy người dùng với email: " + email + ", password: " + password);
@@ -117,9 +131,4 @@ public class DangNhap extends AppCompatActivity {
             }
         }
     }
-
-    // Loại bỏ hàm hashPassword vì không cần mã hóa (giữ plaintext)
-    /* private String hashPassword(String password) {
-        return password; // Không cần hàm này nữa
-    } */
 }

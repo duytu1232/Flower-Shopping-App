@@ -5,17 +5,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import androidx.recyclerview.widget.RecyclerView;
-import java.util.List;
 
 import com.example.flowerapp.R;
-import com.example.flowerapp.User.Fragments.Class.NotificationItem;
+import com.example.flowerapp.Models.NotificationItem;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {
-    private List<com.example.flowerapp.User.Fragments.Class.NotificationItem> notifications; // Cập nhật kiểu
+    private List<NotificationItem> notifications;
 
-    public NotificationAdapter(List<com.example.flowerapp.User.Fragments.Class.NotificationItem> notifications) {
-        this.notifications = notifications;
+    public NotificationAdapter(List<NotificationItem> notifications) {
+        this.notifications = notifications != null ? notifications : new ArrayList<>();
     }
 
     @Override
@@ -27,10 +30,16 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        com.example.flowerapp.User.Fragments.Class.NotificationItem notification = notifications.get(position);
-        holder.tvTitle.setText(notification.getTitle());
-        holder.tvMessage.setText(notification.getMessage());
-        holder.tvTimestamp.setText(notification.getTimestamp());
+        NotificationItem notification = notifications.get(position);
+        if (holder.tvTitle != null) {
+            holder.tvTitle.setText(notification.getTitle() != null ? notification.getTitle() : "No Title");
+        }
+        if (holder.tvMessage != null) {
+            holder.tvMessage.setText(notification.getMessage() != null ? notification.getMessage() : "No Message");
+        }
+        if (holder.tvTimestamp != null) {
+            holder.tvTimestamp.setText(notification.getTimestamp() != null ? notification.getTimestamp() : "No Time");
+        }
     }
 
     @Override

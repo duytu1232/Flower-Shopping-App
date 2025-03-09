@@ -32,7 +32,6 @@ import java.util.HashSet;
 import java.util.List;
 
 public class TimKiem extends AppCompatActivity {
-
     private EditText searchEditText;
     private ImageView backButton, searchIcon, filterIcon;
     private RecyclerView searchHistoryRecyclerView;
@@ -60,8 +59,14 @@ public class TimKiem extends AppCompatActivity {
         searchHistoryRecyclerView = findViewById(R.id.search_history);
         sharedPreferences = getSharedPreferences("SearchPrefs", MODE_PRIVATE);
 
+        if (searchEditText == null || backButton == null || searchIcon == null || filterIcon == null || searchHistoryRecyclerView == null) {
+            Toast.makeText(this, "Error: Missing UI components", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
         searchHistoryList = new ArrayList<>(sharedPreferences.getStringSet("history", new HashSet<>()));
-        historyAdapter = new SearchHistoryAdapter(searchHistoryList, this::searchFromHistory);
+        historyAdapter = new SearchHistoryAdapter(searchHistoryList, this::searchFromHistory, this::deleteHistoryItem);
         searchHistoryRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         searchHistoryRecyclerView.setAdapter(historyAdapter);
     }
@@ -75,7 +80,7 @@ public class TimKiem extends AppCompatActivity {
     }
 
     private void setupSearchHistory() {
-        // Không cần thêm gì vì đã xử lý trong initViews()
+        // Đã xử lý trong initViews
     }
 
     private void setupListeners() {
@@ -94,7 +99,7 @@ public class TimKiem extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                // Có thể thêm gợi ý tìm kiếm ở đây nếu cần
+                // Có thể thêm gợi ý tìm kiếm real-time nếu cần
             }
         });
 
@@ -105,15 +110,23 @@ public class TimKiem extends AppCompatActivity {
         String query = searchEditText.getText().toString().trim();
         if (!query.isEmpty()) {
             saveSearchHistory(query);
-            Toast.makeText(this, "Searching: " + query, Toast.LENGTH_SHORT).show();
-            // Thêm logic tìm kiếm sản phẩm thực tế ở đây (ví dụ: gọi API hoặc lọc danh sách)
+            // Chuyển từ khóa tìm kiếm sang MainActivity để hiển thị trong FragmentShop
+            Intent intent = new Intent(TimKiem.this, MainActivity.class);
+            intent.putExtra("openFragment", "shop");
+            intent.putExtra("search_query", query);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
+        } else {
+            Toast.makeText(this, "Please enter a search query", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void saveSearchHistory(String query) {
+        searchHistoryList.remove(query); // Xóa nếu đã tồn tại để tránh trùng lặp
         searchHistoryList.add(0, query); // Thêm vào đầu danh sách
         if (searchHistoryList.size() > 10) searchHistoryList.remove(searchHistoryList.size() - 1); // Giới hạn 10 mục
-        historyAdapter.notifyDataSetChanged(); // Sử dụng lại notifyDataSetChanged cho đơn giản
+        historyAdapter.notifyDataSetChanged();
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putStringSet("history", new HashSet<>(searchHistoryList));
         editor.apply();
@@ -121,7 +134,7 @@ public class TimKiem extends AppCompatActivity {
 
     private void clearSearchHistory() {
         searchHistoryList.clear();
-        historyAdapter.notifyDataSetChanged(); // Sử dụng lại notifyDataSetChanged cho đơn giản
+        historyAdapter.notifyDataSetChanged();
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.remove("history").apply();
     }
@@ -129,6 +142,18 @@ public class TimKiem extends AppCompatActivity {
     private void searchFromHistory(String query) {
         searchEditText.setText(query);
         performSearch();
+    }
+
+    private void deleteHistoryItem(String query) {
+        int position = searchHistoryList.indexOf(query);
+        if (position != -1) {
+            searchHistoryList.remove(position);
+            historyAdapter.notifyItemRemoved(position);
+            historyAdapter.notifyItemRangeChanged(position, searchHistoryList.size());
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putStringSet("history", new HashSet<>(searchHistoryList));
+            editor.apply();
+        }
     }
 
     private void showFilterDialog() {
@@ -142,10 +167,18 @@ public class TimKiem extends AppCompatActivity {
 
         if (applyFilterBtn != null) {
             applyFilterBtn.setOnClickListener(v -> {
-                String flowerType = flowerTypeSpinner != null ? (flowerTypeSpinner.getSelectedItem() != null ? flowerTypeSpinner.getSelectedItem().toString() : "Tất cả") : "Tất cả";
+                String flowerType = flowerTypeSpinner != null && flowerTypeSpinner.getSelectedItem() != null ?
+                        flowerTypeSpinner.getSelectedItem().toString() : "Tất cả";
                 List<Float> priceRange = priceRangeSlider != null ? priceRangeSlider.getValues() : new ArrayList<>(List.of(0f, 1000000f));
-                Toast.makeText(this, "Filter: Type=" + flowerType + ", Price=" + priceRange.get(0) + "-" + priceRange.get(1), Toast.LENGTH_SHORT).show();
-                // Áp dụng bộ lọc vào danh sách sản phẩm ở đây
+                // Chuyển bộ lọc sang MainActivity để áp dụng trong FragmentShop
+                Intent intent = new Intent(TimKiem.this, MainActivity.class);
+                intent.putExtra("openFragment", "shop");
+                intent.putExtra("filter_type", flowerType);
+                intent.putExtra("filter_price_min", priceRange.get(0));
+                intent.putExtra("filter_price_max", priceRange.get(1));
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish();
                 dialog.dismiss();
             });
         }
@@ -159,24 +192,29 @@ public class TimKiem extends AppCompatActivity {
         finish();
     }
 
-    // Adapter đơn giản hóa không dùng DiffUtil/ListAdapter
     private static class SearchHistoryAdapter extends RecyclerView.Adapter<SearchHistoryAdapter.ViewHolder> {
         private final List<String> historyList;
         private final OnItemClickListener listener;
+        private final OnDeleteClickListener deleteListener;
 
         interface OnItemClickListener {
             void onItemClick(String query);
         }
 
-        SearchHistoryAdapter(List<String> historyList, OnItemClickListener listener) {
+        interface OnDeleteClickListener {
+            void onDeleteClick(String query);
+        }
+
+        SearchHistoryAdapter(List<String> historyList, OnItemClickListener listener, OnDeleteClickListener deleteListener) {
             this.historyList = historyList;
             this.listener = listener;
+            this.deleteListener = deleteListener;
         }
 
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_search_history, parent, false);
             return new ViewHolder(view);
         }
 
@@ -185,6 +223,7 @@ public class TimKiem extends AppCompatActivity {
             String query = historyList.get(position);
             holder.textView.setText(query);
             holder.itemView.setOnClickListener(v -> listener.onItemClick(query));
+            holder.deleteButton.setOnClickListener(v -> deleteListener.onDeleteClick(query));
         }
 
         @Override
@@ -194,10 +233,12 @@ public class TimKiem extends AppCompatActivity {
 
         static class ViewHolder extends RecyclerView.ViewHolder {
             TextView textView;
+            ImageView deleteButton;
 
             ViewHolder(View itemView) {
                 super(itemView);
-                textView = itemView.findViewById(android.R.id.text1);
+                textView = itemView.findViewById(R.id.search_history_item);
+                deleteButton = itemView.findViewById(R.id.delete_history_item);
             }
         }
     }

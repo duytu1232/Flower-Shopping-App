@@ -2,6 +2,7 @@ package com.example.flowerapp.Admin.Fragments;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -19,8 +20,10 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.flowerapp.Models.Order;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.Helper.DatabaseHelper;
+import com.example.flowerapp.User.Fragments.MyOrder_Fragment.OrderDetailActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +77,8 @@ public class OrderManagementFragment extends Fragment {
                     String status = cursor.getString(statusIndex);
                     double total = cursor.getDouble(totalIndex);
                     String address = cursor.getString(addressIndex);
-                    orderList.add(new Order(id, userId, date, status, total, address));
+                    // Tạo Order với các trường bổ sung (title, imageResId, imageUrl để trống nếu không có)
+                    orderList.add(new Order(id, userId, date, status, total, address, "Order #" + id, 0, null));
                 }
             }
             cursor.close();
@@ -147,23 +151,7 @@ public class OrderManagementFragment extends Fragment {
         }
     }
 
-    // Class Order (model) - Thêm thuộc tính shippingAddress
-    public static class Order {
-        int id, userId;
-        String orderDate, status, shippingAddress;
-        double totalAmount;
-
-        public Order(int id, int userId, String orderDate, String status, double totalAmount, String shippingAddress) {
-            this.id = id;
-            this.userId = userId;
-            this.orderDate = orderDate;
-            this.status = status;
-            this.totalAmount = totalAmount;
-            this.shippingAddress = shippingAddress;
-        }
-    }
-
-    // Adapter (giữ nguyên, không cần thay đổi vì đã dùng Order model mới)
+    // Adapter
     public static class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHolder> {
         private List<Order> orders;
         private Context context;
@@ -185,12 +173,20 @@ public class OrderManagementFragment extends Fragment {
         @Override
         public void onBindViewHolder(@NonNull OrderViewHolder holder, int position) {
             Order order = orders.get(position);
-            holder.orderIdTextView.setText("Order #" + order.id);
-            holder.statusTextView.setText("Status: " + order.status);
-            holder.detailsTextView.setText("User ID: " + order.userId + " | Total: $" + order.totalAmount + " | Date: " + order.orderDate + " | Address: " + order.shippingAddress);
+            holder.orderIdTextView.setText("Order #" + order.getId());
+            holder.statusTextView.setText("Status: " + order.getStatus());
+            holder.detailsTextView.setText("User ID: " + order.getUserId() + " | Total: $" + order.getTotalAmount()
+                    + " | Date: " + order.getOrderDate() + " | Address: " + order.getShippingAddress());
 
             holder.btnEdit.setOnClickListener(v -> fragment.showEditOrderDialog(order));
-            holder.btnDelete.setOnClickListener(v -> fragment.deleteOrder(order.id));
+            holder.btnDelete.setOnClickListener(v -> fragment.deleteOrder(order.getId()));
+
+            // Thêm sự kiện nhấp để mở OrderDetailActivity
+            holder.itemView.setOnClickListener(v -> {
+                Intent intent = new Intent(context, OrderDetailActivity.class);
+                intent.putExtra("order", order);
+                context.startActivity(intent);
+            });
         }
 
         @Override
@@ -224,11 +220,11 @@ public class OrderManagementFragment extends Fragment {
         EditText editTotal = view.findViewById(R.id.edit_order_total);
         EditText editAddress = view.findViewById(R.id.edit_order_address);
 
-        editUserId.setText(String.valueOf(order.userId));
-        editDate.setText(order.orderDate);
-        editStatus.setText(order.status);
-        editTotal.setText(String.valueOf(order.totalAmount));
-        editAddress.setText(order.shippingAddress);
+        editUserId.setText(String.valueOf(order.getUserId()));
+        editDate.setText(order.getOrderDate());
+        editStatus.setText(order.getStatus());
+        editTotal.setText(String.valueOf(order.getTotalAmount()));
+        editAddress.setText(order.getShippingAddress());
 
         builder.setView(view)
                 .setPositiveButton("Cập nhật", (dialog, which) -> {
@@ -243,7 +239,7 @@ public class OrderManagementFragment extends Fragment {
                         return;
                     }
 
-                    updateOrder(order.id, userId, date, status, total, address);
+                    updateOrder(order.getId(), userId, date, status, total, address);
                 })
                 .setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss());
 

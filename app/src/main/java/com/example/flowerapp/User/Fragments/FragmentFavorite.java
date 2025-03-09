@@ -1,5 +1,7 @@
 package com.example.flowerapp.User.Fragments;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -7,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,9 +20,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.flowerapp.Adapters.FavoriteAdapter;
+import com.example.flowerapp.MainActivity;
 import com.example.flowerapp.Models.Product;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.Helper.DatabaseHelper;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +36,7 @@ public class FragmentFavorite extends Fragment {
     private FavoriteAdapter adapter;
     private List<Product> favoriteList;
     private TextView emptyMessage;
+    private Button exploreButton;
 
     @Nullable
     @Override
@@ -39,6 +45,7 @@ public class FragmentFavorite extends Fragment {
 
         recyclerView = view.findViewById(R.id.recycler_favorite_list);
         emptyMessage = view.findViewById(R.id.empty_message);
+        exploreButton = view.findViewById(R.id.explore_button);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         favoriteList = new ArrayList<>();
@@ -53,6 +60,24 @@ public class FragmentFavorite extends Fragment {
         // Cập nhật trạng thái giao diện
         updateEmptyState();
 
+        // Nút "Khám phá thêm"
+        if (exploreButton != null) {
+            exploreButton.setOnClickListener(v -> {
+                FragmentShop fragmentShop = new FragmentShop();
+                requireActivity().getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, fragmentShop)
+                        .addToBackStack(null)
+                        .commit();
+                // Cập nhật BottomNavigationView
+                if (requireActivity() instanceof MainActivity) {
+                    BottomNavigationView bottomNav = requireActivity().findViewById(R.id.bottomNavMain);
+                    if (bottomNav != null) {
+                        bottomNav.setSelectedItemId(R.id.bottomItemShop);
+                    }
+                }
+            });
+        }
+
         return view;
     }
 
@@ -60,9 +85,17 @@ public class FragmentFavorite extends Fragment {
         DatabaseHelper dbHelper = new DatabaseHelper(requireContext());
         SQLiteDatabase db = dbHelper.openDatabase();
 
+        SharedPreferences prefs = requireActivity().getSharedPreferences("MyPrefs", requireActivity().MODE_PRIVATE);
+        int userId = prefs.getInt("user_id", -1);
+        if (userId == -1) {
+            Toast.makeText(requireContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         Cursor cursor = db.rawQuery(
                 "SELECT p.* FROM Products p " +
-                        "INNER JOIN Favorites f ON p.product_id = f.product_id", null);
+                        "INNER JOIN Favorites f ON p.product_id = f.product_id " +
+                        "WHERE f.user_id = ?", new String[]{String.valueOf(userId)});
 
         if (cursor != null) {
             int idIndex = cursor.getColumnIndex("product_id");
@@ -89,26 +122,27 @@ public class FragmentFavorite extends Fragment {
                 }
             }
             cursor.close();
-        } else {
-            Log.e(TAG, "Cursor is null! Kiểm tra truy vấn SQL hoặc bảng Favorites.");
         }
         dbHelper.closeDatabase(db);
     }
 
-    // Phương thức để cập nhật trạng thái khi danh sách trống
-    public void updateEmptyState() { // Đổi từ private thành public
+    public void updateEmptyState() {
         if (favoriteList.isEmpty()) {
             recyclerView.setVisibility(View.GONE);
             if (emptyMessage != null) {
                 emptyMessage.setVisibility(View.VISIBLE);
                 emptyMessage.setText("No favorite products available");
-            } else {
-                Toast.makeText(requireContext(), "No favorite products available", Toast.LENGTH_SHORT).show();
+            }
+            if (exploreButton != null) {
+                exploreButton.setVisibility(View.VISIBLE);
             }
         } else {
             recyclerView.setVisibility(View.VISIBLE);
             if (emptyMessage != null) {
                 emptyMessage.setVisibility(View.GONE);
+            }
+            if (exploreButton != null) {
+                exploreButton.setVisibility(View.GONE);
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.example.flowerapp;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -20,6 +21,7 @@ import com.example.flowerapp.User.Fragments.FragmentCart;
 import com.example.flowerapp.User.Fragments.FragmentFavorite;
 import com.example.flowerapp.User.Fragments.FragmentHome;
 import com.example.flowerapp.User.Fragments.FragmentShop;
+import com.example.flowerapp.Security.DangNhap;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.HashMap;
@@ -29,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private BottomNavigationView bottomNav;
     private EditText searchEditText;
     private ImageView filterIcon;
+    private FragmentShop fragmentShop;
 
     private final HashMap<Integer, Fragment> fragmentMap = new HashMap<>();
 
@@ -38,12 +41,21 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
+        // Kiểm tra trạng thái đăng nhập
+        SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        if (prefs.getInt("user_id", -1) == -1) {
+            Intent intent = new Intent(this, DangNhap.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
         initViews();
         setupBottomNav();
         setupSearch();
         setupFilter();
 
-        // Thêm xử lý notification icon
         ImageView notificationIcon = findViewById(R.id.notificationIcon);
         if (notificationIcon != null) {
             notificationIcon.setOnClickListener(view -> {
@@ -52,12 +64,26 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        // Mở Fragment mặc định
         String openFragment = getIntent().getStringExtra("openFragment");
         if (savedInstanceState == null) {
             if ("account".equals(openFragment)) {
                 if (bottomNav != null) {
                     bottomNav.setSelectedItemId(R.id.bottomItemAccount);
+                }
+            } else if ("shop".equals(openFragment)) {
+                if (bottomNav != null) {
+                    bottomNav.setSelectedItemId(R.id.bottomItemShop);
+                    Bundle args = new Bundle();
+                    String searchQuery = getIntent().getStringExtra("search_query");
+                    String filterType = getIntent().getStringExtra("filter_type");
+                    float filterPriceMin = getIntent().getFloatExtra("filter_price_min", 0f);
+                    float filterPriceMax = getIntent().getFloatExtra("filter_price_max", Float.MAX_VALUE);
+                    if (searchQuery != null) args.putString("search_query", searchQuery);
+                    if (filterType != null) args.putString("filter_type", filterType);
+                    args.putFloat("filter_price_min", filterPriceMin);
+                    args.putFloat("filter_price_max", filterPriceMax);
+                    fragmentShop.setArguments(args);
+                    replaceFragment(fragmentShop);
                 }
             } else {
                 if (bottomNav != null) {
@@ -70,12 +96,12 @@ public class MainActivity extends AppCompatActivity {
     private void initViews() {
         headerLayout = findViewById(R.id.header_layout);
         khoangTrongMenu = findViewById(R.id.status_bar_spacer);
-        bottomNav = findViewById(R.id.bottomNavMain); // Khởi tạo bottomNav
+        bottomNav = findViewById(R.id.bottomNavMain);
         searchEditText = findViewById(R.id.EditText_Searching_Bar);
         filterIcon = findViewById(R.id.filter_icon);
 
         fragmentMap.put(R.id.bottomItemHome, new FragmentHome());
-        fragmentMap.put(R.id.bottomItemShop, new FragmentShop());
+        fragmentMap.put(R.id.bottomItemShop, fragmentShop = new FragmentShop());
         fragmentMap.put(R.id.bottomItemFavorite, new FragmentFavorite());
         fragmentMap.put(R.id.bottomItemCart, new FragmentCart());
         fragmentMap.put(R.id.bottomItemAccount, new FragmentAccountUser());
@@ -91,32 +117,41 @@ public class MainActivity extends AppCompatActivity {
                 }
                 return false;
             });
+        } else {
+            Toast.makeText(this, "Bottom navigation not found", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void setupSearch() {
-        findViewById(R.id.Search_bar_icon).setOnClickListener(v ->
-                startActivity(new Intent(MainActivity.this, TimKiem.class))
-        );
+        ImageView searchIcon = findViewById(R.id.Search_bar_icon);
+        if (searchIcon != null) {
+            searchIcon.setOnClickListener(v -> {
+                Intent intent = new Intent(MainActivity.this, TimKiem.class);
+                startActivity(intent);
+            });
+        }
 
-        searchEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        if (searchEditText != null) {
+            searchEditText.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                Toast.makeText(MainActivity.this, "Searching: " + s, Toast.LENGTH_SHORT).show();
-            }
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {}
 
-            @Override
-            public void afterTextChanged(Editable s) {}
-        });
+                @Override
+                public void afterTextChanged(Editable s) {}
+            });
+        }
     }
 
     private void setupFilter() {
-        filterIcon.setOnClickListener(v ->
-                Toast.makeText(MainActivity.this, "Filter clicked", Toast.LENGTH_SHORT).show()
-        );
+        if (filterIcon != null) {
+            filterIcon.setOnClickListener(v -> {
+                Intent intent = new Intent(MainActivity.this, TimKiem.class);
+                startActivity(intent);
+            });
+        }
     }
 
     private void replaceFragment(Fragment newFragment) {
@@ -135,5 +170,14 @@ public class MainActivity extends AppCompatActivity {
     public void openNotification(View view) {
         Intent intent = new Intent(MainActivity.this, NotificationActivity.class);
         startActivity(intent);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (getSupportFragmentManager().getBackStackEntryCount() > 1) {
+            getSupportFragmentManager().popBackStack();
+        } else {
+            super.onBackPressed();
+        }
     }
 }

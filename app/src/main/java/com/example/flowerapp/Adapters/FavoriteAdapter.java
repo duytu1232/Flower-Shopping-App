@@ -1,6 +1,8 @@
 package com.example.flowerapp.Adapters;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,9 +18,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.flowerapp.Models.Product;
+import com.example.flowerapp.ProductDetailActivity;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.Helper.DatabaseHelper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.FavoriteViewHolder> {
@@ -32,7 +36,7 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.Favori
     }
 
     public FavoriteAdapter(List<Product> favoriteList, Context context, OnFavoriteRemovedListener listener) {
-        this.favoriteList = favoriteList;
+        this.favoriteList = favoriteList != null ? favoriteList : new ArrayList<>();
         this.context = context;
         this.dbHelper = new DatabaseHelper(context);
         this.listener = listener;
@@ -48,16 +52,28 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.Favori
     @Override
     public void onBindViewHolder(@NonNull FavoriteViewHolder holder, int position) {
         Product product = favoriteList.get(position);
-        holder.productName.setText(product.getName() != null ? product.getName() : "No Name");
-        holder.productPrice.setText(String.format("$%.2f", product.getPrice()));
-        Glide.with(context)
-                .load(product.getImageUrl())
-                .placeholder(R.drawable.shop)
-                .error(R.drawable.shop)
-                .into(holder.productImage);
+        if (holder.productName != null) {
+            holder.productName.setText(product.getName() != null ? product.getName() : "No Name");
+        }
+        if (holder.productPrice != null) {
+            holder.productPrice.setText(String.format("$%.2f", product.getPrice()));
+        }
+        if (holder.productImage != null) {
+            Glide.with(context)
+                    .load(product.getImageUrl())
+                    .placeholder(R.drawable.shop)
+                    .error(R.drawable.shop)
+                    .into(holder.productImage);
+        }
 
         holder.removeFavorite.setOnClickListener(v -> {
             removeFavorite(product.getId(), position);
+        });
+
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(context, ProductDetailActivity.class);
+            intent.putExtra("product_id", product.getId());
+            context.startActivity(intent);
         });
     }
 
@@ -83,8 +99,15 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.Favori
     private void removeFavorite(int productId, int position) {
         SQLiteDatabase db = dbHelper.openDatabase();
         try {
-            String whereClause = "product_id = ?";
-            String[] whereArgs = {String.valueOf(productId)};
+            SharedPreferences prefs = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+            int userId = prefs.getInt("user_id", -1);
+            if (userId == -1) {
+                Toast.makeText(context, "User not logged in", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String whereClause = "product_id = ? AND user_id = ?";
+            String[] whereArgs = {String.valueOf(productId), String.valueOf(userId)};
             int deletedRows = db.delete("Favorites", whereClause, whereArgs);
 
             if (deletedRows > 0) {

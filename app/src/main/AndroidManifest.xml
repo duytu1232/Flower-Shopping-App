@@ -6,6 +6,11 @@
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.CAMERA" /> <!-- Xóa trùng lặp -->
+    <!-- Thêm thẻ uses-feature để chỉ định camera là tùy chọn -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -17,6 +22,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FlowerApp"
         tools:targetApi="31">
+        <activity
+            android:name=".User.Fragments.GuestFragment"
+            android:exported="false" />
+        <activity
+            android:name=".AccountInfoActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ProductDetailActivity"
+            android:exported="false" />
         <activity
             android:name=".User.Fragments.MyOrder_Fragment.ReviewActivity"
             android:exported="false" />
@@ -38,9 +52,8 @@
 
         <meta-data
             android:name="com.google.android.actions"
-            android:resource="@drawable/rounded_border_light" /> <!-- <meta-data -->
-        <!-- android:name="com.google.android.actions" -->
-        <!-- android:resource="@xml/item_order" /> -->
+            android:resource="@drawable/rounded_border_light" />
+
         <activity
             android:name=".Security.QuenMatKhau"
             android:exported="false" />
@@ -76,9 +89,8 @@
         </activity>
         <activity
             android:name=".NotificationActivity"
-            android:label="Notifications" /> <!-- <activity -->
-        <!-- android:name=".Class.MyApplication" -->
-        <!-- android:exported="false" /> -->
+            android:label="Notifications" />
+
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />

@@ -1,8 +1,11 @@
 package com.example.flowerapp.User.Fragments.MyOrder_Fragment;
 
 import android.content.ContentValues;
+import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RatingBar;
@@ -50,36 +53,68 @@ public class ReviewActivity extends AppCompatActivity {
                 Toast.makeText(this, "Please provide a rating", Toast.LENGTH_SHORT).show();
                 return;
             }
+            if (TextUtils.isEmpty(comment)) {
+                Toast.makeText(this, "Please write a comment", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-            saveReviewToDatabase(order.getOrderId(), rating, comment);
+            saveReviewToDatabase(order.getId(), rating, comment);
             Toast.makeText(this, "Review submitted", Toast.LENGTH_SHORT).show();
             finish();
         });
     }
 
     private void saveReviewToDatabase(int orderId, float rating, String comment) {
-        try (SQLiteDatabase db = dbHelper.openDatabase()) {
+        SQLiteDatabase db = null;
+        try {
+            db = dbHelper.openDatabase();
+            SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+            int userId = prefs.getInt("user_id", -1); // Lấy từ SharedPreferences
+            if (userId == -1) {
+                Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Lấy product_id từ Order_Items
+            int productId = getProductIdFromOrder(db, orderId);
+            if (productId == -1) {
+                Toast.makeText(this, "Product not found for this order", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             ContentValues values = new ContentValues();
             values.put("order_id", orderId);
-            values.put("user_id", 1); // Cần lấy user_id từ SharedPreferences hoặc logic đăng nhập
-            values.put("product_id", 1); // Cần lấy product_id từ Order_Items
+            values.put("user_id", userId);
+            values.put("product_id", productId);
             values.put("rating", rating);
             values.put("comment", comment);
             values.put("review_date", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
 
-            db.insert("Reviews", null, values);
-            // Cập nhật trạng thái đơn hàng nếu cần (ví dụ: đánh dấu là đã đánh giá)
+            long result = db.insert("Reviews", null, values);
+            if (result == -1) {
+                Toast.makeText(this, "Error submitting review", Toast.LENGTH_SHORT).show();
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(this, "Error submitting review", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Error submitting review: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        } finally {
+            if (db != null) dbHelper.closeDatabase(db);
         }
+    }
+
+    private int getProductIdFromOrder(SQLiteDatabase db, int orderId) {
+        Cursor cursor = db.rawQuery("SELECT product_id FROM Order_Items WHERE order_id = ?", new String[]{String.valueOf(orderId)});
+        if (cursor.moveToFirst()) {
+            int productId = cursor.getInt(cursor.getColumnIndexOrThrow("product_id"));
+            cursor.close();
+            return productId;
+        }
+        cursor.close();
+        return -1;
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (dbHelper != null) {
-            dbHelper.closeDatabase(dbHelper.openDatabase());
-        }
     }
 }
