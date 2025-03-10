@@ -31,7 +31,7 @@
 ## 📷 Ảnh màn hình
 | Trang chủ | Giỏ hàng | Thanh toán |
 |-----------|---------|------------|
-| ![Home](https://your-image-url.com/home.png) | ![Cart](https://your-image-url.com/cart.png) | ![Checkout](https://your-image-url.com/checkout.png) |
+| ![Home](app/src/main/res/drawable/home_labbel.png) | ![Cart](app/src/main/res/drawable/cart_labbel.png) | ![Checkout](app/src/main/res/drawable/show.png) |
 
 ## 🛠 Đóng góp
 1. Fork repository này.
