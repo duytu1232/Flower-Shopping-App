@@ -131,7 +131,7 @@ public class FragmentAccountUser extends Fragment {
                         .setPositiveButton("Yes", (dialog, which) -> {
                             SharedPreferences prefs = requireActivity().getSharedPreferences("MyPrefs", requireActivity().MODE_PRIVATE);
                             SharedPreferences.Editor editor = prefs.edit();
-                            editor.clear(); // Xóa toàn bộ dữ liệu trong SharedPreferences
+                            editor.clear();
                             editor.apply();
                             Intent intent = new Intent(getActivity(), DangNhap.class);
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -193,35 +193,48 @@ public class FragmentAccountUser extends Fragment {
         builder.show();
     }
 
-    private void saveAvatarToDatabase(String avatarUri) {
-        SharedPreferences prefs = requireActivity().getSharedPreferences("MyPrefs", requireActivity().MODE_PRIVATE);
-        int userId = prefs.getInt("user_id", -1);
-        if (userId != -1) {
-            try (SQLiteDatabase db = dbHelper.openDatabase()) {
-                ContentValues values = new ContentValues();
-                values.put("avatar_uri", avatarUri);
-                db.update("Users", values, "user_id = ?", new String[]{String.valueOf(userId)});
-            } catch (Exception e) {
-                Log.e("FragmentAccountUser", "Lỗi lưu avatar: " + e.getMessage());
-                Toast.makeText(requireContext(), "Lỗi khi lưu ảnh đại diện", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
     private String getAvatarFromDatabase(int userId) {
         if (userId == -1) return null;
-        try (SQLiteDatabase db = dbHelper.openDatabase()) {
+        SQLiteDatabase db = dbHelper.openDatabase();
+        try {
             Cursor cursor = db.rawQuery("SELECT avatar_uri FROM Users WHERE user_id = ?", new String[]{String.valueOf(userId)});
             if (cursor.moveToFirst()) {
                 int avatarIndex = cursor.getColumnIndex("avatar_uri");
                 if (avatarIndex != -1) {
-                    return cursor.getString(avatarIndex);
+                    String avatarUri = cursor.getString(avatarIndex);
+                    cursor.close();
+                    return avatarUri;
                 }
             }
             cursor.close();
         } catch (Exception e) {
             Log.e("FragmentAccountUser", "Lỗi lấy avatar: " + e.getMessage());
+        } finally {
+            dbHelper.closeDatabase(db);
         }
         return null;
+    }
+
+    private void saveAvatarToDatabase(String avatarUri) {
+        SharedPreferences prefs = requireActivity().getSharedPreferences("MyPrefs", requireActivity().MODE_PRIVATE);
+        int userId = prefs.getInt("user_id", -1);
+        if (userId != -1) {
+            SQLiteDatabase db = dbHelper.openDatabase();
+            try {
+                ContentValues values = new ContentValues();
+                values.put("avatar_uri", avatarUri);
+                int rowsAffected = db.update("Users", values, "user_id = ?", new String[]{String.valueOf(userId)});
+                if (rowsAffected > 0) {
+                    Toast.makeText(requireContext(), "Ảnh đại diện đã được cập nhật", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(requireContext(), "Không thể cập nhật ảnh đại diện", Toast.LENGTH_SHORT).show();
+                }
+            } catch (Exception e) {
+                Log.e("FragmentAccountUser", "Lỗi lưu avatar: " + e.getMessage());
+                Toast.makeText(requireContext(), "Lỗi khi lưu ảnh đại diện", Toast.LENGTH_SHORT).show();
+            } finally {
+                dbHelper.closeDatabase(db);
+            }
+        }
     }
 }

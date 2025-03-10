@@ -121,6 +121,7 @@ public class RevenueManagementFragment extends Fragment {
         if (!revenueList.isEmpty()) {
             RevenueAdapter adapter = new RevenueAdapter(revenueList);
             recyclerView.setAdapter(adapter);
+            recyclerView.scheduleLayoutAnimation(); // Animation khi load
         }
 
         dbHelper.closeDatabase(db);

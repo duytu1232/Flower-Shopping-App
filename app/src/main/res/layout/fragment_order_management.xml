@@ -1,41 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Admin.Fragments.OrderManagementFragment">
+    android:orientation="vertical"
+    android:background="#F5F5F5">
 
+    <!-- Tiêu đề -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:gravity="center"
+        android:padding="16dp"
+        android:text="Quản lý Đơn Hàng"
+        android:textColor="#689F38"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <!-- Nút Thêm Đơn Hàng -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"
+        android:padding="16dp">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Quản lý Đơn Hàng"
-            android:textColor="#99BC85"
-            android:textSize="20sp"
-            android:padding="16dp" />
-
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_add_order"
             android:layout_width="wrap_content"
             android:layout_height="48dp"
-            android:layout_margin="16dp"
-            android:backgroundTint="#99BC85"
+            android:layout_gravity="end"
             android:text="Thêm Đơn Hàng"
             android:textColor="@android:color/white"
-            android:layout_gravity="end" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_order_list"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:padding="8dp" />
-
+            app:backgroundTint="#99BC85"
+            app:cornerRadius="8dp"
+            android:elevation="2dp"
+            app:icon="@drawable/ic_add"
+            app:iconTint="@android:color/white"
+            android:paddingHorizontal="16dp"/>
     </LinearLayout>
 
-</FrameLayout>
+    <!-- RecyclerView cho danh sách đơn hàng -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_order_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp"
+        android:clipToPadding="false"
+        android:background="@android:color/transparent"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
+
+</LinearLayout>

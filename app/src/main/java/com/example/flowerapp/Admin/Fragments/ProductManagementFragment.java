@@ -5,9 +5,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -52,6 +54,7 @@ public class ProductManagementFragment extends Fragment {
         return view;
     }
 
+    // Thêm animation trong loadProducts, addProduct, updateProduct, deleteProduct
     private void loadProducts() {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
             Cursor cursor = db.rawQuery("SELECT product_id, name, price, stock, image_url FROM Products", null);
@@ -67,6 +70,7 @@ public class ProductManagementFragment extends Fragment {
             }
             cursor.close();
             adapter.notifyDataSetChanged();
+            recyclerView.scheduleLayoutAnimation(); // Animation khi load
         } catch (Exception e) {
             Toast.makeText(requireContext(), "Lỗi tải sản phẩm: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
@@ -84,24 +88,45 @@ public class ProductManagementFragment extends Fragment {
 
         builder.setView(view)
                 .setPositiveButton("Thêm", (dialog, which) -> {
-                    String name = editName.getText().toString().trim();
-                    double price = Double.parseDouble(editPrice.getText().toString().trim());
-                    int stock = Integer.parseInt(editStock.getText().toString().trim());
-                    String imageUrl = editImageUrl.getText().toString().trim();
+                    try {
+                        String name = editName.getText().toString().trim();
+                        if (TextUtils.isEmpty(name)) {
+                            editName.setError("Tên sản phẩm không được để trống");
+                            return;
+                        }
+                        double price = Double.parseDouble(editPrice.getText().toString().trim());
+                        if (price <= 0) {
+                            editPrice.setError("Giá phải lớn hơn 0");
+                            return;
+                        }
+                        int stock = Integer.parseInt(editStock.getText().toString().trim());
+                        if (stock < 0) {
+                            editStock.setError("Số lượng không được âm");
+                            return;
+                        }
+                        String imageUrl = editImageUrl.getText().toString().trim();
 
-                    addProduct(name, price, stock, imageUrl);
-                    loadProducts();
-                    Toast.makeText(requireContext(), "Thêm sản phẩm thành công", Toast.LENGTH_SHORT).show();
+                        addProduct(name, price, stock, imageUrl);
+                        loadProducts();
+                        Toast.makeText(requireContext(), "Thêm sản phẩm thành công", Toast.LENGTH_SHORT).show();
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(requireContext(), "Vui lòng nhập đúng định dạng số", Toast.LENGTH_SHORT).show();
+                    }
                 })
                 .setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss());
 
-        builder.show();
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(android.R.color.holo_red_dark));
     }
 
     private void addProduct(String name, double price, int stock, String imageUrl) {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
             db.execSQL("INSERT INTO Products (name, price, stock, image_url) VALUES (?, ?, ?, ?)",
                     new Object[]{name, price, stock, imageUrl});
+            recyclerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.fall_down));
+            loadProducts();
         } catch (Exception e) {
             Toast.makeText(requireContext(), "Lỗi thêm sản phẩm: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
@@ -111,8 +136,8 @@ public class ProductManagementFragment extends Fragment {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
             db.execSQL("UPDATE Products SET name = ?, price = ?, stock = ?, image_url = ? WHERE product_id = ?",
                     new Object[]{name, price, stock, imageUrl, id});
+            recyclerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.fall_down));
             loadProducts();
-            Toast.makeText(requireContext(), "Cập nhật sản phẩm thành công", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(requireContext(), "Lỗi cập nhật sản phẩm: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
@@ -121,8 +146,8 @@ public class ProductManagementFragment extends Fragment {
     private void deleteProduct(int id) {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
             db.execSQL("DELETE FROM Products WHERE product_id = ?", new Object[]{id});
+            recyclerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.fall_down));
             loadProducts();
-            Toast.makeText(requireContext(), "Xóa sản phẩm thành công", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(requireContext(), "Lỗi xóa sản phẩm: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
@@ -162,9 +187,11 @@ public class ProductManagementFragment extends Fragment {
             return new ProductViewHolder(view);
         }
 
+        // Thêm animation trong onBindViewHolder của ProductAdapter
         @Override
         public void onBindViewHolder(@NonNull ProductViewHolder holder, int position) {
             Product product = products.get(position);
+            holder.itemView.setAnimation(AnimationUtils.loadAnimation(context, android.R.anim.fade_in));
             holder.nameTextView.setText(product.name);
             holder.priceTextView.setText("Price: $" + product.price);
             holder.quantityTextView.setText("Stock: " + product.stock);
@@ -193,6 +220,7 @@ public class ProductManagementFragment extends Fragment {
         }
     }
 
+    // Cập nhật tương tự trong showEditProductDialog
     private void showEditProductDialog(Product product) {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Sửa Sản Phẩm");
@@ -210,15 +238,34 @@ public class ProductManagementFragment extends Fragment {
 
         builder.setView(view)
                 .setPositiveButton("Cập nhật", (dialog, which) -> {
-                    String name = editName.getText().toString().trim();
-                    double price = Double.parseDouble(editPrice.getText().toString().trim());
-                    int stock = Integer.parseInt(editStock.getText().toString().trim());
-                    String imageUrl = editImageUrl.getText().toString().trim();
+                    try {
+                        String name = editName.getText().toString().trim();
+                        if (TextUtils.isEmpty(name)) {
+                            editName.setError("Tên sản phẩm không được để trống");
+                            return;
+                        }
+                        double price = Double.parseDouble(editPrice.getText().toString().trim());
+                        if (price <= 0) {
+                            editPrice.setError("Giá phải lớn hơn 0");
+                            return;
+                        }
+                        int stock = Integer.parseInt(editStock.getText().toString().trim());
+                        if (stock < 0) {
+                            editStock.setError("Số lượng không được âm");
+                            return;
+                        }
+                        String imageUrl = editImageUrl.getText().toString().trim();
 
-                    updateProduct(product.id, name, price, stock, imageUrl);
+                        updateProduct(product.id, name, price, stock, imageUrl);
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(requireContext(), "Vui lòng nhập đúng định dạng số", Toast.LENGTH_SHORT).show();
+                    }
                 })
                 .setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss());
 
-        builder.show();
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(android.R.color.holo_red_dark));
     }
 }

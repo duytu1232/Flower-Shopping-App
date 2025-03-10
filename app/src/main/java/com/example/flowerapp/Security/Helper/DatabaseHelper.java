@@ -14,7 +14,7 @@ import java.io.OutputStream;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "FlowerApp.db";
-    private static final int DATABASE_VERSION = 3; // Tăng lên 3 để xóa bảng Favorites
+    private static final int DATABASE_VERSION = 4; // Xác nhận phiên bản
     private static final String TAG = "DatabaseHelper";
     private final Context context;
 
@@ -40,6 +40,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             if (oldVersion < 3) {
                 db.execSQL("DROP TABLE IF EXISTS Favorites");
                 Log.d(TAG, "Đã xóa bảng Favorites.");
+            }
+            if (oldVersion < 4) {
+                db.execSQL("ALTER TABLE Users ADD COLUMN full_name TEXT DEFAULT NULL");
+                db.execSQL("ALTER TABLE Users ADD COLUMN phone TEXT DEFAULT NULL");
+                db.execSQL("ALTER TABLE Users ADD COLUMN avatar_uri TEXT DEFAULT NULL");
+                Log.d(TAG, "Đã thêm cột full_name, phone, và avatar_uri vào bảng Users.");
             }
         } catch (Exception e) {
             Log.e(TAG, "Lỗi khi nâng cấp cơ sở dữ liệu: " + e.getMessage());
@@ -74,42 +80,43 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private void copyOrVerifyDatabaseFromAssets() {
         File dbFile = context.getDatabasePath(DATABASE_NAME);
-        if (!dbFile.exists()) {
-            try {
-                Log.d(TAG, "Bắt đầu sao chép cơ sở dữ liệu từ assets...");
-                InputStream inputStream = context.getAssets().open(DATABASE_NAME);
-                int size = inputStream.available();
-                Log.d(TAG, "Kích thước tệp trong assets: " + size + " bytes");
-                if (size == 0) {
-                    throw new IOException("Tệp cơ sở dữ liệu trong assets trống!");
-                }
-
-                File outDir = dbFile.getParentFile();
-                if (!outDir.exists()) {
-                    boolean created = outDir.mkdirs();
-                    Log.d(TAG, "Tạo thư mục " + outDir.getPath() + ": " + (created ? "Thành công" : "Thất bại"));
-                }
-
-                OutputStream outputStream = new FileOutputStream(dbFile);
-                byte[] buffer = new byte[1024];
-                int length;
-                int totalBytes = 0;
-                while ((length = inputStream.read(buffer)) > 0) {
-                    outputStream.write(buffer, 0, length);
-                    totalBytes += length;
-                }
-
-                outputStream.flush();
-                outputStream.close();
-                inputStream.close();
-                Log.d(TAG, "Sao chép thành công, tổng bytes: " + totalBytes);
-            } catch (IOException e) {
-                Log.e(TAG, "Lỗi sao chép cơ sở dữ liệu: " + e.getMessage(), e);
-                Toast.makeText(context, "Lỗi sao chép cơ sở dữ liệu: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                throw new RuntimeException("Không thể sao chép cơ sở dữ liệu từ assets: " + e.getMessage());
+        // Xóa tệp cũ để sao chép lại (chỉ dùng tạm thời để debug)
+        if (dbFile.exists()) {
+            dbFile.delete();
+            Log.d(TAG, "Đã xóa cơ sở dữ liệu cũ để sao chép lại từ assets.");
+        }
+        try {
+            Log.d(TAG, "Bắt đầu sao chép cơ sở dữ liệu từ assets...");
+            InputStream inputStream = context.getAssets().open(DATABASE_NAME);
+            int size = inputStream.available();
+            Log.d(TAG, "Kích thước tệp trong assets: " + size + " bytes");
+            if (size == 0) {
+                throw new IOException("Tệp cơ sở dữ liệu trong assets trống!");
             }
-        } else {
-            Log.d(TAG, "Cơ sở dữ liệu đã tồn tại tại: " + dbFile.getPath());
+
+            File outDir = dbFile.getParentFile();
+            if (!outDir.exists()) {
+                boolean created = outDir.mkdirs();
+                Log.d(TAG, "Tạo thư mục " + outDir.getPath() + ": " + (created ? "Thành công" : "Thất bại"));
+            }
+
+            OutputStream outputStream = new FileOutputStream(dbFile);
+            byte[] buffer = new byte[1024];
+            int length;
+            int totalBytes = 0;
+            while ((length = inputStream.read(buffer)) > 0) {
+                outputStream.write(buffer, 0, length);
+                totalBytes += length;
+            }
+
+            outputStream.flush();
+            outputStream.close();
+            inputStream.close();
+            Log.d(TAG, "Sao chép thành công, tổng bytes: " + totalBytes);
+        } catch (IOException e) {
+            Log.e(TAG, "Lỗi sao chép cơ sở dữ liệu: " + e.getMessage(), e);
+            Toast.makeText(context, "Lỗi sao chép cơ sở dữ liệu: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            throw new RuntimeException("Không thể sao chép cơ sở dữ liệu từ assets: " + e.getMessage());
         }
     }
 }

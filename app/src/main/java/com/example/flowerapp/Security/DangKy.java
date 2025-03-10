@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.flowerapp.Models.User;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.Helper.DatabaseHelper;
 
@@ -71,24 +72,50 @@ public class DangKy extends AppCompatActivity {
     }
 
     private void saveUserToSQLite(String username, String fullName, String email, String phone, String password) {
-        try (SQLiteDatabase db = dbHelper.openDatabase()) {
+        SQLiteDatabase db = dbHelper.openDatabase();
+        try {
+            // Tạo đối tượng User với 8 tham số, bỏ password
+            User user = new User(
+                    0, // userId sẽ được tự động tạo bởi AUTOINCREMENT
+                    username,
+                    email,
+                    "customer",
+                    "active",
+                    fullName,
+                    phone,
+                    null // avatarUri mặc định là null
+            );
+
+            String hashedPassword = hashPassword(password); // Mã hóa mật khẩu
+
             ContentValues values = new ContentValues();
-            values.put("username", username);
-            values.put("password", hashPassword(password)); // Mã hóa mật khẩu
-            values.put("email", email);
-            values.put("full_name", fullName);
-            values.put("phone", phone);
-            values.put("role", "customer");
-            values.put("status", "active");
-            db.insert("Users", null, values);
+            values.put("username", user.getUsername());
+            values.put("password", hashedPassword); // Thêm mật khẩu đã mã hóa
+            values.put("email", user.getEmail());
+            values.put("role", user.getRole());
+            values.put("status", user.getStatus());
+            values.put("full_name", user.getFullName());
+            values.put("phone", user.getPhone());
+
+            long result = db.insert("Users", null, values);
+            if (result != -1) {
+                Log.d("DangKy", "Người dùng đã được lưu thành công, ID: " + result);
+                user.setUserId((int) result); // Cập nhật userId sau khi insert
+            } else {
+                Log.e("DangKy", "Lỗi khi lưu người dùng vào cơ sở dữ liệu");
+                Toast.makeText(this, "Lỗi lưu thông tin người dùng!", Toast.LENGTH_SHORT).show();
+            }
         } catch (Exception e) {
             Log.e("DangKy", "Lỗi lưu người dùng vào cơ sở dữ liệu: " + e.getMessage());
             Toast.makeText(this, "Lỗi hệ thống, vui lòng thử lại!", Toast.LENGTH_SHORT).show();
+        } finally {
+            dbHelper.closeDatabase(db);
         }
     }
 
     private boolean isEmailExists(String email) {
-        try (SQLiteDatabase db = dbHelper.openDatabase()) {
+        SQLiteDatabase db = dbHelper.openDatabase();
+        try {
             Cursor cursor = db.rawQuery("SELECT * FROM Users WHERE email = ?", new String[]{email});
             boolean exists = cursor.getCount() > 0;
             cursor.close();
@@ -96,20 +123,39 @@ public class DangKy extends AppCompatActivity {
         } catch (Exception e) {
             Log.e("DangKy", "Lỗi kiểm tra email: " + e.getMessage());
             return false;
+        } finally {
+            dbHelper.closeDatabase(db);
         }
     }
 
     private boolean validateInput(String username, String fullName, String email, String phone, String password, String confirmPassword) {
-        if (TextUtils.isEmpty(username)) { editTxtUsername.setError("Vui lòng nhập tên người dùng"); return false; }
-        if (TextUtils.isEmpty(fullName)) { editTxtFullName.setError("Vui lòng nhập họ tên"); return false; }
-        if (TextUtils.isEmpty(email) || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) { editTxtEmail.setError("Vui lòng nhập email hợp lệ"); return false; }
-        if (TextUtils.isEmpty(phone) || phone.length() < 10) { editTxtPhone.setError("Số điện thoại không hợp lệ"); return false; }
-        if (TextUtils.isEmpty(password) || password.length() < 6) { editTxtPassword.setError("Mật khẩu phải từ 6 ký tự"); return false; }
-        if (!password.equals(confirmPassword)) { editTxtConfirmPassword.setError("Mật khẩu không khớp"); return false; }
+        if (TextUtils.isEmpty(username)) {
+            editTxtUsername.setError("Vui lòng nhập tên người dùng");
+            return false;
+        }
+        if (TextUtils.isEmpty(fullName)) {
+            editTxtFullName.setError("Vui lòng nhập họ tên");
+            return false;
+        }
+        if (TextUtils.isEmpty(email) || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            editTxtEmail.setError("Vui lòng nhập email hợp lệ");
+            return false;
+        }
+        if (TextUtils.isEmpty(phone) || phone.length() < 10) {
+            editTxtPhone.setError("Số điện thoại không hợp lệ");
+            return false;
+        }
+        if (TextUtils.isEmpty(password) || password.length() < 6) {
+            editTxtPassword.setError("Mật khẩu phải từ 6 ký tự");
+            return false;
+        }
+        if (!password.equals(confirmPassword)) {
+            editTxtConfirmPassword.setError("Mật khẩu không khớp");
+            return false;
+        }
         return true;
     }
 
-    // Giả lập hàm hash mật khẩu (cần thêm thư viện BCrypt)
     private String hashPassword(String password) {
         // Thay bằng logic thực tế với BCrypt hoặc SHA-256
         // Ví dụ: return BCrypt.hashpw(password, BCrypt.gensalt());

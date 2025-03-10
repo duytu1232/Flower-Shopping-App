@@ -23,6 +23,7 @@ import com.example.flowerapp.Admin.Fragments.OrderManagementFragment;
 import com.example.flowerapp.Admin.Fragments.ProductManagementFragment;
 import com.example.flowerapp.Admin.Fragments.RevenueManagementFragment;
 import com.example.flowerapp.Admin.Fragments.UserManagementFragment;
+import com.example.flowerapp.Models.User;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.DangNhap;
 import com.example.flowerapp.Security.Helper.DatabaseHelper;
@@ -146,15 +147,43 @@ public class AdminActivity extends AppCompatActivity {
     private void setupUserInfo() {
         TextView userNameTextView = navView.getHeaderView(0).findViewById(R.id.user_name);
         SQLiteDatabase db = dbHelper.openDatabase();
-        Cursor cursor = db.rawQuery("SELECT username FROM Users WHERE role = 'admin' LIMIT 1", null);
-        if (cursor.moveToFirst()) {
-            String username = cursor.getString(0);
-            userNameTextView.setText(username);
-        } else {
+        try {
+            Cursor cursor = db.rawQuery("SELECT user_id, username, full_name FROM Users WHERE role = 'admin' LIMIT 1", null);
+            if (cursor.moveToFirst()) {
+                int userIdColumn = cursor.getColumnIndex("user_id");
+                int usernameColumn = cursor.getColumnIndex("username");
+                int fullNameColumn = cursor.getColumnIndex("full_name");
+
+                if (userIdColumn >= 0 && usernameColumn >= 0) {
+                    int userId = cursor.getInt(userIdColumn);
+                    String username = cursor.getString(usernameColumn);
+                    String fullName = fullNameColumn >= 0 ? cursor.getString(fullNameColumn) : null;
+
+                    User admin = new User(
+                            userId,
+                            username,
+                            null,
+                            "admin",
+                            null,
+                            fullName != null ? fullName : username,
+                            null,
+                            null
+                    );
+                    userNameTextView.setText(admin.getFullName());
+                } else {
+                    Toast.makeText(this, "Cột không tồn tại trong cơ sở dữ liệu", Toast.LENGTH_SHORT).show();
+                    userNameTextView.setText("Admin");
+                }
+            } else {
+                userNameTextView.setText("Admin");
+            }
+            cursor.close();
+        } catch (Exception e) {
+            Toast.makeText(this, "Lỗi tải thông tin admin: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             userNameTextView.setText("Admin");
+        } finally {
+            dbHelper.closeDatabase(db);
         }
-        cursor.close();
-        dbHelper.closeDatabase(db);
     }
 
     private void replaceFragment(Fragment newFragment) {

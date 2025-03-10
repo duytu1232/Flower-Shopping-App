@@ -45,4 +45,20 @@
         android:inputType="text"
         android:minHeight="48dp" />
 
+    <EditText
+        android:id="@+id/edit_user_full_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Họ và tên"
+        android:inputType="text"
+        android:minHeight="48dp" />
+
+    <EditText
+        android:id="@+id/edit_user_phone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Số điện thoại"
+        android:inputType="phone"
+        android:minHeight="48dp" />
+
 </LinearLayout>

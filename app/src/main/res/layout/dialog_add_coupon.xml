@@ -1,48 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:layout_margin="16dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="#FFFFFF">
 
-    <EditText
-        android:id="@+id/edit_coupon_code"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Mã giảm giá"
-        android:inputType="text"
-        android:minHeight="48dp" />
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <EditText
-        android:id="@+id/edit_coupon_value"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Giá trị giảm (USD)"
-        android:inputType="numberDecimal"
-        android:minHeight="48dp" />
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Mã giảm giá"
+            app:hintTextColor="#99BC85">
 
-    <EditText
-        android:id="@+id/edit_coupon_start"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Ngày bắt đầu (YYYY-MM-DD)"
-        android:inputType="date"
-        android:minHeight="48dp" />
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_coupon_code"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:minHeight="48dp" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-    <EditText
-        android:id="@+id/edit_coupon_end"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Ngày kết thúc (YYYY-MM-DD)"
-        android:inputType="date"
-        android:minHeight="48dp" />
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Giá trị giảm (USD)"
+            app:hintTextColor="#99BC85">
 
-    <EditText
-        android:id="@+id/edit_coupon_status"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Trạng thái (active/expired)"
-        android:inputType="text"
-        android:minHeight="48dp" />
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_coupon_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal"
+                android:minHeight="48dp" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-</LinearLayout>
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Ngày bắt đầu (YYYY-MM-DD)"
+            app:hintTextColor="#99BC85">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_coupon_start"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:focusable="false"
+                android:cursorVisible="false"
+                android:minHeight="48dp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Ngày kết thúc (YYYY-MM-DD)"
+            app:hintTextColor="#99BC85">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_coupon_end"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:focusable="false"
+                android:cursorVisible="false"
+                android:minHeight="48dp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Trạng thái (active/expired)"
+            app:hintTextColor="#99BC85">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_coupon_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:minHeight="48dp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

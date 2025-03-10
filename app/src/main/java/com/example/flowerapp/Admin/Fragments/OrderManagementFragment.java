@@ -1,6 +1,7 @@
 package com.example.flowerapp.Admin.Fragments;
 
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -9,6 +10,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -26,6 +28,7 @@ import com.example.flowerapp.Security.Helper.DatabaseHelper;
 import com.example.flowerapp.User.Fragments.MyOrder_Fragment.OrderDetailActivity;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 public class OrderManagementFragment extends Fragment {
@@ -57,6 +60,7 @@ public class OrderManagementFragment extends Fragment {
         return view;
     }
 
+    // Thêm animation trong loadOrders, addOrder, updateOrder, deleteOrder
     private void loadOrders() {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
             Cursor cursor = db.rawQuery("SELECT order_id, user_id, order_date, status, total_amount, shipping_address FROM Orders", null);
@@ -77,12 +81,12 @@ public class OrderManagementFragment extends Fragment {
                     String status = cursor.getString(statusIndex);
                     double total = cursor.getDouble(totalIndex);
                     String address = cursor.getString(addressIndex);
-                    // Tạo Order với các trường bổ sung (title, imageResId, imageUrl để trống nếu không có)
                     orderList.add(new Order(id, userId, date, status, total, address, "Order #" + id, 0, null));
                 }
             }
             cursor.close();
             adapter.notifyDataSetChanged();
+            recyclerView.scheduleLayoutAnimation(); // Animation khi load
         } catch (Exception e) {
             Toast.makeText(requireContext(), "Lỗi tải đơn hàng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
@@ -99,32 +103,52 @@ public class OrderManagementFragment extends Fragment {
         EditText editTotal = view.findViewById(R.id.edit_order_total);
         EditText editAddress = view.findViewById(R.id.edit_order_address);
 
+        // Thêm DatePicker cho ngày đặt
+        editDate.setOnClickListener(v -> {
+            Calendar calendar = Calendar.getInstance();
+            DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(),
+                    (view1, year, month, dayOfMonth) -> {
+                        String date = String.format("%d-%02d-%02d", year, month + 1, dayOfMonth);
+                        editDate.setText(date);
+                    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+            datePickerDialog.show();
+        });
+
         builder.setView(view)
                 .setPositiveButton("Thêm", (dialog, which) -> {
-                    int userId = Integer.parseInt(editUserId.getText().toString().trim());
-                    String date = editDate.getText().toString().trim();
-                    String status = editStatus.getText().toString().trim().toLowerCase();
-                    double total = Double.parseDouble(editTotal.getText().toString().trim());
-                    String address = editAddress.getText().toString().trim();
+                    try {
+                        int userId = Integer.parseInt(editUserId.getText().toString().trim());
+                        String date = editDate.getText().toString().trim();
+                        String status = editStatus.getText().toString().trim().toLowerCase();
+                        double total = Double.parseDouble(editTotal.getText().toString().trim());
+                        String address = editAddress.getText().toString().trim();
 
-                    if (!status.matches("pending|processing|shipped|delivered|canceled")) {
-                        Toast.makeText(requireContext(), "Status phải là 'pending', 'processing', 'shipped', 'delivered', hoặc 'canceled'", Toast.LENGTH_SHORT).show();
-                        return;
+                        if (!status.matches("pending|processing|shipped|delivered|canceled")) {
+                            Toast.makeText(requireContext(), "Status phải là 'pending', 'processing', 'shipped', 'delivered', hoặc 'canceled'", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        addOrder(userId, date, status, total, address);
+                        loadOrders();
+                        Toast.makeText(requireContext(), "Thêm đơn hàng thành công", Toast.LENGTH_SHORT).show();
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(requireContext(), "Vui lòng nhập đúng định dạng số", Toast.LENGTH_SHORT).show();
                     }
-
-                    addOrder(userId, date, status, total, address);
-                    loadOrders();
-                    Toast.makeText(requireContext(), "Thêm đơn hàng thành công", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss());
 
-        builder.show();
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(android.R.color.holo_red_dark));
     }
 
     private void addOrder(int userId, String orderDate, String status, double totalAmount, String shippingAddress) {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
             db.execSQL("INSERT INTO Orders (user_id, order_date, status, total_amount, shipping_address) VALUES (?, ?, ?, ?, ?)",
                     new Object[]{userId, orderDate, status, totalAmount, shippingAddress});
+            recyclerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.fall_down));
+            loadOrders();
         } catch (Exception e) {
             Toast.makeText(requireContext(), "Lỗi thêm đơn hàng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
@@ -134,8 +158,8 @@ public class OrderManagementFragment extends Fragment {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
             db.execSQL("UPDATE Orders SET user_id = ?, order_date = ?, status = ?, total_amount = ?, shipping_address = ? WHERE order_id = ?",
                     new Object[]{userId, orderDate, status, totalAmount, shippingAddress, id});
+            recyclerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.fall_down));
             loadOrders();
-            Toast.makeText(requireContext(), "Cập nhật đơn hàng thành công", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(requireContext(), "Lỗi cập nhật đơn hàng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
@@ -144,8 +168,8 @@ public class OrderManagementFragment extends Fragment {
     private void deleteOrder(int id) {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
             db.execSQL("DELETE FROM Orders WHERE order_id = ?", new Object[]{id});
+            recyclerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.fall_down));
             loadOrders();
-            Toast.makeText(requireContext(), "Xóa đơn hàng thành công", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(requireContext(), "Lỗi xóa đơn hàng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
@@ -170,9 +194,11 @@ public class OrderManagementFragment extends Fragment {
             return new OrderViewHolder(view);
         }
 
+        // Thêm animation trong onBindViewHolder của OrderAdapter
         @Override
         public void onBindViewHolder(@NonNull OrderViewHolder holder, int position) {
             Order order = orders.get(position);
+            holder.itemView.setAnimation(AnimationUtils.loadAnimation(context, android.R.anim.fade_in));
             holder.orderIdTextView.setText("Order #" + order.getId());
             holder.statusTextView.setText("Status: " + order.getStatus());
             holder.detailsTextView.setText("User ID: " + order.getUserId() + " | Total: $" + order.getTotalAmount()
@@ -181,7 +207,6 @@ public class OrderManagementFragment extends Fragment {
             holder.btnEdit.setOnClickListener(v -> fragment.showEditOrderDialog(order));
             holder.btnDelete.setOnClickListener(v -> fragment.deleteOrder(order.getId()));
 
-            // Thêm sự kiện nhấp để mở OrderDetailActivity
             holder.itemView.setOnClickListener(v -> {
                 Intent intent = new Intent(context, OrderDetailActivity.class);
                 intent.putExtra("order", order);
@@ -226,23 +251,41 @@ public class OrderManagementFragment extends Fragment {
         editTotal.setText(String.valueOf(order.getTotalAmount()));
         editAddress.setText(order.getShippingAddress());
 
+        // Thêm DatePicker cho ngày đặt
+        editDate.setOnClickListener(v -> {
+            Calendar calendar = Calendar.getInstance();
+            DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(),
+                    (view1, year, month, dayOfMonth) -> {
+                        String date = String.format("%d-%02d-%02d", year, month + 1, dayOfMonth);
+                        editDate.setText(date);
+                    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+            datePickerDialog.show();
+        });
+
         builder.setView(view)
                 .setPositiveButton("Cập nhật", (dialog, which) -> {
-                    int userId = Integer.parseInt(editUserId.getText().toString().trim());
-                    String date = editDate.getText().toString().trim();
-                    String status = editStatus.getText().toString().trim().toLowerCase();
-                    double total = Double.parseDouble(editTotal.getText().toString().trim());
-                    String address = editAddress.getText().toString().trim();
+                    try {
+                        int userId = Integer.parseInt(editUserId.getText().toString().trim());
+                        String date = editDate.getText().toString().trim();
+                        String status = editStatus.getText().toString().trim().toLowerCase();
+                        double total = Double.parseDouble(editTotal.getText().toString().trim());
+                        String address = editAddress.getText().toString().trim();
 
-                    if (!status.matches("pending|processing|shipped|delivered|canceled")) {
-                        Toast.makeText(requireContext(), "Status phải là 'pending', 'processing', 'shipped', 'delivered', hoặc 'canceled'", Toast.LENGTH_SHORT).show();
-                        return;
+                        if (!status.matches("pending|processing|shipped|delivered|canceled")) {
+                            Toast.makeText(requireContext(), "Status phải là 'pending', 'processing', 'shipped', 'delivered', hoặc 'canceled'", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        updateOrder(order.getId(), userId, date, status, total, address);
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(requireContext(), "Vui lòng nhập đúng định dạng số", Toast.LENGTH_SHORT).show();
                     }
-
-                    updateOrder(order.getId(), userId, date, status, total, address);
                 })
                 .setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss());
 
-        builder.show();
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(android.R.color.holo_red_dark));
     }
 }

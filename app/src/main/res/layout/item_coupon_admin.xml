@@ -4,9 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    app:cardBackgroundColor="#FFFFFF"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="4dp">
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="#FFFFFF">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,63 +14,63 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <LinearLayout
+        <!-- Mã giảm giá -->
+        <TextView
+            android:id="@+id/coupon_code"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#333333"/>
 
-            <TextView
-                android:id="@+id/coupon_code"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:textColor="#99BC85"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <Button
-                    android:id="@+id/btn_edit_coupon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:backgroundTint="#99BC85"
-                    android:text="Sửa"
-                    android:textColor="@android:color/white"
-                    android:padding="8dp"
-                    android:textSize="14sp"
-                    android:layout_marginEnd="8dp" />
-
-                <Button
-                    android:id="@+id/btn_delete_coupon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:backgroundTint="#FF4444"
-                    android:text="Xóa"
-                    android:textColor="@android:color/white"
-                    android:padding="8dp"
-                    android:textSize="14sp"
-                    android:layout_marginStart="8dp" />
-            </LinearLayout>
-        </LinearLayout>
-
+        <!-- Giá trị -->
         <TextView
             android:id="@+id/coupon_value"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#666"
-            android:textSize="16sp" />
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:layout_marginTop="4dp"/>
 
+        <!-- Thời gian và trạng thái -->
         <TextView
             android:id="@+id/coupon_period"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#666"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:layout_marginTop="4dp"/>
+
+        <!-- Nút Sửa và Xóa -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:layout_marginTop="8dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_edit_coupon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sửa"
+                android:textColor="@android:color/white"
+                app:backgroundTint="#99BC85"
+                app:cornerRadius="8dp"
+                android:paddingHorizontal="12dp"
+                android:layout_marginEnd="8dp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_delete_coupon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Xóa"
+                android:textColor="@android:color/white"
+                app:backgroundTint="#FF4444"
+                app:cornerRadius="8dp"
+                android:paddingHorizontal="12dp"/>
+        </LinearLayout>
 
     </LinearLayout>
+
 </androidx.cardview.widget.CardView>

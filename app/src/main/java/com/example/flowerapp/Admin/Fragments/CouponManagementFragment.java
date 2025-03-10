@@ -1,6 +1,7 @@
 package com.example.flowerapp.Admin.Fragments;
 
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -9,6 +10,7 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -26,6 +28,7 @@ import com.example.flowerapp.Security.Helper.DatabaseHelper;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -56,6 +59,7 @@ public class CouponManagementFragment extends Fragment {
         return view;
     }
 
+    // Thêm animation trong loadCoupons, addCoupon, updateCoupon, deleteCoupon
     private void loadCoupons() {
         SQLiteDatabase db = null;
         try {
@@ -74,6 +78,7 @@ public class CouponManagementFragment extends Fragment {
             }
             cursor.close();
             adapter.notifyDataSetChanged();
+            recyclerView.scheduleLayoutAnimation(); // Animation khi load
         } catch (Exception e) {
             Toast.makeText(requireContext(), "Lỗi tải mã giảm giá: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         } finally {
@@ -92,6 +97,28 @@ public class CouponManagementFragment extends Fragment {
         EditText editEnd = view.findViewById(R.id.edit_coupon_end);
         EditText editStatus = view.findViewById(R.id.edit_coupon_status);
 
+        // Thêm DatePicker cho ngày bắt đầu
+        editStart.setOnClickListener(v -> {
+            Calendar calendar = Calendar.getInstance();
+            DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(),
+                    (view1, year, month, dayOfMonth) -> {
+                        String date = String.format("%d-%02d-%02d", year, month + 1, dayOfMonth);
+                        editStart.setText(date);
+                    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+            datePickerDialog.show();
+        });
+
+        // Thêm DatePicker cho ngày kết thúc
+        editEnd.setOnClickListener(v -> {
+            Calendar calendar = Calendar.getInstance();
+            DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(),
+                    (view1, year, month, dayOfMonth) -> {
+                        String date = String.format("%d-%02d-%02d", year, month + 1, dayOfMonth);
+                        editEnd.setText(date);
+                    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+            datePickerDialog.show();
+        });
+
         builder.setView(view)
                 .setPositiveButton("Thêm", (dialog, which) -> {
                     if (!validateInput(editCode, editValue, editStart, editEnd, editStatus)) return;
@@ -108,7 +135,10 @@ public class CouponManagementFragment extends Fragment {
                 })
                 .setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss());
 
-        builder.show();
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(android.R.color.holo_red_dark));
     }
 
     private boolean validateInput(EditText code, EditText value, EditText start, EditText end, EditText status) {
@@ -177,6 +207,7 @@ public class CouponManagementFragment extends Fragment {
             cursor.close();
             db.execSQL("INSERT INTO Discount_Codes (code, discount_value, start_date, end_date, status) VALUES (?, ?, ?, ?, ?)",
                     new Object[]{code, discountValue, startDate, endDate, status});
+            recyclerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.fall_down));
             loadCoupons();
             Toast.makeText(requireContext(), "Thêm mã giảm giá thành công", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
@@ -192,6 +223,7 @@ public class CouponManagementFragment extends Fragment {
             db = dbHelper.openDatabase();
             db.execSQL("UPDATE Discount_Codes SET code = ?, discount_value = ?, start_date = ?, end_date = ?, status = ? WHERE discount_id = ?",
                     new Object[]{code, discountValue, startDate, endDate, status, id});
+            recyclerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.fall_down));
             loadCoupons();
             Toast.makeText(requireContext(), "Cập nhật mã giảm giá thành công", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
@@ -205,7 +237,6 @@ public class CouponManagementFragment extends Fragment {
         SQLiteDatabase db = null;
         try {
             db = dbHelper.openDatabase();
-            // Kiểm tra trước khi xóa
             Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM Orders WHERE discount_code = ?", new String[]{String.valueOf(id)});
             if (cursor.moveToFirst() && cursor.getInt(0) > 0) {
                 Toast.makeText(requireContext(), "Không thể xóa: Mã giảm giá đang được sử dụng!", Toast.LENGTH_SHORT).show();
@@ -215,6 +246,7 @@ public class CouponManagementFragment extends Fragment {
             cursor.close();
 
             db.execSQL("DELETE FROM Discount_Codes WHERE discount_id = ?", new Object[]{id});
+            recyclerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.fall_down));
             loadCoupons();
             Toast.makeText(requireContext(), "Xóa mã giảm giá thành công", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
@@ -257,9 +289,11 @@ public class CouponManagementFragment extends Fragment {
             return new CouponViewHolder(view);
         }
 
+        // Thêm animation trong onBindViewHolder của CouponAdapter
         @Override
         public void onBindViewHolder(@NonNull CouponViewHolder holder, int position) {
             Coupon coupon = coupons.get(position);
+            holder.itemView.setAnimation(AnimationUtils.loadAnimation(context, android.R.anim.fade_in));
             holder.codeTextView.setText("Code: " + coupon.code);
             holder.valueTextView.setText("Value: $" + coupon.discountValue);
             holder.periodTextView.setText("Period: " + coupon.startDate + " to " + coupon.endDate + " | Status: " + coupon.status);
@@ -288,6 +322,7 @@ public class CouponManagementFragment extends Fragment {
         }
     }
 
+    // Cập nhật tương tự trong showEditCouponDialog
     private void showEditCouponDialog(Coupon coupon) {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Sửa Mã Giảm Giá");
@@ -305,6 +340,28 @@ public class CouponManagementFragment extends Fragment {
         editEnd.setText(coupon.endDate);
         editStatus.setText(coupon.status);
 
+        // Thêm DatePicker cho ngày bắt đầu
+        editStart.setOnClickListener(v -> {
+            Calendar calendar = Calendar.getInstance();
+            DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(),
+                    (view1, year, month, dayOfMonth) -> {
+                        String date = String.format("%d-%02d-%02d", year, month + 1, dayOfMonth);
+                        editStart.setText(date);
+                    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+            datePickerDialog.show();
+        });
+
+        // Thêm DatePicker cho ngày kết thúc
+        editEnd.setOnClickListener(v -> {
+            Calendar calendar = Calendar.getInstance();
+            DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(),
+                    (view1, year, month, dayOfMonth) -> {
+                        String date = String.format("%d-%02d-%02d", year, month + 1, dayOfMonth);
+                        editEnd.setText(date);
+                    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+            datePickerDialog.show();
+        });
+
         builder.setView(view)
                 .setPositiveButton("Cập nhật", (dialog, which) -> {
                     if (!validateInput(editCode, editValue, editStart, editEnd, editStatus)) return;
@@ -319,6 +376,9 @@ public class CouponManagementFragment extends Fragment {
                 })
                 .setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss());
 
-        builder.show();
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(android.R.color.holo_red_dark));
     }
 }
