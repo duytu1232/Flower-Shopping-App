@@ -23,9 +23,6 @@
         android:theme="@style/Theme.FlowerApp"
         tools:targetApi="31">
         <activity
-            android:name=".User.Fragments.GuestFragment"
-            android:exported="false" />
-        <activity
             android:name=".AccountInfoActivity"
             android:exported="false" />
         <activity
