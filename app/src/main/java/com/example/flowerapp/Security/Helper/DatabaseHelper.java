@@ -14,7 +14,7 @@ import java.io.OutputStream;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "FlowerApp.db";
-    private static final int DATABASE_VERSION = 4; // Xác nhận phiên bản
+    private static final int DATABASE_VERSION = 4;
     private static final String TAG = "DatabaseHelper";
     private final Context context;
 
@@ -78,45 +78,84 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    // Thêm phương thức để cập nhật số lượng trong giỏ hàng
+    public boolean updateCartQuantity(int cartId, int newQuantity) {
+        SQLiteDatabase db = null;
+        try {
+            db = openDatabase();
+            db.execSQL("UPDATE Carts SET quantity = ? WHERE cart_id = ?",
+                    new Object[]{newQuantity, cartId});
+            Log.d(TAG, "Updated quantity for cart_id: " + cartId);
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Error updating cart quantity: " + e.getMessage());
+            Toast.makeText(context, "Error updating cart quantity", Toast.LENGTH_SHORT).show();
+            return false;
+        } finally {
+            if (db != null) {
+                closeDatabase(db);
+            }
+        }
+    }
+
+    // Thêm phương thức để xóa mục khỏi giỏ hàng
+    public boolean deleteCartItem(int cartId) {
+        SQLiteDatabase db = null;
+        try {
+            db = openDatabase();
+            db.execSQL("DELETE FROM Carts WHERE cart_id = ?",
+                    new Object[]{cartId});
+            Log.d(TAG, "Deleted cart item with cart_id: " + cartId);
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Error deleting cart item: " + e.getMessage());
+            Toast.makeText(context, "Error deleting cart item", Toast.LENGTH_SHORT).show();
+            return false;
+        } finally {
+            if (db != null) {
+                closeDatabase(db);
+            }
+        }
+    }
+
     private void copyOrVerifyDatabaseFromAssets() {
         File dbFile = context.getDatabasePath(DATABASE_NAME);
-        // Xóa tệp cũ để sao chép lại (chỉ dùng tạm thời để debug)
-        if (dbFile.exists()) {
-            dbFile.delete();
-            Log.d(TAG, "Đã xóa cơ sở dữ liệu cũ để sao chép lại từ assets.");
-        }
-        try {
-            Log.d(TAG, "Bắt đầu sao chép cơ sở dữ liệu từ assets...");
-            InputStream inputStream = context.getAssets().open(DATABASE_NAME);
-            int size = inputStream.available();
-            Log.d(TAG, "Kích thước tệp trong assets: " + size + " bytes");
-            if (size == 0) {
-                throw new IOException("Tệp cơ sở dữ liệu trong assets trống!");
-            }
+        if (!dbFile.exists()) {
+            try {
+                Log.d(TAG, "Bắt đầu sao chép cơ sở dữ liệu từ assets...");
+                InputStream inputStream = context.getAssets().open(DATABASE_NAME);
+                int size = inputStream.available();
+                Log.d(TAG, "Kích thước tệp trong assets: " + size + " bytes");
+                if (size == 0) {
+                    throw new IOException("Tệp cơ sở dữ liệu trong assets trống!");
+                }
 
-            File outDir = dbFile.getParentFile();
-            if (!outDir.exists()) {
-                boolean created = outDir.mkdirs();
-                Log.d(TAG, "Tạo thư mục " + outDir.getPath() + ": " + (created ? "Thành công" : "Thất bại"));
-            }
+                File outDir = dbFile.getParentFile();
+                if (!outDir.exists()) {
+                    boolean created = outDir.mkdirs();
+                    Log.d(TAG, "Tạo thư mục " + outDir.getPath() + ": " + (created ? "Thành công" : "Thất bại"));
+                }
 
-            OutputStream outputStream = new FileOutputStream(dbFile);
-            byte[] buffer = new byte[1024];
-            int length;
-            int totalBytes = 0;
-            while ((length = inputStream.read(buffer)) > 0) {
-                outputStream.write(buffer, 0, length);
-                totalBytes += length;
-            }
+                OutputStream outputStream = new FileOutputStream(dbFile);
+                byte[] buffer = new byte[1024];
+                int length;
+                int totalBytes = 0;
+                while ((length = inputStream.read(buffer)) > 0) {
+                    outputStream.write(buffer, 0, length);
+                    totalBytes += length;
+                }
 
-            outputStream.flush();
-            outputStream.close();
-            inputStream.close();
-            Log.d(TAG, "Sao chép thành công, tổng bytes: " + totalBytes);
-        } catch (IOException e) {
-            Log.e(TAG, "Lỗi sao chép cơ sở dữ liệu: " + e.getMessage(), e);
-            Toast.makeText(context, "Lỗi sao chép cơ sở dữ liệu: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            throw new RuntimeException("Không thể sao chép cơ sở dữ liệu từ assets: " + e.getMessage());
+                outputStream.flush();
+                outputStream.close();
+                inputStream.close();
+                Log.d(TAG, "Sao chép thành công, tổng bytes: " + totalBytes);
+            } catch (IOException e) {
+                Log.e(TAG, "Lỗi sao chép cơ sở dữ liệu: " + e.getMessage(), e);
+                Toast.makeText(context, "Lỗi sao chép cơ sở dữ liệu: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                throw new RuntimeException("Không thể sao chép cơ sở dữ liệu từ assets: " + e.getMessage());
+            }
+        } else {
+            Log.d(TAG, "Cơ sở dữ liệu đã tồn tại tại: " + dbFile.getPath());
         }
     }
 }

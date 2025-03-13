@@ -1,8 +1,5 @@
 package com.example.flowerapp.Admin.Fragments;
 
-import android.app.AlertDialog;
-import android.app.DatePickerDialog;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -10,86 +7,68 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AnimationUtils;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import android.widget.DatePicker;
-import com.example.flowerapp.R;
-import com.example.flowerapp.Security.Helper.DatabaseHelper;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import com.example.flowerapp.Adapters.CouponAdapter;
+import com.example.flowerapp.Security.Helper.DatabaseHelper;
+import com.example.flowerapp.Models.Coupon;
+import com.example.flowerapp.R;
+
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 public class CouponManagementFragment extends Fragment {
-    private DatabaseHelper dbHelper;
     private RecyclerView recyclerView;
     private CouponAdapter adapter;
-    private List<Coupon> couponList;
+    private List<Coupon> couponList = new ArrayList<>();
+    private DatabaseHelper dbHelper;
 
-    @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_coupon_management, container, false);
 
         dbHelper = new DatabaseHelper(requireContext());
-        couponList = new ArrayList<>();
         recyclerView = view.findViewById(R.id.recycler_coupon_list);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-
-        adapter = new CouponAdapter(couponList, requireContext(), this);
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        adapter = new CouponAdapter(couponList, this::showEditCouponDialog, this::deleteCoupon);
         recyclerView.setAdapter(adapter);
 
+        view.findViewById(R.id.btn_add_coupon).setOnClickListener(v -> showAddCouponDialog());
+
         loadCoupons();
-
-        Button addButton = view.findViewById(R.id.btn_add_coupon);
-        addButton.setOnClickListener(v -> showAddCouponDialog());
-
         return view;
     }
 
-    // Thêm animation trong loadCoupons, addCoupon, updateCoupon, deleteCoupon
     private void loadCoupons() {
-        SQLiteDatabase db = null;
-        try {
-            db = dbHelper.openDatabase();
-            Cursor cursor = db.rawQuery("SELECT discount_id, code, discount_value, start_date, end_date, status FROM Discount_Codes", null);
+        try (SQLiteDatabase db = dbHelper.openDatabase()) {
+            Cursor cursor = db.rawQuery("SELECT * FROM Discount_Codes", null);
             couponList.clear();
-
             while (cursor.moveToNext()) {
                 int id = cursor.getInt(cursor.getColumnIndexOrThrow("discount_id"));
                 String code = cursor.getString(cursor.getColumnIndexOrThrow("code"));
-                double value = cursor.getDouble(cursor.getColumnIndexOrThrow("discount_value"));
-                String start = cursor.getString(cursor.getColumnIndexOrThrow("start_date"));
-                String end = cursor.getString(cursor.getColumnIndexOrThrow("end_date"));
+                double discountValue = cursor.getDouble(cursor.getColumnIndexOrThrow("discount_value"));
+                String startDate = cursor.getString(cursor.getColumnIndexOrThrow("start_date"));
+                String endDate = cursor.getString(cursor.getColumnIndexOrThrow("end_date"));
                 String status = cursor.getString(cursor.getColumnIndexOrThrow("status"));
-                couponList.add(new Coupon(id, code, value, start, end, status));
+                couponList.add(new Coupon(id, code, discountValue, startDate, endDate, status));
             }
             cursor.close();
             adapter.notifyDataSetChanged();
-            recyclerView.scheduleLayoutAnimation(); // Animation khi load
+            recyclerView.scheduleLayoutAnimation();
         } catch (Exception e) {
             Toast.makeText(requireContext(), "Lỗi tải mã giảm giá: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        } finally {
-            if (db != null) dbHelper.closeDatabase(db);
         }
     }
 
     private void showAddCouponDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Thêm Mã Giảm Giá");
-
         View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_coupon, null);
         EditText editCode = view.findViewById(R.id.edit_coupon_code);
         EditText editValue = view.findViewById(R.id.edit_coupon_value);
@@ -97,288 +76,146 @@ public class CouponManagementFragment extends Fragment {
         EditText editEnd = view.findViewById(R.id.edit_coupon_end);
         EditText editStatus = view.findViewById(R.id.edit_coupon_status);
 
-        // Thêm DatePicker cho ngày bắt đầu
-        editStart.setOnClickListener(v -> {
-            Calendar calendar = Calendar.getInstance();
-            DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(),
-                    (view1, year, month, dayOfMonth) -> {
-                        String date = String.format("%d-%02d-%02d", year, month + 1, dayOfMonth);
-                        editStart.setText(date);
-                    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
-            datePickerDialog.show();
-        });
-
-        // Thêm DatePicker cho ngày kết thúc
-        editEnd.setOnClickListener(v -> {
-            Calendar calendar = Calendar.getInstance();
-            DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(),
-                    (view1, year, month, dayOfMonth) -> {
-                        String date = String.format("%d-%02d-%02d", year, month + 1, dayOfMonth);
-                        editEnd.setText(date);
-                    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
-            datePickerDialog.show();
-        });
-
         builder.setView(view)
                 .setPositiveButton("Thêm", (dialog, which) -> {
-                    if (!validateInput(editCode, editValue, editStart, editEnd, editStatus)) return;
+                    try {
+                        String code = editCode.getText().toString().trim();
+                        double discountValue = Double.parseDouble(editValue.getText().toString().trim());
+                        String startDate = editStart.getText().toString().trim();
+                        String endDate = editEnd.getText().toString().trim();
+                        String status = editStatus.getText().toString().trim();
 
-                    String code = editCode.getText().toString().trim();
-                    double value = Double.parseDouble(editValue.getText().toString().trim());
-                    String start = editStart.getText().toString().trim();
-                    String end = editEnd.getText().toString().trim();
-                    String status = editStatus.getText().toString().trim().toLowerCase();
+                        if (TextUtils.isEmpty(code) || discountValue <= 0 || TextUtils.isEmpty(startDate) || TextUtils.isEmpty(endDate) || TextUtils.isEmpty(status)) {
+                            Toast.makeText(requireContext(), "Vui lòng điền đầy đủ thông tin hợp lệ!", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
 
-                    addCoupon(code, value, start, end, status);
-                    loadCoupons();
-                    Toast.makeText(requireContext(), "Thêm mã giảm giá thành công", Toast.LENGTH_SHORT).show();
+                        addCoupon(code, discountValue, startDate, endDate, status);
+                        loadCoupons();
+                        Toast.makeText(requireContext(), "Thêm mã giảm giá thành công", Toast.LENGTH_SHORT).show();
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(requireContext(), "Vui lòng nhập đúng định dạng số", Toast.LENGTH_SHORT).show();
+                    }
                 })
-                .setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss());
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(android.R.color.holo_green_dark));
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+                .setNegativeButton("Hủy", null)
+                .show();
     }
 
-    private boolean validateInput(EditText code, EditText value, EditText start, EditText end, EditText status) {
-        if (TextUtils.isEmpty(code.getText())) {
-            code.setError("Mã không được để trống");
-            return false;
-        }
-        if (TextUtils.isEmpty(value.getText()) || Double.parseDouble(value.getText().toString().trim()) <= 0) {
-            value.setError("Giá trị phải lớn hơn 0");
-            return false;
-        }
-        String startDate = start.getText().toString().trim();
-        String endDate = end.getText().toString().trim();
-        if (TextUtils.isEmpty(startDate) || !isValidDate(startDate)) {
-            start.setError("Ngày bắt đầu không hợp lệ (yyyy-MM-dd)");
-            return false;
-        }
-        if (TextUtils.isEmpty(endDate) || !isValidDate(endDate)) {
-            end.setError("Ngày kết thúc không hợp lệ (yyyy-MM-dd)");
-            return false;
-        }
-        if (compareDates(startDate, endDate) > 0) {
-            start.setError("Ngày bắt đầu phải nhỏ hơn ngày kết thúc");
-            return false;
-        }
-        if (TextUtils.isEmpty(status.getText()) || !status.getText().toString().trim().toLowerCase().matches("active|expired")) {
-            status.setError("Status phải là 'active' hoặc 'expired'");
-            return false;
-        }
-        return true;
+    private void showEditCouponDialog(Coupon coupon) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Sửa Mã Giảm Giá");
+        View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_coupon, null);
+        EditText editCode = view.findViewById(R.id.edit_coupon_code);
+        EditText editValue = view.findViewById(R.id.edit_coupon_value);
+        EditText editStart = view.findViewById(R.id.edit_coupon_start);
+        EditText editEnd = view.findViewById(R.id.edit_coupon_end);
+        EditText editStatus = view.findViewById(R.id.edit_coupon_status);
+
+        editCode.setText(coupon.getCode());
+        editValue.setText(String.valueOf(coupon.getDiscountValue()));
+        editStart.setText(coupon.getStartDate());
+        editEnd.setText(coupon.getEndDate());
+        editStatus.setText(coupon.getStatus());
+
+        builder.setView(view)
+                .setPositiveButton("Cập nhật", (dialog, which) -> {
+                    try {
+                        String code = editCode.getText().toString().trim();
+                        double discountValue = Double.parseDouble(editValue.getText().toString().trim());
+                        String startDate = editStart.getText().toString().trim();
+                        String endDate = editEnd.getText().toString().trim();
+                        String status = editStatus.getText().toString().trim();
+
+                        if (TextUtils.isEmpty(code) || discountValue <= 0 || TextUtils.isEmpty(startDate) || TextUtils.isEmpty(endDate) || TextUtils.isEmpty(status)) {
+                            Toast.makeText(requireContext(), "Vui lòng điền đầy đủ thông tin hợp lệ!", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        updateCoupon(coupon.getId(), code, discountValue, startDate, endDate, status);
+                        loadCoupons();
+                        Toast.makeText(requireContext(), "Cập nhật mã giảm giá thành công", Toast.LENGTH_SHORT).show();
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(requireContext(), "Vui lòng nhập đúng định dạng số", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
     }
 
-    private int compareDates(String startDate, String endDate) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        try {
-            Date start = sdf.parse(startDate);
-            Date end = sdf.parse(endDate);
-            return start.compareTo(end);
-        } catch (ParseException e) {
-            return 1; // Giả định lỗi, ưu tiên không hợp lệ
-        }
-    }
-
-    private boolean isValidDate(String dateStr) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        sdf.setLenient(false);
-        try {
-            Date date = sdf.parse(dateStr);
-            return date != null;
-        } catch (ParseException e) {
-            return false;
-        }
-    }
-
-    // Trong showAddCouponDialog và showEditCouponDialog, thêm kiểm tra trùng lặp code
-    private void addCoupon(String code, double discountValue, String startDate, String endDate, String status) {
-        SQLiteDatabase db = null;
-        try {
-            db = dbHelper.openDatabase();
-            Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM Discount_Codes WHERE code = ?", new String[]{code});
+    private boolean isCodeExists(String code, int excludeId) {
+        try (SQLiteDatabase db = dbHelper.openDatabase()) {
+            Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM Discount_Codes WHERE code = ? AND discount_id != ?", new String[]{code, String.valueOf(excludeId)});
             if (cursor.moveToFirst() && cursor.getInt(0) > 0) {
-                Toast.makeText(requireContext(), "Mã giảm giá đã tồn tại!", Toast.LENGTH_SHORT).show();
                 cursor.close();
-                return;
+                return true;
             }
             cursor.close();
+            return false;
+        } catch (Exception e) {
+            Toast.makeText(requireContext(), "Lỗi kiểm tra mã: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            return false;
+        }
+    }
+
+    private void addCoupon(String code, double discountValue, String startDate, String endDate, String status) {
+        if (isCodeExists(code, -1)) {
+            Toast.makeText(requireContext(), "Mã giảm giá đã tồn tại!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try (SQLiteDatabase db = dbHelper.openDatabase()) {
             db.execSQL("INSERT INTO Discount_Codes (code, discount_value, start_date, end_date, status) VALUES (?, ?, ?, ?, ?)",
                     new Object[]{code, discountValue, startDate, endDate, status});
-            recyclerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.fall_down));
-            loadCoupons();
-            Toast.makeText(requireContext(), "Thêm mã giảm giá thành công", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(requireContext(), "Lỗi thêm mã giảm giá: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        } finally {
-            if (db != null) dbHelper.closeDatabase(db);
         }
     }
 
     private void updateCoupon(int id, String code, double discountValue, String startDate, String endDate, String status) {
-        SQLiteDatabase db = null;
-        try {
-            db = dbHelper.openDatabase();
+        if (isCodeExists(code, id)) {
+            Toast.makeText(requireContext(), "Mã giảm giá đã tồn tại!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try (SQLiteDatabase db = dbHelper.openDatabase()) {
             db.execSQL("UPDATE Discount_Codes SET code = ?, discount_value = ?, start_date = ?, end_date = ?, status = ? WHERE discount_id = ?",
                     new Object[]{code, discountValue, startDate, endDate, status, id});
-            recyclerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.fall_down));
-            loadCoupons();
-            Toast.makeText(requireContext(), "Cập nhật mã giảm giá thành công", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(requireContext(), "Lỗi cập nhật mã giảm giá: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        } finally {
-            if (db != null) dbHelper.closeDatabase(db);
+        }
+    }
+
+    private boolean isCouponReferenced(int discountId) {
+        try (SQLiteDatabase db = dbHelper.openDatabase()) {
+            Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM Orders WHERE discount_code = ?", new String[]{String.valueOf(discountId)});
+            if (cursor.moveToFirst() && cursor.getInt(0) > 0) {
+                cursor.close();
+                return true;
+            }
+            cursor.close();
+            return false;
+        } catch (Exception e) {
+            Toast.makeText(requireContext(), "Lỗi kiểm tra tham chiếu: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            return true;
         }
     }
 
     private void deleteCoupon(int id) {
-        SQLiteDatabase db = null;
-        try {
-            db = dbHelper.openDatabase();
-            Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM Orders WHERE discount_code = ?", new String[]{String.valueOf(id)});
-            if (cursor.moveToFirst() && cursor.getInt(0) > 0) {
-                Toast.makeText(requireContext(), "Không thể xóa: Mã giảm giá đang được sử dụng!", Toast.LENGTH_SHORT).show();
-                cursor.close();
-                return;
-            }
-            cursor.close();
-
-            db.execSQL("DELETE FROM Discount_Codes WHERE discount_id = ?", new Object[]{id});
-            recyclerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.fall_down));
-            loadCoupons();
-            Toast.makeText(requireContext(), "Xóa mã giảm giá thành công", Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            Toast.makeText(requireContext(), "Lỗi xóa mã giảm giá: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        } finally {
-            if (db != null) dbHelper.closeDatabase(db);
+        if (isCouponReferenced(id)) {
+            Toast.makeText(requireContext(), "Không thể xóa: Mã giảm giá đang được sử dụng!", Toast.LENGTH_SHORT).show();
+            return;
         }
-    }
-
-    public static class Coupon {
-        int id;
-        String code, startDate, endDate, status;
-        double discountValue;
-
-        public Coupon(int id, String code, double discountValue, String startDate, String endDate, String status) {
-            this.id = id;
-            this.code = code;
-            this.discountValue = discountValue;
-            this.startDate = startDate;
-            this.endDate = endDate;
-            this.status = status;
-        }
-    }
-
-    public static class CouponAdapter extends RecyclerView.Adapter<CouponAdapter.CouponViewHolder> {
-        private List<Coupon> coupons;
-        private Context context;
-        private CouponManagementFragment fragment;
-
-        public CouponAdapter(List<Coupon> coupons, Context context, CouponManagementFragment fragment) {
-            this.coupons = coupons;
-            this.context = context;
-            this.fragment = fragment;
-        }
-
-        @NonNull
-        @Override
-        public CouponViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(context).inflate(R.layout.item_coupon_admin, parent, false);
-            return new CouponViewHolder(view);
-        }
-
-        // Thêm animation trong onBindViewHolder của CouponAdapter
-        @Override
-        public void onBindViewHolder(@NonNull CouponViewHolder holder, int position) {
-            Coupon coupon = coupons.get(position);
-            holder.itemView.setAnimation(AnimationUtils.loadAnimation(context, android.R.anim.fade_in));
-            holder.codeTextView.setText("Code: " + coupon.code);
-            holder.valueTextView.setText("Value: $" + coupon.discountValue);
-            holder.periodTextView.setText("Period: " + coupon.startDate + " to " + coupon.endDate + " | Status: " + coupon.status);
-
-            holder.btnEdit.setOnClickListener(v -> fragment.showEditCouponDialog(coupon));
-            holder.btnDelete.setOnClickListener(v -> fragment.deleteCoupon(coupon.id));
-        }
-
-        @Override
-        public int getItemCount() {
-            return coupons.size();
-        }
-
-        public static class CouponViewHolder extends RecyclerView.ViewHolder {
-            public TextView codeTextView, valueTextView, periodTextView;
-            public Button btnEdit, btnDelete;
-
-            public CouponViewHolder(@NonNull View itemView) {
-                super(itemView);
-                codeTextView = itemView.findViewById(R.id.coupon_code);
-                valueTextView = itemView.findViewById(R.id.coupon_value);
-                periodTextView = itemView.findViewById(R.id.coupon_period);
-                btnEdit = itemView.findViewById(R.id.btn_edit_coupon);
-                btnDelete = itemView.findViewById(R.id.btn_delete_coupon);
-            }
-        }
-    }
-
-    // Cập nhật tương tự trong showEditCouponDialog
-    private void showEditCouponDialog(Coupon coupon) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Sửa Mã Giảm Giá");
-
-        View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_coupon, null);
-        EditText editCode = view.findViewById(R.id.edit_coupon_code);
-        EditText editValue = view.findViewById(R.id.edit_coupon_value);
-        EditText editStart = view.findViewById(R.id.edit_coupon_start);
-        EditText editEnd = view.findViewById(R.id.edit_coupon_end);
-        EditText editStatus = view.findViewById(R.id.edit_coupon_status);
-
-        editCode.setText(coupon.code);
-        editValue.setText(String.valueOf(coupon.discountValue));
-        editStart.setText(coupon.startDate);
-        editEnd.setText(coupon.endDate);
-        editStatus.setText(coupon.status);
-
-        // Thêm DatePicker cho ngày bắt đầu
-        editStart.setOnClickListener(v -> {
-            Calendar calendar = Calendar.getInstance();
-            DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(),
-                    (view1, year, month, dayOfMonth) -> {
-                        String date = String.format("%d-%02d-%02d", year, month + 1, dayOfMonth);
-                        editStart.setText(date);
-                    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
-            datePickerDialog.show();
-        });
-
-        // Thêm DatePicker cho ngày kết thúc
-        editEnd.setOnClickListener(v -> {
-            Calendar calendar = Calendar.getInstance();
-            DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(),
-                    (view1, year, month, dayOfMonth) -> {
-                        String date = String.format("%d-%02d-%02d", year, month + 1, dayOfMonth);
-                        editEnd.setText(date);
-                    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
-            datePickerDialog.show();
-        });
-
-        builder.setView(view)
-                .setPositiveButton("Cập nhật", (dialog, which) -> {
-                    if (!validateInput(editCode, editValue, editStart, editEnd, editStatus)) return;
-
-                    String code = editCode.getText().toString().trim();
-                    double value = Double.parseDouble(editValue.getText().toString().trim());
-                    String start = editStart.getText().toString().trim();
-                    String end = editEnd.getText().toString().trim();
-                    String status = editStatus.getText().toString().trim().toLowerCase();
-
-                    updateCoupon(coupon.id, code, value, start, end, status);
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Xác nhận xóa")
+                .setMessage("Bạn có chắc chắn muốn xóa mã giảm giá này?")
+                .setPositiveButton("Xóa", (dialog, which) -> {
+                    try (SQLiteDatabase db = dbHelper.openDatabase()) {
+                        db.execSQL("DELETE FROM Discount_Codes WHERE discount_id = ?", new Object[]{id});
+                        Toast.makeText(requireContext(), "Xóa mã giảm giá thành công", Toast.LENGTH_SHORT).show();
+                        loadCoupons();
+                    } catch (Exception e) {
+                        Toast.makeText(requireContext(), "Lỗi xóa mã giảm giá: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
                 })
-                .setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss());
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(android.R.color.holo_green_dark));
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+                .setNegativeButton("Hủy", null)
+                .show();
     }
 }

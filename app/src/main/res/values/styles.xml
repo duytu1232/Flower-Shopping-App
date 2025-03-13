@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="Yellow_light">#FFFF00</color>
-    <color name="primary_green">#99BC85</color>
-    <color name="dark_gray">#333333</color>
+    <color name="primary_green">#98BB84</color>
     <color name="light_green">#BFD8AF</color>
     <color name="dark_green">#4CAF50</color>
     <color name="text_color">#333333</color>
     <color name="secondary_text">#666666</color>
+    <color name="white">#FFFFFF</color>
 </resources>

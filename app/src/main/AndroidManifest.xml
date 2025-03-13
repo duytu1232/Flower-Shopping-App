@@ -23,6 +23,12 @@
         android:theme="@style/Theme.FlowerApp"
         tools:targetApi="31">
         <activity
+            android:name=".User.Fragments.ReviewDetail"
+            android:exported="false" />
+        <activity
+            android:name=".User.Fragments.ProductDetail"
+            android:exported="false" />
+        <activity
             android:name=".AccountInfoActivity"
             android:exported="false" />
         <activity
@@ -71,6 +77,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
