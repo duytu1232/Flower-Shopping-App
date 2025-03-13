@@ -52,7 +52,6 @@ dependencies {
     implementation(libs.room.runtime)  // Tùy chọn cho Room
     annotationProcessor(libs.room.compiler)  // Tùy chọn cho Room
     implementation(libs.lifecycle.livedata)  // Tùy chọn cho LiveData
-
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
