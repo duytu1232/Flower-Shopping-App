@@ -43,7 +43,7 @@ public abstract class BaseOrderFragment extends Fragment {
         orderList = new ArrayList<>();
         loadOrdersFromDatabase();
 
-        orderAdapter = new OrderAdapter(orderList);
+        orderAdapter = new OrderAdapter(orderList); // Sử dụng constructor mới
         orderRecyclerView.setAdapter(orderAdapter);
         updateEmptyState();
 
@@ -76,11 +76,11 @@ public abstract class BaseOrderFragment extends Fragment {
                 int imageUrlIndex = cursor.getColumnIndex("image_url");
 
                 int orderId = orderIdIndex >= 0 ? cursor.getInt(orderIdIndex) : 0;
-                int userId = userIdIndex >= 0 ? cursor.getInt(userIdIndex) : 0; // Giá trị mặc định nếu không có
+                int userId = userIdIndex >= 0 ? cursor.getInt(userIdIndex) : 0;
                 String orderDate = dateIndex >= 0 ? cursor.getString(dateIndex) : "";
                 String orderStatus = statusIndex >= 0 ? cursor.getString(statusIndex) : "";
-                double totalAmount = totalAmountIndex >= 0 ? cursor.getDouble(totalAmountIndex) : 0.0; // Giá trị mặc định nếu không có
-                String shippingAddress = shippingAddressIndex >= 0 ? cursor.getString(shippingAddressIndex) : "Not specified"; // Giá trị mặc định nếu không có
+                double totalAmount = totalAmountIndex >= 0 ? cursor.getDouble(totalAmountIndex) : 0.0;
+                String shippingAddress = shippingAddressIndex >= 0 ? cursor.getString(shippingAddressIndex) : "Not specified";
                 String title = productNameIndex >= 0 ? cursor.getString(productNameIndex) : "Unknown Product";
                 String imageUrl = imageUrlIndex >= 0 ? cursor.getString(imageUrlIndex) : "";
                 int imageRes = R.drawable.order_base_line;

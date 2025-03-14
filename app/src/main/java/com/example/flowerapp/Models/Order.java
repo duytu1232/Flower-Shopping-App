@@ -1,6 +1,8 @@
 package com.example.flowerapp.Models;
 
 import java.io.Serializable;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 public class Order implements Serializable {
     private int id, userId;
@@ -11,6 +13,16 @@ public class Order implements Serializable {
 
     public Order(int id, int userId, String orderDate, String status, double totalAmount, String shippingAddress,
                  String title, int imageResId, String imageUrl) {
+        if (totalAmount < 0) {
+            throw new IllegalArgumentException("Tổng tiền không được âm");
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        sdf.setLenient(false);
+        try {
+            sdf.parse(orderDate);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Ngày đặt hàng không hợp lệ (yyyy-MM-dd)");
+        }
         this.id = id;
         this.userId = userId;
         this.orderDate = orderDate;
