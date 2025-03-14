@@ -1,5 +1,7 @@
 package com.example.flowerapp.Models;
 
+import android.util.Patterns;
+
 public class Product {
     private int id;           // product_id
     private String name;      // name
@@ -32,8 +34,25 @@ public class Product {
     public void setId(int id) { this.id = id; }
     public void setName(String name) { this.name = name; }
     public void setDescription(String description) { this.description = description; }
-    public void setPrice(double price) { this.price = price; }
-    public void setStock(int stock) { this.stock = stock; }
-    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    public void setPrice(double price) {
+        if (price <= 0) {
+            throw new IllegalArgumentException("Giá phải lớn hơn 0");
+        }
+        this.price = price;
+    }
+
+    public void setStock(int stock) {
+        if (stock < 0) {
+            throw new IllegalArgumentException("Số lượng không được âm");
+        }
+        this.stock = stock;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        if (imageUrl != null && !Patterns.WEB_URL.matcher(imageUrl).matches()) {
+            throw new IllegalArgumentException("URL hình ảnh không hợp lệ");
+        }
+        this.imageUrl = imageUrl;
+    }
     public void setCategory(String category) { this.category = category; }
 }

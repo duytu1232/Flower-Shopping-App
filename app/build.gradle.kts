@@ -26,6 +26,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+    buildToolsVersion = "34.0.0"
 }
 
 dependencies {
@@ -51,7 +52,6 @@ dependencies {
     implementation(libs.room.runtime)  // Tùy chọn cho Room
     annotationProcessor(libs.room.compiler)  // Tùy chọn cho Room
     implementation(libs.lifecycle.livedata)  // Tùy chọn cho LiveData
-
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

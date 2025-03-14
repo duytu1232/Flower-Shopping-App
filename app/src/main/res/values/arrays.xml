@@ -6,4 +6,13 @@
         <item>Hoa cẩm chướng</item>
         <item>Hoa lan</item>
     </string-array>
+    <string-array name="rating_filters">
+        <item>All</item>
+        <item>5 Stars</item>
+        <item>4 Stars</item>
+        <item>3 Stars</item>
+        <item>2 Stars</item>
+        <item>1 Star</item>
+    </string-array>
+    <string name="select_rating">Select Rating</string>
 </resources>

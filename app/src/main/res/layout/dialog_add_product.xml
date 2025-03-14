@@ -31,7 +31,21 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Giá (USD)"
+            android:hint="Mô tả"
+            app:hintTextColor="#99BC85">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_product_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:minHeight="48dp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Giá (VND)"
             app:hintTextColor="#99BC85">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -67,6 +81,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textUri"
+                android:minHeight="48dp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Danh mục"
+            app:hintTextColor="#99BC85">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_product_category"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
                 android:minHeight="48dp" />
         </com.google.android.material.textfield.TextInputLayout>
 
