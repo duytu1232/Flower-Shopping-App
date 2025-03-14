@@ -1,6 +1,7 @@
 package com.example.flowerapp.Adapters;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,11 +9,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.flowerapp.Models.Product;
 import com.example.flowerapp.R;
+import com.example.flowerapp.User.Fragments.ProductDetail;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.List;
@@ -74,6 +79,23 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             } else {
                 holder.productImage.setImageResource(android.R.drawable.ic_menu_gallery);
             }
+        }
+
+        // Điều hướng đến ProductDetail khi nhấn vào sản phẩm (chỉ áp dụng cho chế độ hiển thị)
+        if (onEditClick == null && onDeleteClick == null) {
+            holder.itemView.setOnClickListener(v -> {
+                ProductDetail productDetailFragment = new ProductDetail();
+                Bundle args = new Bundle();
+                args.putInt("product_id", product.getId());
+                productDetailFragment.setArguments(args);
+
+                // Điều hướng đến ProductDetail fragment
+                FragmentManager fragmentManager = ((FragmentActivity) holder.itemView.getContext()).getSupportFragmentManager();
+                FragmentTransaction transaction = fragmentManager.beginTransaction();
+                transaction.replace(R.id.fragment_container, productDetailFragment);
+                transaction.addToBackStack(null);
+                transaction.commit();
+            });
         }
 
         if (onEditClick == null || onDeleteClick == null) {

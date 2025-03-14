@@ -1,6 +1,7 @@
 package com.example.flowerapp.Adapters;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,11 +10,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.flowerapp.Models.CartItem;
 import com.example.flowerapp.R;
+import com.example.flowerapp.User.Fragments.ProductDetail;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.List;
@@ -68,6 +73,20 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         } else {
             holder.cartItemImage.setImageResource(android.R.drawable.ic_menu_gallery);
         }
+
+        // Điều hướng đến ProductDetail khi nhấn vào item
+        holder.itemView.setOnClickListener(v -> {
+            ProductDetail productDetailFragment = new ProductDetail();
+            Bundle args = new Bundle();
+            args.putInt("product_id", item.getProductId());
+            productDetailFragment.setArguments(args);
+
+            FragmentManager fragmentManager = ((FragmentActivity) context).getSupportFragmentManager();
+            FragmentTransaction transaction = fragmentManager.beginTransaction();
+            transaction.replace(R.id.fragment_container, productDetailFragment);
+            transaction.addToBackStack(null);
+            transaction.commit();
+        });
 
         // Xử lý nút tăng số lượng
         holder.btnIncreaseQuantity.setOnClickListener(v -> {
