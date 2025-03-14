@@ -1,30 +1,24 @@
 package com.example.flowerapp.Admin.Fragments;
 
-import android.app.AlertDialog;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AnimationUtils;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.flowerapp.Adapters.UserAdapter;
+import com.example.flowerapp.Security.Helper.DatabaseHelper;
 import com.example.flowerapp.Models.User;
 import com.example.flowerapp.R;
-import com.example.flowerapp.Security.Helper.DatabaseHelper;
 
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -32,67 +26,45 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserManagementFragment extends Fragment {
-    private DatabaseHelper dbHelper;
     private RecyclerView recyclerView;
     private UserAdapter adapter;
-    private List<User> userList;
+    private List<User> userList = new ArrayList<>();
+    private DatabaseHelper dbHelper;
 
-    @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_user_management, container, false);
 
         dbHelper = new DatabaseHelper(requireContext());
-        userList = new ArrayList<>();
         recyclerView = view.findViewById(R.id.recycler_user_list);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-
-        adapter = new UserAdapter(userList, requireContext(), this);
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        adapter = new UserAdapter(userList, this::showEditUserDialog, this::deleteUser);
         recyclerView.setAdapter(adapter);
 
+        view.findViewById(R.id.btn_add_user).setOnClickListener(v -> showAddUserDialog());
+
         loadUsers();
-
-        Button addButton = view.findViewById(R.id.btn_add_user);
-        addButton.setOnClickListener(v -> showAddUserDialog());
-
         return view;
     }
 
     private void loadUsers() {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            Cursor cursor = db.rawQuery("SELECT user_id, username, email, role, status, full_name, phone, avatar_uri FROM Users", null);
+            Cursor cursor = db.rawQuery("SELECT * FROM Users", null);
             userList.clear();
-
-            if (cursor.moveToFirst()) {
-                int userIdColumn = cursor.getColumnIndex("user_id");
-                int usernameColumn = cursor.getColumnIndex("username");
-                int emailColumn = cursor.getColumnIndex("email");
-                int roleColumn = cursor.getColumnIndex("role");
-                int statusColumn = cursor.getColumnIndex("status");
-                int fullNameColumn = cursor.getColumnIndex("full_name");
-                int phoneColumn = cursor.getColumnIndex("phone");
-                int avatarUriColumn = cursor.getColumnIndex("avatar_uri");
-
-                if (userIdColumn < 0 || usernameColumn < 0 || emailColumn < 0 || roleColumn < 0 || statusColumn < 0) {
-                    Toast.makeText(requireContext(), "Thiếu cột bắt buộc trong cơ sở dữ liệu", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                do {
-                    int id = cursor.getInt(userIdColumn);
-                    String username = cursor.getString(usernameColumn);
-                    String email = cursor.getString(emailColumn);
-                    String role = cursor.getString(roleColumn);
-                    String status = cursor.getString(statusColumn);
-                    String fullName = fullNameColumn >= 0 ? cursor.getString(fullNameColumn) : null;
-                    String phone = phoneColumn >= 0 ? cursor.getString(phoneColumn) : null;
-                    String avatarUri = avatarUriColumn >= 0 ? cursor.getString(avatarUriColumn) : null;
-                    userList.add(new User(id, username, email, role, status, fullName, phone, avatarUri));
-                } while (cursor.moveToNext());
+            while (cursor.moveToNext()) {
+                int userId = cursor.getInt(cursor.getColumnIndexOrThrow("user_id"));
+                String username = cursor.getString(cursor.getColumnIndexOrThrow("username"));
+                String email = cursor.getString(cursor.getColumnIndexOrThrow("email"));
+                String role = cursor.getString(cursor.getColumnIndexOrThrow("role"));
+                String status = cursor.getString(cursor.getColumnIndexOrThrow("status"));
+                String fullName = cursor.getString(cursor.getColumnIndexOrThrow("full_name"));
+                String phone = cursor.getString(cursor.getColumnIndexOrThrow("phone"));
+                String avatarUri = cursor.getString(cursor.getColumnIndexOrThrow("avatar_uri"));
+                userList.add(new User(userId, username, email, role, status, fullName, phone, avatarUri));
             }
             cursor.close();
             adapter.notifyDataSetChanged();
-            recyclerView.scheduleLayoutAnimation(); // Thêm animation khi load danh sách
+            recyclerView.scheduleLayoutAnimation();
         } catch (Exception e) {
             Toast.makeText(requireContext(), "Lỗi tải người dùng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
@@ -101,7 +73,6 @@ public class UserManagementFragment extends Fragment {
     private void showAddUserDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Thêm Người Dùng");
-
         View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_user, null);
         EditText editUsername = view.findViewById(R.id.edit_user_username);
         EditText editEmail = view.findViewById(R.id.edit_user_email);
@@ -116,88 +87,25 @@ public class UserManagementFragment extends Fragment {
                     String username = editUsername.getText().toString().trim();
                     String email = editEmail.getText().toString().trim();
                     String password = editPassword.getText().toString().trim();
-                    String role = editRole.getText().toString().trim().toLowerCase();
-                    String status = editStatus.getText().toString().trim().toLowerCase();
+                    String role = editRole.getText().toString().trim();
+                    String status = editStatus.getText().toString().trim();
                     String fullName = editFullName.getText().toString().trim();
                     String phone = editPhone.getText().toString().trim();
 
-                    if (!validateInput(username, email, password, role, status, phone)) {
+                    if (TextUtils.isEmpty(username) || TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
+                        Toast.makeText(requireContext(), "Vui lòng điền đầy đủ thông tin bắt buộc!", Toast.LENGTH_SHORT).show();
                         return;
                     }
-
-                    if (isEmailExists(email)) {
-                        Toast.makeText(requireContext(), "Email đã được sử dụng!", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
-                    addUser(username, hashedPassword, email, role, status, fullName, phone, null);
+                    addUser(username, password, email, role, status, fullName, phone, null);
                     loadUsers();
-                    Toast.makeText(requireContext(), "Thêm người dùng thành công", Toast.LENGTH_SHORT).show();
                 })
-                .setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss());
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(android.R.color.holo_green_dark));
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(android.R.color.holo_red_dark));
-    }
-
-    private boolean validateInput(String username, String email, String password, String role, String status, String phone) {
-        if (TextUtils.isEmpty(username)) {
-            Toast.makeText(requireContext(), "Vui lòng nhập tên người dùng", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        if (TextUtils.isEmpty(email) || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            Toast.makeText(requireContext(), "Vui lòng nhập email hợp lệ", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        if (TextUtils.isEmpty(password) || password.length() < 6) {
-            Toast.makeText(requireContext(), "Mật khẩu phải từ 6 ký tự", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        if (!role.matches("customer|admin|staff")) {
-            Toast.makeText(requireContext(), "Role phải là 'customer', 'admin', hoặc 'staff'", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        if (!status.matches("active|locked")) {
-            Toast.makeText(requireContext(), "Status phải là 'active' hoặc 'locked'", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        if (!TextUtils.isEmpty(phone) && !phone.matches("\\d{10}")) {
-            Toast.makeText(requireContext(), "Số điện thoại phải là 10 chữ số", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        return true;
-    }
-
-    private boolean isEmailExists(String email) {
-        try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            Cursor cursor = db.rawQuery("SELECT * FROM Users WHERE email = ?", new String[]{email});
-            boolean exists = cursor.getCount() > 0;
-            cursor.close();
-            return exists;
-        } catch (Exception e) {
-            Toast.makeText(requireContext(), "Lỗi kiểm tra email: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            return false;
-        }
-    }
-
-    private void addUser(String username, String password, String email, String role, String status, String fullName, String phone, String avatarUri) {
-        try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            db.execSQL("INSERT INTO Users (username, password, email, role, status, full_name, phone, avatar_uri) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                    new Object[]{username, password, email, role, status, fullName, phone, avatarUri});
-            recyclerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.fall_down)); // Animation khi thêm
-            loadUsers();
-        } catch (Exception e) {
-            Toast.makeText(requireContext(), "Lỗi thêm người dùng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
+                .setNegativeButton("Hủy", null)
+                .show();
     }
 
     private void showEditUserDialog(User user) {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Sửa Người Dùng");
-
         View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_user, null);
         EditText editUsername = view.findViewById(R.id.edit_user_username);
         EditText editEmail = view.findViewById(R.id.edit_user_email);
@@ -208,130 +116,113 @@ public class UserManagementFragment extends Fragment {
         EditText editPhone = view.findViewById(R.id.edit_user_phone);
 
         editUsername.setText(user.getUsername());
-        editEmail.setText(user.getEmail() != null ? user.getEmail() : "");
-        editPassword.setText("");
-        editRole.setText(user.getRole() != null ? user.getRole() : "");
-        editStatus.setText(user.getStatus() != null ? user.getStatus() : "");
-        editFullName.setText(user.getFullName() != null ? user.getFullName() : "");
-        editPhone.setText(user.getPhone() != null ? user.getPhone() : "");
+        editEmail.setText(user.getEmail());
+        editRole.setText(user.getRole());
+        editStatus.setText(user.getStatus());
+        editFullName.setText(user.getFullName());
+        editPhone.setText(user.getPhone());
 
         builder.setView(view)
                 .setPositiveButton("Cập nhật", (dialog, which) -> {
                     String username = editUsername.getText().toString().trim();
                     String email = editEmail.getText().toString().trim();
                     String password = editPassword.getText().toString().trim();
-                    String role = editRole.getText().toString().trim().toLowerCase();
-                    String status = editStatus.getText().toString().trim().toLowerCase();
+                    String role = editRole.getText().toString().trim();
+                    String status = editStatus.getText().toString().trim();
                     String fullName = editFullName.getText().toString().trim();
                     String phone = editPhone.getText().toString().trim();
 
-                    if (!validateInput(username, email, null, role, status, phone)) {
+                    if (TextUtils.isEmpty(username) || TextUtils.isEmpty(email)) {
+                        Toast.makeText(requireContext(), "Vui lòng điền đầy đủ thông tin bắt buộc!", Toast.LENGTH_SHORT).show();
                         return;
                     }
-
-                    if (!email.equals(user.getEmail()) && isEmailExists(email)) {
-                        Toast.makeText(requireContext(), "Email đã được sử dụng!", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    updateUser(user.getUserId(), username, password.isEmpty() ? null : password, email, role, status, fullName, phone, user.getAvatarUri());
+                    updateUser(user.getUserId(), username, password, email, role, status, fullName, phone, user.getAvatarUri());
+                    loadUsers();
                 })
-                .setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss());
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(android.R.color.holo_green_dark));
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+                .setNegativeButton("Hủy", null)
+                .show();
     }
 
-    private void updateUser(int id, String username, String password, String email, String role, String status, String fullName, String phone, String avatarUri) {
+    private boolean isUsernameExists(String username, int excludeId) {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            if (password == null || password.isEmpty()) {
+            Cursor cursor = db.rawQuery("SELECT * FROM Users WHERE username = ? AND user_id != ?", new String[]{username, String.valueOf(excludeId)});
+            boolean exists = cursor.getCount() > 0;
+            cursor.close();
+            return exists;
+        } catch (Exception e) {
+            Toast.makeText(requireContext(), "Lỗi kiểm tra username: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            return false;
+        }
+    }
+
+    private void addUser(String username, String password, String email, String role, String status, String fullName, String phone, String avatarUri) {
+        if (isUsernameExists(username, -1)) {
+            Toast.makeText(requireContext(), "Tên người dùng đã tồn tại!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try (SQLiteDatabase db = dbHelper.openDatabase()) {
+            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+            db.execSQL("INSERT INTO Users (username, password, email, role, status, full_name, phone, avatar_uri) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    new Object[]{username, hashedPassword, email, role, status, fullName, phone, avatarUri});
+            Toast.makeText(requireContext(), "Thêm người dùng thành công", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(requireContext(), "Lỗi thêm người dùng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void updateUser(int userId, String username, String password, String email, String role, String status, String fullName, String phone, String avatarUri) {
+        if (isUsernameExists(username, userId)) {
+            Toast.makeText(requireContext(), "Tên người dùng đã tồn tại!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try (SQLiteDatabase db = dbHelper.openDatabase()) {
+            if (TextUtils.isEmpty(password)) {
                 db.execSQL("UPDATE Users SET username = ?, email = ?, role = ?, status = ?, full_name = ?, phone = ?, avatar_uri = ? WHERE user_id = ?",
-                        new Object[]{username, email, role, status, fullName, phone, avatarUri, id});
+                        new Object[]{username, email, role, status, fullName, phone, avatarUri, userId});
             } else {
                 String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
                 db.execSQL("UPDATE Users SET username = ?, password = ?, email = ?, role = ?, status = ?, full_name = ?, phone = ?, avatar_uri = ? WHERE user_id = ?",
-                        new Object[]{username, hashedPassword, email, role, status, fullName, phone, avatarUri, id});
+                        new Object[]{username, hashedPassword, email, role, status, fullName, phone, avatarUri, userId});
             }
-            recyclerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.fall_down)); // Animation khi cập nhật
-            loadUsers();
             Toast.makeText(requireContext(), "Cập nhật người dùng thành công", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(requireContext(), "Lỗi cập nhật người dùng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void deleteUser(int id) {
+    private boolean isUserReferenced(int userId) {
+        try (SQLiteDatabase db = dbHelper.openDatabase()) {
+            Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM Orders WHERE user_id = ?", new String[]{String.valueOf(userId)});
+            if (cursor.moveToFirst() && cursor.getInt(0) > 0) {
+                cursor.close();
+                return true;
+            }
+            cursor.close();
+            return false;
+        } catch (Exception e) {
+            Toast.makeText(requireContext(), "Lỗi kiểm tra tham chiếu: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            return true;
+        }
+    }
+
+    private void deleteUser(int userId) {
+        if (isUserReferenced(userId)) {
+            Toast.makeText(requireContext(), "Không thể xóa: Người dùng đang có đơn hàng!", Toast.LENGTH_SHORT).show();
+            return;
+        }
         new AlertDialog.Builder(requireContext())
                 .setTitle("Xác nhận xóa")
                 .setMessage("Bạn có chắc chắn muốn xóa người dùng này?")
                 .setPositiveButton("Xóa", (dialog, which) -> {
                     try (SQLiteDatabase db = dbHelper.openDatabase()) {
-                        db.execSQL("DELETE FROM Users WHERE user_id = ?", new Object[]{id});
-                        recyclerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.fall_down)); // Animation khi xóa
-                        loadUsers();
+                        db.execSQL("DELETE FROM Users WHERE user_id = ?", new Object[]{userId});
                         Toast.makeText(requireContext(), "Xóa người dùng thành công", Toast.LENGTH_SHORT).show();
+                        loadUsers();
                     } catch (Exception e) {
                         Toast.makeText(requireContext(), "Lỗi xóa người dùng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 })
-                .setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss())
+                .setNegativeButton("Hủy", null)
                 .show();
-    }
-
-    public static class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder> {
-        private List<User> users;
-        private Context context;
-        private UserManagementFragment fragment;
-
-        public UserAdapter(List<User> users, Context context, UserManagementFragment fragment) {
-            this.users = users;
-            this.context = context;
-            this.fragment = fragment;
-        }
-
-        @NonNull
-        @Override
-        public UserViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(context).inflate(R.layout.item_user_admin, parent, false);
-            return new UserViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull UserViewHolder holder, int position) {
-            User user = users.get(position);
-            holder.itemView.setAnimation(AnimationUtils.loadAnimation(context, android.R.anim.fade_in)); // Animation cho mỗi item
-            holder.usernameTextView.setText(user.getUsername() != null ? user.getUsername() : "N/A");
-            holder.emailTextView.setText("Email: " + (user.getEmail() != null ? user.getEmail() : "N/A"));
-            holder.fullNameTextView.setText("Họ tên: " + (user.getFullName() != null ? user.getFullName() : "N/A"));
-            holder.phoneTextView.setText("SĐT: " + (user.getPhone() != null ? user.getPhone() : "N/A"));
-            holder.roleStatusTextView.setText("Role: " + (user.getRole() != null ? user.getRole() : "N/A") +
-                    " | Status: " + (user.getStatus() != null ? user.getStatus() : "N/A"));
-
-            holder.btnEdit.setOnClickListener(v -> fragment.showEditUserDialog(user));
-            holder.btnDelete.setOnClickListener(v -> fragment.deleteUser(user.getUserId()));
-        }
-
-        @Override
-        public int getItemCount() {
-            return users != null ? users.size() : 0;
-        }
-
-        public static class UserViewHolder extends RecyclerView.ViewHolder {
-            public TextView usernameTextView, emailTextView, roleStatusTextView, fullNameTextView, phoneTextView;
-            public com.google.android.material.button.MaterialButton btnEdit, btnDelete;
-
-            public UserViewHolder(@NonNull View itemView) {
-                super(itemView);
-                usernameTextView = itemView.findViewById(R.id.user_username);
-                emailTextView = itemView.findViewById(R.id.user_email);
-                roleStatusTextView = itemView.findViewById(R.id.user_role_status);
-                fullNameTextView = itemView.findViewById(R.id.user_full_name);
-                phoneTextView = itemView.findViewById(R.id.user_phone);
-                btnEdit = itemView.findViewById(R.id.btn_edit_user);
-                btnDelete = itemView.findViewById(R.id.btn_delete_user);
-            }
-        }
     }
 }

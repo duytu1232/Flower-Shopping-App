@@ -1,5 +1,7 @@
 package com.example.flowerapp.Models;
 
+import android.util.Patterns;
+
 public class User {
     private int userId;
     private String username;
@@ -50,7 +52,12 @@ public class User {
     public void setPassword(String password) { this.password = password; } // Thêm setter cho password
 
     public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setEmail(String email) {
+        if (email != null && !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            throw new IllegalArgumentException("Email không hợp lệ");
+        }
+        this.email = email;
+    }
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
@@ -62,8 +69,27 @@ public class User {
     public void setFullName(String fullName) { this.fullName = fullName; }
 
     public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
+    public void setPhone(String phone) {
+        if (phone != null && !phone.matches("\\d{10}")) {
+            throw new IllegalArgumentException("Số điện thoại phải là 10 chữ số");
+        }
+        this.phone = phone;
+    }
 
     public String getAvatarUri() { return avatarUri; }
     public void setAvatarUri(String avatarUri) { this.avatarUri = avatarUri; }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "userId=" + userId +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", role='" + role + '\'' +
+                ", status='" + status + '\'' +
+                ", fullName='" + fullName + '\'' +
+                ", phone='" + phone + '\'' +
+                ", avatarUri='" + avatarUri + '\'' +
+                '}';
+    }
 }

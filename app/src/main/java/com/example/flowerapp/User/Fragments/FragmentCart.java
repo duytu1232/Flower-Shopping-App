@@ -34,6 +34,7 @@ public class FragmentCart extends Fragment {
     private List<CartItem> cartList;
     private TextView emptyMessage;
     private Button checkoutButton;
+    private DatabaseHelper dbHelper;
 
     @Nullable
     @Override
@@ -43,28 +44,32 @@ public class FragmentCart extends Fragment {
         recyclerView = view.findViewById(R.id.recycler_cart_items);
         emptyMessage = view.findViewById(R.id.empty_message);
         checkoutButton = view.findViewById(R.id.checkout_button);
+        dbHelper = new DatabaseHelper(getContext());
 
         if (recyclerView == null || emptyMessage == null || checkoutButton == null) {
             Log.e(TAG, "One or more views not found in layout");
+            Toast.makeText(getContext(), "Error: Missing views in layout", Toast.LENGTH_SHORT).show();
             return view;
         }
 
-        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         cartList = new ArrayList<>();
 
         loadCartItems();
 
-        adapter = new CartAdapter(cartList, requireContext());
+        adapter = new CartAdapter(cartList, getContext(),
+                this::increaseQuantity,
+                this::decreaseQuantity,
+                this::deleteCartItem);
         recyclerView.setAdapter(adapter);
 
         updateEmptyState();
 
         checkoutButton.setOnClickListener(v -> {
             if (cartList.isEmpty()) {
-                Toast.makeText(requireContext(), "Your cart is empty", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Your cart is empty", Toast.LENGTH_SHORT).show();
             } else {
-                // Chuyển đến activity thanh toán (tạo sau nếu cần)
-                Toast.makeText(requireContext(), "Proceed to checkout", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Proceed to checkout", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -72,42 +77,92 @@ public class FragmentCart extends Fragment {
     }
 
     private void loadCartItems() {
-        DatabaseHelper dbHelper = new DatabaseHelper(requireContext());
-        SQLiteDatabase db = dbHelper.openDatabase();
+        SQLiteDatabase db = null;
+        try {
+            db = dbHelper.openDatabase();
 
-        SharedPreferences prefs = requireActivity().getSharedPreferences("MyPrefs", requireActivity().MODE_PRIVATE);
-        int userId = prefs.getInt("user_id", -1);
-        if (userId == -1) {
-            Toast.makeText(requireContext(), "User not logged in", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        Cursor cursor = db.rawQuery(
-                "SELECT c.cart_id, c.product_id, c.quantity, p.name, p.price, p.image_url " +
-                        "FROM Cart c " +
-                        "INNER JOIN Products p ON c.product_id = p.product_id " +
-                        "WHERE c.user_id = ?", new String[]{String.valueOf(userId)});
-
-        if (cursor != null) {
-            int cartIdIndex = cursor.getColumnIndex("cart_id");
-            int productIdIndex = cursor.getColumnIndex("product_id");
-            int quantityIndex = cursor.getColumnIndex("quantity");
-            int nameIndex = cursor.getColumnIndex("name");
-            int priceIndex = cursor.getColumnIndex("price");
-            int imageUrlIndex = cursor.getColumnIndex("image_url");
-
-            while (cursor.moveToNext()) {
-                int cartId = cartIdIndex >= 0 ? cursor.getInt(cartIdIndex) : 0;
-                int productId = productIdIndex >= 0 ? cursor.getInt(productIdIndex) : 0;
-                int quantity = quantityIndex >= 0 ? cursor.getInt(quantityIndex) : 0;
-                String name = nameIndex >= 0 ? cursor.getString(nameIndex) : "";
-                double price = priceIndex >= 0 ? cursor.getDouble(priceIndex) : 0.0;
-                String imageUrl = imageUrlIndex >= 0 ? cursor.getString(imageUrlIndex) : "";
-                cartList.add(new CartItem(cartId, productId, name, price, quantity, imageUrl));
+            SharedPreferences prefs = requireActivity().getSharedPreferences("MyPrefs", requireActivity().MODE_PRIVATE);
+            int userId = prefs.getInt("user_id", -1);
+            if (userId == -1) {
+                Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+                return;
             }
-            cursor.close();
+
+            Cursor cursor = db.rawQuery(
+                    "SELECT c.cart_id, c.product_id, c.quantity, p.name, p.price, p.image_url " +
+                            "FROM Carts c " +
+                            "INNER JOIN Products p ON c.product_id = p.product_id " +
+                            "WHERE c.user_id = ?", new String[]{String.valueOf(userId)});
+
+            if (cursor != null) {
+                int cartIdIndex = cursor.getColumnIndex("cart_id");
+                int productIdIndex = cursor.getColumnIndex("product_id");
+                int quantityIndex = cursor.getColumnIndex("quantity");
+                int nameIndex = cursor.getColumnIndex("name");
+                int priceIndex = cursor.getColumnIndex("price");
+                int imageUrlIndex = cursor.getColumnIndex("image_url");
+
+                if (cartIdIndex == -1 || productIdIndex == -1 || quantityIndex == -1 ||
+                        nameIndex == -1 || priceIndex == -1 || imageUrlIndex == -1) {
+                    Log.e(TAG, "One or more columns do not exist in Carts or Products table!");
+                    Toast.makeText(getContext(), "Error: Database columns missing", Toast.LENGTH_SHORT).show();
+                } else {
+                    while (cursor.moveToNext()) {
+                        int cartId = cursor.getInt(cartIdIndex);
+                        int productId = cursor.getInt(productIdIndex);
+                        int quantity = cursor.getInt(quantityIndex);
+                        String name = cursor.getString(nameIndex);
+                        double price = cursor.getDouble(priceIndex);
+                        String imageUrl = cursor.getString(imageUrlIndex);
+                        if (name == null) name = "Unknown Product";
+                        cartList.add(new CartItem(cartId, productId, name, price, quantity, imageUrl));
+                    }
+                }
+                cursor.close();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading cart items: " + e.getMessage());
+            Toast.makeText(getContext(), "Error loading cart: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        } finally {
+            if (db != null) {
+                dbHelper.closeDatabase(db);
+            }
         }
-        dbHelper.closeDatabase(db);
+    }
+
+    private void increaseQuantity(CartItem item) {
+        item.quantity = item.getQuantity() + 1;
+        updateCartItemQuantity(item);
+        adapter.notifyDataSetChanged();
+    }
+
+    private void decreaseQuantity(CartItem item) {
+        if (item.getQuantity() > 1) {
+            item.quantity = item.getQuantity() - 1;
+            updateCartItemQuantity(item);
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+    private void deleteCartItem(CartItem item) {
+        deleteItemFromCart(item.getCartId());
+        cartList.remove(item);
+        updateEmptyState();
+        adapter.notifyDataSetChanged();
+    }
+
+    private void updateCartItemQuantity(CartItem item) {
+        boolean success = dbHelper.updateCartQuantity(item.getCartId(), item.getQuantity());
+        if (!success) {
+            Toast.makeText(getContext(), "Failed to update quantity", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void deleteItemFromCart(int cartId) {
+        boolean success = dbHelper.deleteCartItem(cartId);
+        if (!success) {
+            Toast.makeText(getContext(), "Failed to delete item", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void updateEmptyState() {

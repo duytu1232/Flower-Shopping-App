@@ -35,11 +35,9 @@ public class FragmentHome extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        // Khởi tạo ViewFlipper
         viewFlipper = view.findViewById(R.id.viewFlipper);
         setupViewFlipper();
 
-        // Khởi tạo RecyclerView
         recyclerNewProducts = view.findViewById(R.id.listnewProduct);
         recyclerSaleProducts = view.findViewById(R.id.listsaleProduct);
 
@@ -49,45 +47,49 @@ public class FragmentHome extends Fragment {
         recyclerNewProducts.setLayoutManager(newLayoutManager);
         recyclerSaleProducts.setLayoutManager(saleLayoutManager);
 
-        // Lấy dữ liệu từ cơ sở dữ liệu
         DatabaseHelper dbHelper = new DatabaseHelper(requireContext());
-        SQLiteDatabase db = dbHelper.openDatabase();
-
+        SQLiteDatabase db = null;
         List<Product> allProducts = new ArrayList<>();
-        Cursor cursor = db.rawQuery("SELECT * FROM Products LIMIT 10", null); // Giới hạn số lượng
-        if (cursor != null) {
-            int idIndex = cursor.getColumnIndex("product_id");
-            int nameIndex = cursor.getColumnIndex("name");
-            int descriptionIndex = cursor.getColumnIndex("description");
-            int priceIndex = cursor.getColumnIndex("price");
-            int stockIndex = cursor.getColumnIndex("stock");
-            int imageUrlIndex = cursor.getColumnIndex("image_url");
-            int categoryIndex = cursor.getColumnIndex("category");
+        try {
+            db = dbHelper.openDatabase();
+            Cursor cursor = db.rawQuery("SELECT * FROM Products LIMIT 10", null);
+            if (cursor != null) {
+                int idIndex = cursor.getColumnIndex("product_id");
+                int nameIndex = cursor.getColumnIndex("name");
+                int descriptionIndex = cursor.getColumnIndex("description");
+                int priceIndex = cursor.getColumnIndex("price");
+                int stockIndex = cursor.getColumnIndex("stock");
+                int imageUrlIndex = cursor.getColumnIndex("image_url");
+                int categoryIndex = cursor.getColumnIndex("category");
 
-            if (idIndex == -1 || nameIndex == -1 || descriptionIndex == -1 || priceIndex == -1 ||
-                    stockIndex == -1 || imageUrlIndex == -1 || categoryIndex == -1) {
-                Log.e(TAG, "Một hoặc nhiều cột không tồn tại trong bảng Products!");
-            } else {
-                while (cursor.moveToNext()) {
-                    int id = cursor.getInt(idIndex);
-                    String name = cursor.getString(nameIndex);
-                    String description = cursor.getString(descriptionIndex);
-                    double price = cursor.getDouble(priceIndex);
-                    int stock = cursor.getInt(stockIndex);
-                    String imageUrl = cursor.getString(imageUrlIndex);
-                    String category = cursor.getString(categoryIndex);
-                    allProducts.add(new Product(id, name, description, price, stock, imageUrl, category));
+                if (idIndex == -1 || nameIndex == -1 || descriptionIndex == -1 || priceIndex == -1 ||
+                        stockIndex == -1 || imageUrlIndex == -1 || categoryIndex == -1) {
+                    Log.e(TAG, "One or more columns do not exist in Products table!");
+                } else {
+                    while (cursor.moveToNext()) {
+                        int id = cursor.getInt(idIndex);
+                        String name = cursor.getString(nameIndex);
+                        String description = cursor.getString(descriptionIndex);
+                        double price = cursor.getDouble(priceIndex);
+                        int stock = cursor.getInt(stockIndex);
+                        String imageUrl = cursor.getString(imageUrlIndex);
+                        String category = cursor.getString(categoryIndex);
+                        allProducts.add(new Product(id, name, description, price, stock, imageUrl, category));
+                    }
                 }
+                cursor.close();
             }
-            cursor.close();
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading products: " + e.getMessage());
+        } finally {
+            if (db != null) {
+                dbHelper.closeDatabase(db);
+            }
         }
-        dbHelper.closeDatabase(db);
 
-        // Phân loại sản phẩm (giả lập: sản phẩm mới và sản phẩm sale)
         List<Product> newProducts = new ArrayList<>();
         List<Product> saleProducts = new ArrayList<>();
         for (Product product : allProducts) {
-            // Cần thêm cột 'is_sale' hoặc 'discount' trong bảng Products để phân loại chính xác
             if (product.getPrice() < 70) { // Giả lập, cần thay bằng logic thực tế
                 saleProducts.add(product);
             } else {
@@ -95,7 +97,6 @@ public class FragmentHome extends Fragment {
             }
         }
 
-        // Khởi tạo và gán adapter
         ProductAdapter newProductAdapter = new ProductAdapter(newProducts, requireContext());
         ProductAdapter saleProductAdapter = new ProductAdapter(saleProducts, requireContext());
 

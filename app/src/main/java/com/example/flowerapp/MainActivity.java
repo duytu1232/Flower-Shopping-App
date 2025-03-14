@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -26,6 +27,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
     private LinearLayout headerLayout, khoangTrongMenu;
     private BottomNavigationView bottomNav;
     private EditText searchEditText;
@@ -40,7 +42,6 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        // Kiểm tra trạng thái đăng nhập
         SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
         if (prefs.getInt("user_id", -1) == -1) {
             Intent intent = new Intent(this, DangNhap.class);
@@ -93,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initViews() {
+        Log.d(TAG, "Initializing views");
         headerLayout = findViewById(R.id.header_layout);
         khoangTrongMenu = findViewById(R.id.status_bar_spacer);
         bottomNav = findViewById(R.id.bottomNavMain);
@@ -116,6 +118,7 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             });
         } else {
+            Log.e(TAG, "Bottom navigation not found");
             Toast.makeText(this, "Bottom navigation not found", Toast.LENGTH_SHORT).show();
         }
     }
@@ -153,15 +156,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void replaceFragment(Fragment newFragment) {
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.replace(R.id.fragment_container, newFragment);
-        transaction.addToBackStack(null);
-        transaction.commit();
-
-        boolean hideHeader = newFragment instanceof FragmentAccountUser ||
-                newFragment instanceof FragmentCart;
-        headerLayout.setVisibility(hideHeader ? View.GONE : View.VISIBLE);
-        khoangTrongMenu.setVisibility(hideHeader ? View.GONE : View.VISIBLE);
+        try {
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.fragment_container, newFragment);
+            transaction.addToBackStack(null);
+            transaction.commit();
+            boolean hideHeader = newFragment instanceof FragmentAccountUser || newFragment instanceof FragmentCart;
+            headerLayout.setVisibility(hideHeader ? View.GONE : View.VISIBLE);
+            khoangTrongMenu.setVisibility(hideHeader ? View.GONE : View.VISIBLE);
+        } catch (Exception e) {
+            Log.e(TAG, "Error replacing fragment: " + e.getMessage());
+            Toast.makeText(this, "Error loading fragment", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void openNotification(View view) {
