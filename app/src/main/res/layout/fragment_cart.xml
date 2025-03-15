@@ -6,26 +6,34 @@
     android:layout_height="match_parent"
     android:background="#BFD8AF">
 
+    <!-- Thanh Spacer để tạo khoảng cách với thanh trạng thái -->
     <LinearLayout
         android:id="@+id/status_bar_spacer"
         android:layout_width="match_parent"
         android:layout_height="35dp"
         android:orientation="vertical"
-        tools:ignore="MissingConstraints"></LinearLayout>
+        app:layout_constraintTop_toTopOf="parent" />
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    </RelativeLayout>
+
+    <!-- Tiêu đề Cart, đặt dưới status_bar_spacer để tránh dính vào menu trên -->
     <TextView
         android:id="@+id/textview_cart_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:text="Cart"
         android:textColor="#333333"
         android:textSize="28sp"
         android:textStyle="bold"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/status_bar_spacer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Thông báo giỏ hàng trống -->
     <TextView
         android:id="@+id/empty_message"
         android:layout_width="wrap_content"
@@ -39,14 +47,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Danh sách sản phẩm trong giỏ hàng -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_cart_items"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:padding="8dp"
+        app:layout_constraintBottom_toTopOf="@id/checkout_button"
         app:layout_constraintTop_toBottomOf="@id/textview_cart_title"
-        app:layout_constraintBottom_toTopOf="@id/checkout_button" />
+        app:layout_constraintVertical_bias="1.0"
+        tools:layout_editor_absoluteX="0dp" />
 
+    <!-- Nút Checkout -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/checkout_button"
         android:layout_width="match_parent"

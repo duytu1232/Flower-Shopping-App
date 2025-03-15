@@ -135,13 +135,16 @@ public class MainActivity extends AppCompatActivity {
         if (searchEditText != null) {
             searchEditText.addTextChangedListener(new TextWatcher() {
                 @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
 
                 @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                }
 
                 @Override
-                public void afterTextChanged(Editable s) {}
+                public void afterTextChanged(Editable s) {
+                }
             });
         }
     }
@@ -161,7 +164,10 @@ public class MainActivity extends AppCompatActivity {
             transaction.replace(R.id.fragment_container, newFragment);
             transaction.addToBackStack(null);
             transaction.commit();
-            boolean hideHeader = newFragment instanceof FragmentAccountUser || newFragment instanceof FragmentCart;
+            boolean hideHeader = newFragment instanceof FragmentAccountUser ||
+                    newFragment instanceof FragmentCart ||
+                    newFragment instanceof FragmentShop;
+
             headerLayout.setVisibility(hideHeader ? View.GONE : View.VISIBLE);
             khoangTrongMenu.setVisibility(hideHeader ? View.GONE : View.VISIBLE);
         } catch (Exception e) {
