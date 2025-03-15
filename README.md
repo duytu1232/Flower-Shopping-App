@@ -1,6 +1,6 @@
 # 🌸 Flower Shopping App
 
-![Flower Shopping App](https://your-image-url.com/banner.png)  
+![Flower Shopping App](app/src/main/res/drawable/daisy.png)  
 
 ## 🌼 Giới thiệu
 **Flower Shopping App** là một ứng dụng cửa hàng bán hoa trực tuyến, giúp người dùng dễ dàng tìm kiếm, lựa chọn và đặt mua những bó hoa đẹp nhất cho các dịp đặc biệt.
