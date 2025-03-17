@@ -62,19 +62,31 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         holder.productPrice.setText("Giá: " + String.format("%.2f VND", product.getPrice()));
 
         if (holder.productImage != null) {
-            String imageName = product.getImageUrl();
-            if (imageName != null && !imageName.isEmpty()) {
-                // Lấy ID tài nguyên từ tên hình ảnh
-                int resourceId = holder.itemView.getContext().getResources().getIdentifier(
-                        imageName, "drawable", holder.itemView.getContext().getPackageName());
-                if (resourceId != 0) {
+            String imageUrl = product.getImageUrl();
+            if (imageUrl != null && !imageUrl.isEmpty()) {
+                // Kiểm tra nếu imageUrl là đường dẫn trong assets
+                if (imageUrl.startsWith("assets/") || imageUrl.contains("/")) {
+                    // Loại bỏ "assets/" và sử dụng file:///android_asset/
+                    String assetPath = "file:///android_asset/" + imageUrl.replace("assets/", "").replace("\\", "/");
                     Glide.with(holder.itemView.getContext())
-                            .load(resourceId)
+                            .load(assetPath)
                             .placeholder(android.R.drawable.ic_menu_gallery)
+                            .error(android.R.drawable.ic_dialog_alert)
                             .into(holder.productImage);
                 } else {
-                    // Nếu không tìm thấy tài nguyên, hiển thị placeholder
-                    holder.productImage.setImageResource(android.R.drawable.ic_menu_gallery);
+                    // Giả sử là tên file trong drawable (loại bỏ đuôi .png/.jpg)
+                    int resourceId = holder.itemView.getContext().getResources().getIdentifier(
+                            imageUrl.replace(".png", "").replace(".jpg", ""), "drawable",
+                            holder.itemView.getContext().getPackageName());
+                    if (resourceId != 0) {
+                        Glide.with(holder.itemView.getContext())
+                                .load(resourceId)
+                                .placeholder(android.R.drawable.ic_menu_gallery)
+                                .into(holder.productImage);
+                    } else {
+                        // Nếu không tìm thấy, hiển thị placeholder
+                        holder.productImage.setImageResource(android.R.drawable.ic_menu_gallery);
+                    }
                 }
             } else {
                 holder.productImage.setImageResource(android.R.drawable.ic_menu_gallery);
@@ -89,7 +101,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                 args.putInt("product_id", product.getId());
                 productDetailFragment.setArguments(args);
 
-                // Điều hướng đến ProductDetail fragment
                 FragmentManager fragmentManager = ((FragmentActivity) holder.itemView.getContext()).getSupportFragmentManager();
                 FragmentTransaction transaction = fragmentManager.beginTransaction();
                 transaction.replace(R.id.fragment_container, productDetailFragment);

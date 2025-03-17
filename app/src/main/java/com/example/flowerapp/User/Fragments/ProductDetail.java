@@ -30,9 +30,9 @@ import com.example.flowerapp.Models.Review;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.Helper.DatabaseHelper;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.text.SimpleDateFormat;
 import java.util.List;
 
 public class ProductDetail extends Fragment {
@@ -214,9 +214,38 @@ public class ProductDetail extends Fragment {
                 productDescription.setText(cursor.getString(cursor.getColumnIndexOrThrow("description")));
                 productStock.setText("Số lượng trong kho: " + cursor.getInt(cursor.getColumnIndexOrThrow("stock")));
                 String imageUrl = cursor.getString(cursor.getColumnIndexOrThrow("image_url"));
-                int resourceId = getResources().getIdentifier(imageUrl, "drawable", getContext().getPackageName());
-                if (resourceId != 0) {
-                    Glide.with(this).load(resourceId).into(productImage);
+
+                // Xử lý hiển thị ảnh
+                if (imageUrl != null && !imageUrl.isEmpty()) {
+                    if (imageUrl.startsWith("assets/") || imageUrl.contains("/")) {
+                        // Xử lý ảnh trong assets
+                        String assetPath = "file:///android_asset/" + imageUrl.replace("assets/", "").replace("\\", "/");
+                        Glide.with(this)
+                                .load(assetPath)
+                                .placeholder(android.R.drawable.ic_menu_gallery)
+                                .error(android.R.drawable.ic_dialog_alert)
+                                .into(productImage);
+                    } else if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+                        // Xử lý ảnh từ URL
+                        Glide.with(this)
+                                .load(imageUrl)
+                                .placeholder(android.R.drawable.ic_menu_gallery)
+                                .error(android.R.drawable.ic_dialog_alert)
+                                .into(productImage);
+                    } else {
+                        // Xử lý ảnh từ drawable
+                        int resourceId = getResources().getIdentifier(
+                                imageUrl.replace(".png", "").replace(".jpg", ""), "drawable",
+                                getContext().getPackageName());
+                        if (resourceId != 0) {
+                            Glide.with(this)
+                                    .load(resourceId)
+                                    .placeholder(android.R.drawable.ic_menu_gallery)
+                                    .into(productImage);
+                        } else {
+                            productImage.setImageResource(android.R.drawable.ic_menu_gallery);
+                        }
+                    }
                 } else {
                     productImage.setImageResource(android.R.drawable.ic_menu_gallery);
                 }

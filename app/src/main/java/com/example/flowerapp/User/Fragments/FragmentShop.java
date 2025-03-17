@@ -153,4 +153,11 @@ public class FragmentShop extends Fragment {
             emptyMessage.setVisibility(View.GONE);
         }
     }
+
+    public void refreshProducts() {
+        productList.clear();
+        loadProducts();
+        adapter.notifyDataSetChanged();
+        updateEmptyState();
+    }
 }

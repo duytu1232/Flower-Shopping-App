@@ -1,6 +1,7 @@
 package com.example.flowerapp.Security.Helper;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
@@ -14,7 +15,7 @@ import java.io.OutputStream;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "FlowerApp.db";
-    private static final int DATABASE_VERSION = 6; // Tăng version để thêm cột stock
+    private static final int DATABASE_VERSION = 6;
     private static final String TAG = "DatabaseHelper";
     private final Context context;
 
@@ -74,12 +75,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 Log.d(TAG, "Đã tạo bảng Orders và Order_Items.");
             }
             if (oldVersion < 6) {
-                db.execSQL("ALTER TABLE Products ADD COLUMN stock INTEGER DEFAULT 10");
-                Log.d(TAG, "Đã thêm cột stock vào bảng Products với giá trị mặc định là 10.");
+                // Kiểm tra xem cột stock đã tồn tại chưa
+                Cursor cursor = db.rawQuery("PRAGMA table_info(Products)", null);
+                boolean hasStockColumn = false;
+                while (cursor.moveToNext()) {
+                    String columnName = cursor.getString(cursor.getColumnIndex("name"));
+                    if ("stock".equalsIgnoreCase(columnName)) {
+                        hasStockColumn = true;
+                        break;
+                    }
+                }
+                cursor.close();
+
+                if (!hasStockColumn) {
+                    db.execSQL("ALTER TABLE Products ADD COLUMN stock INTEGER DEFAULT 10");
+                    Log.d(TAG, "Đã thêm cột stock vào bảng Products với giá trị mặc định là 10.");
+                } else {
+                    Log.d(TAG, "Cột stock đã tồn tại trong bảng Products, bỏ qua ALTER TABLE.");
+                }
             }
         } catch (Exception e) {
             Log.e(TAG, "Lỗi khi nâng cấp cơ sở dữ liệu: " + e.getMessage());
-            Toast.makeText(context, "Lỗi nâng cấp cơ sở dữ liệu", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Lỗi nâng cấp cơ sở dữ liệu: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             throw new RuntimeException("Không thể nâng cấp cơ sở dữ liệu: " + e.getMessage());
         }
     }
@@ -90,14 +107,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             copyOrVerifyDatabaseFromAssets();
         }
         try {
-            SQLiteDatabase db = SQLiteDatabase.openDatabase(dbFile.getPath(), null, SQLiteDatabase.OPEN_READWRITE);
+            SQLiteDatabase db = getWritableDatabase(); // Đảm bảo mở database ở chế độ ghi
             createTablesIfNotExist(db);
             db.rawQuery("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='Users'", null).close();
             Log.d(TAG, "Mở cơ sở dữ liệu thành công: " + dbFile.getPath());
             return db;
         } catch (Exception e) {
             Log.e(TAG, "Lỗi mở cơ sở dữ liệu: " + e.getMessage());
-            Toast.makeText(context, "Không thể mở cơ sở dữ liệu", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Không thể mở cơ sở dữ liệu: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             throw new RuntimeException("Không thể mở cơ sở dữ liệu: " + e.getMessage());
         }
     }
