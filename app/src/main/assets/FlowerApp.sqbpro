@@ -400,39 +400,39 @@ VALUES ('Tulip', 'Yellow tulip bouquet', 60.0, 80, 'tulip.png', 'Flowers');
 
 INSERT INTO Products (name, description, price, stock, image_url, category) VALUES
 
-('Cây xương rồng', 'Cây xương rồng nhỏ trang trí bàn làm việc', 50000, 20, 'hoa/cay_xuong_rong.jpg', 'Cây cảnh'),
+('Cây xương rồng', 'Cây xương rồng nhỏ trang trí bàn làm việc', 50000, 20, 'cay_xuong_rong.jpg', 'Cây cảnh'),
 
-('Cúc mâm xôi', 'Hoa cúc mâm xôi vàng rực rỡ, thích hợp trang trí ngày Tết', 70000, 15, 'hoa/cuc_mam_xoi.jpg', 'Hoa tết'),
+('Cúc mâm xôi', 'Hoa cúc mâm xôi vàng rực rỡ, thích hợp trang trí ngày Tết', 70000, 15, 'cuc_mam_xoi.jpg', 'Hoa tết'),
 
-('Hoa giấy', 'Hoa giấy nhiều màu, dễ chăm sóc, thích hợp trồng leo tường', 30000, 25, 'hoa/hoa_giay.jpg', 'Hoa leo'),
+('Hoa giấy', 'Hoa giấy nhiều màu, dễ chăm sóc, thích hợp trồng leo tường', 30000, 25, 'hoa_giay.jpg', 'Hoa leo'),
 
-('Hoa lan chuông', 'Hoa lan chuông trắng tinh khôi, có mùi hương dễ chịu', 120000, 10, 'hoa/hoa_lan_chuong.jpg', 'Hoa lan'),
+('Hoa lan chuông', 'Hoa lan chuông trắng tinh khôi, có mùi hương dễ chịu', 120000, 10, 'hoa_lan_chuong.jpg', 'Hoa lan'),
 
-('Hoa lay ơn', 'Hoa lay ơn đỏ rực rỡ, thích hợp chưng Tết', 80000, 18, 'hoa/hoa_lay_on.jpg', 'Hoa tết'),
+('Hoa lay ơn', 'Hoa lay ơn đỏ rực rỡ, thích hợp chưng Tết', 80000, 18, 'hoa_lay_on.jpg', 'Hoa tết'),
 
-('Hoa loa kèn', 'Hoa loa kèn trắng đẹp, thích hợp trang trí không gian sang trọng', 100000, 12, 'hoa/hoa_loa_ken.jpg', 'Hoa cắt cành'),
+('Hoa loa kèn', 'Hoa loa kèn trắng đẹp, thích hợp trang trí không gian sang trọng', 100000, 12, 'hoa_loa_ken.jpg', 'Hoa cắt cành'),
 
-('Hoa mai', 'Hoa mai vàng rực rỡ, biểu tượng của mùa xuân', 150000, 8, 'hoa/hoa_mai.jpg', 'Hoa tết'),
+('Hoa mai', 'Hoa mai vàng rực rỡ, biểu tượng của mùa xuân', 150000, 8, 'hoa_mai.jpg', 'Hoa tết'),
 
-('Hoa mẫu đơn', 'Hoa mẫu đơn mang ý nghĩa thịnh vượng và phú quý', 200000, 5, 'hoa/hoa_mau_don.jpg', 'Hoa cao cấp'),
+('Hoa mẫu đơn', 'Hoa mẫu đơn mang ý nghĩa thịnh vượng và phú quý', 200000, 5, 'hoa_mau_don.jpg', 'Hoa cao cấp'),
 
-('Hoa móng tay', 'Hoa móng tay có nhiều màu sắc, dễ trồng', 60000, 20, 'hoa/hoa_mong_tay.jpg', 'Hoa cảnh'),
+('Hoa móng tay', 'Hoa móng tay có nhiều màu sắc, dễ trồng', 60000, 20, 'hoa_mong_tay.jpg', 'Hoa cảnh'),
 
-('Hoa ngọc thảo', 'Hoa ngọc thảo nhỏ xinh, thích hợp trồng trong chậu', 55000, 22, 'hoa/hoa_ngoc_thao.jpg', 'Hoa cảnh'),
+('Hoa ngọc thảo', 'Hoa ngọc thảo nhỏ xinh, thích hợp trồng trong chậu', 55000, 22, 'hoa_ngoc_thao.jpg', 'Hoa cảnh'),
 
-('Hoa nhài', 'Hoa nhài có hương thơm nhẹ nhàng, dễ chịu', 40000, 30, 'hoa/hoa_nhai.jpg', 'Hoa thơm'),
+('Hoa nhài', 'Hoa nhài có hương thơm nhẹ nhàng, dễ chịu', 40000, 30, 'hoa_nhai.jpg', 'Hoa thơm'),
 
-('Hoa quỳnh', 'Hoa quỳnh nở về đêm, có hương thơm đặc trưng', 90000, 8, 'hoa/hoa_quynh.jpg', 'Hoa đặc biệt'),
+('Hoa quỳnh', 'Hoa quỳnh nở về đêm, có hương thơm đặc trưng', 90000, 8, 'hoa_quynh.jpg', 'Hoa đặc biệt'),
 
-('Hoa sứ để bàn', 'Hoa sứ để bàn đẹp, thích hợp làm quà tặng', 110000, 10, 'hoa/hoa_su_de_ban.jpg', 'Cây cảnh'),
+('Hoa sứ để bàn', 'Hoa sứ để bàn đẹp, thích hợp làm quà tặng', 110000, 10, 'hoa_su_de_ban.jpg', 'Cây cảnh'),
 
-('Hoa súng', 'Hoa súng trồng trong nước, có màu tím đẹp', 85000, 7, 'hoa/hoa_sung.jpg', 'Hoa nước'),
+('Hoa súng', 'Hoa súng trồng trong nước, có màu tím đẹp', 85000, 7, 'hoa_sung.jpg', 'Hoa nước'),
 
-('Hoa thạch thảo', 'Hoa thạch thảo nhỏ nhắn, thường dùng trong trang trí', 75000, 15, 'hoa/hoa_thach_thao.jpg', 'Hoa cắt cành'),
+('Hoa thạch thảo', 'Hoa thạch thảo nhỏ nhắn, thường dùng trong trang trí', 75000, 15, 'hoa_thach_thao.jpg', 'Hoa cắt cành'),
 
-('Hoa thanh liễu', 'Hoa thanh liễu có màu sắc đa dạng, dùng trong cắm hoa nghệ thuật', 95000, 12, 'hoa/hoa_thanh_lieu.jpg', 'Hoa cao cấp'),
+('Hoa thanh liễu', 'Hoa thanh liễu có màu sắc đa dạng, dùng trong cắm hoa nghệ thuật', 95000, 12, 'hoa_thanh_lieu.jpg', 'Hoa cao cấp'),
 
-('Hoa tử đinh hương', 'Hoa tử đinh hương có hương thơm ngọt ngào', 130000, 9, 'hoa/hoa_tu_dinh_huong.jpg', 'Hoa thơm');
+('Hoa tử đinh hương', 'Hoa tử đinh hương có hương thơm ngọt ngào', 130000, 9, 'hoa_tu_dinh_huong.jpg', 'Hoa thơm');
 
 
 

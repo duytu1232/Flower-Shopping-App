@@ -43,7 +43,7 @@ public abstract class BaseOrderFragment extends Fragment {
         orderList = new ArrayList<>();
         loadOrdersFromDatabase();
 
-        orderAdapter = new OrderAdapter(orderList); // Sử dụng constructor mới
+        orderAdapter = new OrderAdapter(orderList, this::onReviewClick);
         orderRecyclerView.setAdapter(orderAdapter);
         updateEmptyState();
 
@@ -60,32 +60,28 @@ public abstract class BaseOrderFragment extends Fragment {
         try {
             db = dbHelper.openDatabase();
             Cursor cursor = db.rawQuery(
-                    "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, o.product_name, p.image_url " +
+                    "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, " +
+                            "p.name AS product_name, p.image_url " +
                             "FROM Orders o " +
                             "LEFT JOIN Order_Items oi ON o.order_id = oi.order_id " +
                             "LEFT JOIN Products p ON oi.product_id = p.product_id " +
-                            "WHERE o.status = ? LIMIT 1", new String[]{status});
+                            "WHERE o.status = ?",
+                    new String[]{status});
             while (cursor.moveToNext()) {
-                int orderIdIndex = cursor.getColumnIndex("order_id");
-                int userIdIndex = cursor.getColumnIndex("user_id");
-                int dateIndex = cursor.getColumnIndex("order_date");
-                int statusIndex = cursor.getColumnIndex("status");
-                int totalAmountIndex = cursor.getColumnIndex("total_amount");
-                int shippingAddressIndex = cursor.getColumnIndex("shipping_address");
-                int productNameIndex = cursor.getColumnIndex("product_name");
-                int imageUrlIndex = cursor.getColumnIndex("image_url");
+                int orderId = cursor.getInt(cursor.getColumnIndexOrThrow("order_id"));
+                int userId = cursor.getInt(cursor.getColumnIndexOrThrow("user_id"));
+                String orderDate = cursor.getString(cursor.getColumnIndexOrThrow("order_date"));
+                String orderStatus = cursor.getString(cursor.getColumnIndexOrThrow("status"));
+                double totalAmount = cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount"));
+                String shippingAddress = cursor.getString(cursor.getColumnIndexOrThrow("shipping_address"));
+                String title = cursor.getString(cursor.getColumnIndexOrThrow("product_name"));
+                String imageUrl = cursor.getString(cursor.getColumnIndexOrThrow("image_url"));
 
-                int orderId = orderIdIndex >= 0 ? cursor.getInt(orderIdIndex) : 0;
-                int userId = userIdIndex >= 0 ? cursor.getInt(userIdIndex) : 0;
-                String orderDate = dateIndex >= 0 ? cursor.getString(dateIndex) : "";
-                String orderStatus = statusIndex >= 0 ? cursor.getString(statusIndex) : "";
-                double totalAmount = totalAmountIndex >= 0 ? cursor.getDouble(totalAmountIndex) : 0.0;
-                String shippingAddress = shippingAddressIndex >= 0 ? cursor.getString(shippingAddressIndex) : "Not specified";
-                String title = productNameIndex >= 0 ? cursor.getString(productNameIndex) : "Unknown Product";
-                String imageUrl = imageUrlIndex >= 0 ? cursor.getString(imageUrlIndex) : "";
-                int imageRes = R.drawable.order_base_line;
+                // Xử lý giá trị null
+                title = (title != null) ? title : "Unknown Product";
+                imageUrl = (imageUrl != null) ? imageUrl : "";
 
-                orderList.add(new Order(orderId, userId, orderDate, orderStatus, totalAmount, shippingAddress, title, imageRes, imageUrl));
+                orderList.add(new Order(orderId, userId, orderDate, orderStatus, totalAmount, shippingAddress, title, imageUrl));
             }
             cursor.close();
             orderAdapter.notifyDataSetChanged();
@@ -105,32 +101,27 @@ public abstract class BaseOrderFragment extends Fragment {
         try {
             db = dbHelper.openDatabase();
             Cursor cursor = db.rawQuery(
-                    "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, o.product_name, p.image_url " +
+                    "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, " +
+                            "p.name AS product_name, p.image_url " +
                             "FROM Orders o " +
                             "LEFT JOIN Order_Items oi ON o.order_id = oi.order_id " +
                             "LEFT JOIN Products p ON oi.product_id = p.product_id " +
-                            "WHERE o.return_status = ? LIMIT 1", new String[]{status});
+                            "WHERE o.return_status = ?",
+                    new String[]{status});
             while (cursor.moveToNext()) {
-                int orderIdIndex = cursor.getColumnIndex("order_id");
-                int userIdIndex = cursor.getColumnIndex("user_id");
-                int dateIndex = cursor.getColumnIndex("order_date");
-                int statusIndex = cursor.getColumnIndex("status");
-                int totalAmountIndex = cursor.getColumnIndex("total_amount");
-                int shippingAddressIndex = cursor.getColumnIndex("shipping_address");
-                int productNameIndex = cursor.getColumnIndex("product_name");
-                int imageUrlIndex = cursor.getColumnIndex("image_url");
+                int orderId = cursor.getInt(cursor.getColumnIndexOrThrow("order_id"));
+                int userId = cursor.getInt(cursor.getColumnIndexOrThrow("user_id"));
+                String orderDate = cursor.getString(cursor.getColumnIndexOrThrow("order_date"));
+                String orderStatus = cursor.getString(cursor.getColumnIndexOrThrow("status"));
+                double totalAmount = cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount"));
+                String shippingAddress = cursor.getString(cursor.getColumnIndexOrThrow("shipping_address"));
+                String title = cursor.getString(cursor.getColumnIndexOrThrow("product_name"));
+                String imageUrl = cursor.getString(cursor.getColumnIndexOrThrow("image_url"));
 
-                int orderId = orderIdIndex >= 0 ? cursor.getInt(orderIdIndex) : 0;
-                int userId = userIdIndex >= 0 ? cursor.getInt(userIdIndex) : 0;
-                String orderDate = dateIndex >= 0 ? cursor.getString(dateIndex) : "";
-                String orderStatus = statusIndex >= 0 ? cursor.getString(statusIndex) : "";
-                double totalAmount = totalAmountIndex >= 0 ? cursor.getDouble(totalAmountIndex) : 0.0;
-                String shippingAddress = shippingAddressIndex >= 0 ? cursor.getString(shippingAddressIndex) : "Not specified";
-                String title = productNameIndex >= 0 ? cursor.getString(productNameIndex) : "Unknown Product";
-                String imageUrl = imageUrlIndex >= 0 ? cursor.getString(imageUrlIndex) : "";
-                int imageRes = R.drawable.order_base_line;
+                title = (title != null) ? title : "Unknown Product";
+                imageUrl = (imageUrl != null) ? imageUrl : "";
 
-                orderList.add(new Order(orderId, userId, orderDate, orderStatus, totalAmount, shippingAddress, title, imageRes, imageUrl));
+                orderList.add(new Order(orderId, userId, orderDate, orderStatus, totalAmount, shippingAddress, title, imageUrl));
             }
             cursor.close();
             orderAdapter.notifyDataSetChanged();
@@ -150,33 +141,28 @@ public abstract class BaseOrderFragment extends Fragment {
         try {
             db = dbHelper.openDatabase();
             Cursor cursor = db.rawQuery(
-                    "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, o.product_name, p.image_url " +
+                    "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, " +
+                            "p.name AS product_name, p.image_url " +
                             "FROM Orders o " +
                             "LEFT JOIN Order_Items oi ON o.order_id = oi.order_id " +
                             "LEFT JOIN Products p ON oi.product_id = p.product_id " +
                             "LEFT JOIN Reviews r ON o.order_id = r.order_id " +
-                            "WHERE o.status = 'delivered' AND r.order_id IS NULL LIMIT 1", null);
+                            "WHERE o.status = 'delivered' AND r.order_id IS NULL",
+                    null);
             while (cursor.moveToNext()) {
-                int orderIdIndex = cursor.getColumnIndex("order_id");
-                int userIdIndex = cursor.getColumnIndex("user_id");
-                int dateIndex = cursor.getColumnIndex("order_date");
-                int statusIndex = cursor.getColumnIndex("status");
-                int totalAmountIndex = cursor.getColumnIndex("total_amount");
-                int shippingAddressIndex = cursor.getColumnIndex("shipping_address");
-                int productNameIndex = cursor.getColumnIndex("product_name");
-                int imageUrlIndex = cursor.getColumnIndex("image_url");
+                int orderId = cursor.getInt(cursor.getColumnIndexOrThrow("order_id"));
+                int userId = cursor.getInt(cursor.getColumnIndexOrThrow("user_id"));
+                String orderDate = cursor.getString(cursor.getColumnIndexOrThrow("order_date"));
+                String orderStatus = cursor.getString(cursor.getColumnIndexOrThrow("status"));
+                double totalAmount = cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount"));
+                String shippingAddress = cursor.getString(cursor.getColumnIndexOrThrow("shipping_address"));
+                String title = cursor.getString(cursor.getColumnIndexOrThrow("product_name"));
+                String imageUrl = cursor.getString(cursor.getColumnIndexOrThrow("image_url"));
 
-                int orderId = orderIdIndex >= 0 ? cursor.getInt(orderIdIndex) : 0;
-                int userId = userIdIndex >= 0 ? cursor.getInt(userIdIndex) : 0;
-                String orderDate = dateIndex >= 0 ? cursor.getString(dateIndex) : "";
-                String orderStatus = statusIndex >= 0 ? cursor.getString(statusIndex) : "";
-                double totalAmount = totalAmountIndex >= 0 ? cursor.getDouble(totalAmountIndex) : 0.0;
-                String shippingAddress = shippingAddressIndex >= 0 ? cursor.getString(shippingAddressIndex) : "Not specified";
-                String title = productNameIndex >= 0 ? cursor.getString(productNameIndex) : "Unknown Product";
-                String imageUrl = imageUrlIndex >= 0 ? cursor.getString(imageUrlIndex) : "";
-                int imageRes = R.drawable.order_base_line;
+                title = (title != null) ? title : "Unknown Product";
+                imageUrl = (imageUrl != null) ? imageUrl : "";
 
-                orderList.add(new Order(orderId, userId, orderDate, orderStatus, totalAmount, shippingAddress, title, imageRes, imageUrl));
+                orderList.add(new Order(orderId, userId, orderDate, orderStatus, totalAmount, shippingAddress, title, imageUrl));
             }
             cursor.close();
             orderAdapter.notifyDataSetChanged();
@@ -211,6 +197,11 @@ public abstract class BaseOrderFragment extends Fragment {
         }
         orderAdapter.notifyDataSetChanged();
         updateEmptyState();
+    }
+
+    protected void onReviewClick(Order order) {
+        Toast.makeText(requireContext(), "Review clicked for order: " + order.getId(), Toast.LENGTH_SHORT).show();
+        // Thêm logic chuyển sang màn hình đánh giá (nếu cần)
     }
 
     @Override

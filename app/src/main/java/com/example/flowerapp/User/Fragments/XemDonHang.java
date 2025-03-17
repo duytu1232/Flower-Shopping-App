@@ -82,10 +82,6 @@ public class XemDonHang extends AppCompatActivity {
                         tab.setText(getString(R.string.tab_returned));
                         tab.view.setContentDescription("Returned Tab");
                         break;
-                    case 5:
-                        tab.setText(getString(R.string.tab_canceled));
-                        tab.view.setContentDescription("Canceled Tab");
-                        break;
                 }
             }).attach();
         } else {

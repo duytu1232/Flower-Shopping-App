@@ -1,9 +1,11 @@
 package com.example.flowerapp.Admin.Fragments;
 
 import android.database.Cursor;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,12 +18,15 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.flowerapp.Adapters.CouponAdapter;
-import com.example.flowerapp.Security.Helper.DatabaseHelper;
 import com.example.flowerapp.Models.Coupon;
 import com.example.flowerapp.R;
+import com.example.flowerapp.Security.Helper.DatabaseHelper;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class CouponManagementFragment extends Fragment {
     private RecyclerView recyclerView;
@@ -47,8 +52,9 @@ public class CouponManagementFragment extends Fragment {
 
     private void loadCoupons() {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            Cursor cursor = db.rawQuery("SELECT * FROM Discount_Codes", null);
+            Cursor cursor = db.rawQuery("SELECT discount_id, code, discount_value, start_date, end_date, status FROM Discount_Codes", null);
             couponList.clear();
+            Log.d("CouponManagement", "Số lượng bản ghi: " + cursor.getCount());
             while (cursor.moveToNext()) {
                 int id = cursor.getInt(cursor.getColumnIndexOrThrow("discount_id"));
                 String code = cursor.getString(cursor.getColumnIndexOrThrow("code"));
@@ -57,12 +63,15 @@ public class CouponManagementFragment extends Fragment {
                 String endDate = cursor.getString(cursor.getColumnIndexOrThrow("end_date"));
                 String status = cursor.getString(cursor.getColumnIndexOrThrow("status"));
                 couponList.add(new Coupon(id, code, discountValue, startDate, endDate, status));
+                Log.d("CouponManagement", "Thêm mã giảm giá: " + code);
             }
             cursor.close();
             adapter.notifyDataSetChanged();
             recyclerView.scheduleLayoutAnimation();
+            Log.d("CouponManagement", "Số lượng mã giảm giá trong list: " + couponList.size());
         } catch (Exception e) {
-            Toast.makeText(requireContext(), "Lỗi tải mã giảm giá: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e("CouponManagement", "Lỗi tải mã giảm giá: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi tải mã giảm giá: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -89,10 +98,13 @@ public class CouponManagementFragment extends Fragment {
                             Toast.makeText(requireContext(), "Vui lòng điền đầy đủ thông tin hợp lệ!", Toast.LENGTH_SHORT).show();
                             return;
                         }
+                        if (!isValidDateFormat(startDate) || !isValidDateFormat(endDate) || !isValidDateRange(startDate, endDate)) {
+                            Toast.makeText(requireContext(), "Ngày không hợp lệ (định dạng: yyyy-MM-dd, ngày kết thúc phải sau ngày bắt đầu)", Toast.LENGTH_LONG).show();
+                            return;
+                        }
 
                         addCoupon(code, discountValue, startDate, endDate, status);
                         loadCoupons();
-                        Toast.makeText(requireContext(), "Thêm mã giảm giá thành công", Toast.LENGTH_SHORT).show();
                     } catch (NumberFormatException e) {
                         Toast.makeText(requireContext(), "Vui lòng nhập đúng định dạng số", Toast.LENGTH_SHORT).show();
                     }
@@ -130,16 +142,40 @@ public class CouponManagementFragment extends Fragment {
                             Toast.makeText(requireContext(), "Vui lòng điền đầy đủ thông tin hợp lệ!", Toast.LENGTH_SHORT).show();
                             return;
                         }
+                        if (!isValidDateFormat(startDate) || !isValidDateFormat(endDate) || !isValidDateRange(startDate, endDate)) {
+                            Toast.makeText(requireContext(), "Ngày không hợp lệ (định dạng: yyyy-MM-dd, ngày kết thúc phải sau ngày bắt đầu)", Toast.LENGTH_LONG).show();
+                            return;
+                        }
 
                         updateCoupon(coupon.getId(), code, discountValue, startDate, endDate, status);
                         loadCoupons();
-                        Toast.makeText(requireContext(), "Cập nhật mã giảm giá thành công", Toast.LENGTH_SHORT).show();
                     } catch (NumberFormatException e) {
                         Toast.makeText(requireContext(), "Vui lòng nhập đúng định dạng số", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .setNegativeButton("Hủy", null)
                 .show();
+    }
+
+    private boolean isValidDateFormat(String date) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        sdf.setLenient(false);
+        try {
+            sdf.parse(date);
+            return true;
+        } catch (ParseException e) {
+            return false;
+        }
+    }
+
+    private boolean isValidDateRange(String startDate, String endDate) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        sdf.setLenient(false);
+        try {
+            return sdf.parse(startDate).before(sdf.parse(endDate));
+        } catch (ParseException e) {
+            return false;
+        }
     }
 
     private boolean isCodeExists(String code, int excludeId) {
@@ -152,7 +188,8 @@ public class CouponManagementFragment extends Fragment {
             cursor.close();
             return false;
         } catch (Exception e) {
-            Toast.makeText(requireContext(), "Lỗi kiểm tra mã: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e("CouponManagement", "Lỗi kiểm tra mã: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi kiểm tra mã: " + e.getMessage(), Toast.LENGTH_LONG).show();
             return false;
         }
     }
@@ -165,8 +202,14 @@ public class CouponManagementFragment extends Fragment {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
             db.execSQL("INSERT INTO Discount_Codes (code, discount_value, start_date, end_date, status) VALUES (?, ?, ?, ?, ?)",
                     new Object[]{code, discountValue, startDate, endDate, status});
+            Log.d("CouponManagement", "Thêm mã giảm giá thành công: " + code);
+            Toast.makeText(requireContext(), "Thêm mã giảm giá thành công", Toast.LENGTH_SHORT).show();
+        } catch (SQLiteConstraintException e) {
+            Log.e("CouponManagement", "Lỗi ràng buộc: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi: Dữ liệu không hợp lệ (có thể thiếu thông tin bắt buộc)", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
-            Toast.makeText(requireContext(), "Lỗi thêm mã giảm giá: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e("CouponManagement", "Lỗi thêm mã giảm giá: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi thêm mã giảm giá: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -178,8 +221,14 @@ public class CouponManagementFragment extends Fragment {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
             db.execSQL("UPDATE Discount_Codes SET code = ?, discount_value = ?, start_date = ?, end_date = ?, status = ? WHERE discount_id = ?",
                     new Object[]{code, discountValue, startDate, endDate, status, id});
+            Log.d("CouponManagement", "Cập nhật mã giảm giá thành công: " + code);
+            Toast.makeText(requireContext(), "Cập nhật mã giảm giá thành công", Toast.LENGTH_SHORT).show();
+        } catch (SQLiteConstraintException e) {
+            Log.e("CouponManagement", "Lỗi ràng buộc: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi: Dữ liệu không hợp lệ", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
-            Toast.makeText(requireContext(), "Lỗi cập nhật mã giảm giá: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e("CouponManagement", "Lỗi cập nhật mã giảm giá: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi cập nhật mã giảm giá: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -193,7 +242,8 @@ public class CouponManagementFragment extends Fragment {
             cursor.close();
             return false;
         } catch (Exception e) {
-            Toast.makeText(requireContext(), "Lỗi kiểm tra tham chiếu: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e("CouponManagement", "Lỗi kiểm tra tham chiếu: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi kiểm tra tham chiếu: " + e.getMessage(), Toast.LENGTH_LONG).show();
             return true;
         }
     }
@@ -209,10 +259,12 @@ public class CouponManagementFragment extends Fragment {
                 .setPositiveButton("Xóa", (dialog, which) -> {
                     try (SQLiteDatabase db = dbHelper.openDatabase()) {
                         db.execSQL("DELETE FROM Discount_Codes WHERE discount_id = ?", new Object[]{id});
+                        Log.d("CouponManagement", "Xóa mã giảm giá thành công: " + id);
                         Toast.makeText(requireContext(), "Xóa mã giảm giá thành công", Toast.LENGTH_SHORT).show();
                         loadCoupons();
                     } catch (Exception e) {
-                        Toast.makeText(requireContext(), "Lỗi xóa mã giảm giá: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.e("CouponManagement", "Lỗi xóa mã giảm giá: " + e.getMessage(), e);
+                        Toast.makeText(requireContext(), "Lỗi xóa mã giảm giá: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 })
                 .setNegativeButton("Hủy", null)

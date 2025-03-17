@@ -1,6 +1,7 @@
 package com.example.flowerapp.User.Fragments.MyOrder_Fragment;
 
 import android.os.Bundle;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,6 +17,7 @@ public class OrderDetailActivity extends AppCompatActivity {
     private DatabaseHelper dbHelper;
     private TextView orderTitle, orderStatus, orderDate, orderTotal, orderAddress;
     private ImageView orderImage;
+    private Button btnBack; // Thêm biến cho nút Back
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,24 +25,32 @@ public class OrderDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_order_detail);
 
         dbHelper = new DatabaseHelper(this);
-        orderTitle = findViewById(R.id.orderTitle);
+        orderTitle = findViewById(R.id.order_title);
         orderStatus = findViewById(R.id.order_status);
-        orderDate = findViewById(R.id.orderDate);
-        orderTotal = findViewById(R.id.order_total); // Thêm TextView mới
-        orderAddress = findViewById(R.id.order_address); // Thêm TextView mới
-        orderImage = findViewById(R.id.orderImage);
+        orderDate = findViewById(R.id.order_date);
+        orderTotal = findViewById(R.id.order_total);
+        orderAddress = findViewById(R.id.order_address);
+        orderImage = findViewById(R.id.order_image);
+        btnBack = findViewById(R.id.btn_back); // Khởi tạo nút Back
+
+        // Xử lý sự kiện nhấn nút Back
+        btnBack.setOnClickListener(v -> finish());
 
         Order order = (Order) getIntent().getSerializableExtra("order");
         if (order != null) {
             orderTitle.setText(order.getTitle());
-            orderStatus.setText("Status: " + order.getStatus());
-            orderDate.setText("Date: " + order.getOrderDate());
-            orderTotal.setText("Total: $" + order.getTotalAmount()); // Hiển thị tổng
-            orderAddress.setText("Address: " + order.getShippingAddress()); // Hiển thị địa chỉ
+            orderStatus.setText(order.getStatus());
+            orderDate.setText(order.getOrderDate());
+            orderTotal.setText("$" + order.getTotalAmount());
+            orderAddress.setText(order.getShippingAddress());
             if (order.getImageUrl() != null && !order.getImageUrl().isEmpty()) {
-                Glide.with(this).load(order.getImageUrl()).into(orderImage); // Tải ảnh động
+                Glide.with(this)
+                        .load(order.getImageUrl())
+                        .placeholder(R.drawable.rose)
+                        .error(R.drawable.rose)
+                        .into(orderImage);
             } else {
-                orderImage.setImageResource(order.getImageResId()); // Fallback
+                orderImage.setImageResource(R.drawable.rose);
             }
         } else {
             Toast.makeText(this, "Order data not found", Toast.LENGTH_SHORT).show();
@@ -50,6 +60,8 @@ public class OrderDetailActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Không cần mở lại để đóng, chỉ cần đóng nếu đã mở
+        if (dbHelper != null) {
+            dbHelper.close();
+        }
     }
 }

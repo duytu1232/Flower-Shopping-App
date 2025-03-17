@@ -1,9 +1,11 @@
 package com.example.flowerapp.Admin.Fragments;
 
 import android.database.Cursor;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,9 +18,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.flowerapp.Adapters.ProductAdapter;
-import com.example.flowerapp.Security.Helper.DatabaseHelper;
 import com.example.flowerapp.Models.Product;
 import com.example.flowerapp.R;
+import com.example.flowerapp.Security.Helper.DatabaseHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,8 +49,9 @@ public class ProductManagementFragment extends Fragment {
 
     private void loadProducts() {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            Cursor cursor = db.rawQuery("SELECT * FROM Products", null);
+            Cursor cursor = db.rawQuery("SELECT product_id, name, description, price, stock, image_url, category FROM Products", null);
             productList.clear();
+            Log.d("ProductManagement", "Số lượng bản ghi: " + cursor.getCount());
             while (cursor.moveToNext()) {
                 int id = cursor.getInt(cursor.getColumnIndexOrThrow("product_id"));
                 String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
@@ -57,13 +60,17 @@ public class ProductManagementFragment extends Fragment {
                 int stock = cursor.getInt(cursor.getColumnIndexOrThrow("stock"));
                 String imageUrl = cursor.getString(cursor.getColumnIndexOrThrow("image_url"));
                 String category = cursor.getString(cursor.getColumnIndexOrThrow("category"));
-                productList.add(new Product(id, name, description, price, stock, imageUrl, category));
+                Product product = new Product(id, name, description, price, stock, imageUrl, category);
+                productList.add(product);
+                Log.d("ProductManagement", "Thêm sản phẩm: " + name);
             }
             cursor.close();
             adapter.notifyDataSetChanged();
             recyclerView.scheduleLayoutAnimation();
+            Log.d("ProductManagement", "Số lượng sản phẩm trong list: " + productList.size());
         } catch (Exception e) {
-            Toast.makeText(requireContext(), "Lỗi tải sản phẩm: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e("ProductManagement", "Lỗi tải sản phẩm: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi tải sản phẩm: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -102,7 +109,6 @@ public class ProductManagementFragment extends Fragment {
 
                         addProduct(name, description, price, stock, imageUrl, category);
                         loadProducts();
-                        Toast.makeText(requireContext(), "Thêm sản phẩm thành công", Toast.LENGTH_SHORT).show();
                     } catch (NumberFormatException e) {
                         Toast.makeText(requireContext(), "Vui lòng nhập đúng định dạng số", Toast.LENGTH_SHORT).show();
                     }
@@ -153,7 +159,6 @@ public class ProductManagementFragment extends Fragment {
 
                         updateProduct(product.getId(), name, description, price, stock, imageUrl, category);
                         loadProducts();
-                        Toast.makeText(requireContext(), "Cập nhật sản phẩm thành công", Toast.LENGTH_SHORT).show();
                     } catch (NumberFormatException e) {
                         Toast.makeText(requireContext(), "Vui lòng nhập đúng định dạng số", Toast.LENGTH_SHORT).show();
                     }
@@ -166,8 +171,14 @@ public class ProductManagementFragment extends Fragment {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
             db.execSQL("INSERT INTO Products (name, description, price, stock, image_url, category) VALUES (?, ?, ?, ?, ?, ?)",
                     new Object[]{name, description, price, stock, imageUrl, category});
+            Log.d("ProductManagement", "Thêm sản phẩm thành công: " + name);
+            Toast.makeText(requireContext(), "Thêm sản phẩm thành công", Toast.LENGTH_SHORT).show();
+        } catch (SQLiteConstraintException e) {
+            Log.e("ProductManagement", "Lỗi ràng buộc: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi: Dữ liệu không hợp lệ (có thể trùng lặp hoặc thiếu thông tin)", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
-            Toast.makeText(requireContext(), "Lỗi thêm sản phẩm: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e("ProductManagement", "Lỗi thêm sản phẩm: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi thêm sản phẩm: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -175,8 +186,14 @@ public class ProductManagementFragment extends Fragment {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
             db.execSQL("UPDATE Products SET name = ?, description = ?, price = ?, stock = ?, image_url = ?, category = ? WHERE product_id = ?",
                     new Object[]{name, description, price, stock, imageUrl, category, id});
+            Log.d("ProductManagement", "Cập nhật sản phẩm thành công: " + name);
+            Toast.makeText(requireContext(), "Cập nhật sản phẩm thành công", Toast.LENGTH_SHORT).show();
+        } catch (SQLiteConstraintException e) {
+            Log.e("ProductManagement", "Lỗi ràng buộc: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi: Dữ liệu không hợp lệ", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
-            Toast.makeText(requireContext(), "Lỗi cập nhật sản phẩm: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e("ProductManagement", "Lỗi cập nhật sản phẩm: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi cập nhật sản phẩm: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -190,7 +207,8 @@ public class ProductManagementFragment extends Fragment {
             cursor.close();
             return false;
         } catch (Exception e) {
-            Toast.makeText(requireContext(), "Lỗi kiểm tra tham chiếu: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e("ProductManagement", "Lỗi kiểm tra tham chiếu: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi kiểm tra tham chiếu: " + e.getMessage(), Toast.LENGTH_LONG).show();
             return true;
         }
     }
@@ -206,10 +224,12 @@ public class ProductManagementFragment extends Fragment {
                 .setPositiveButton("Xóa", (dialog, which) -> {
                     try (SQLiteDatabase db = dbHelper.openDatabase()) {
                         db.execSQL("DELETE FROM Products WHERE product_id = ?", new Object[]{id});
+                        Log.d("ProductManagement", "Xóa sản phẩm thành công: " + id);
                         Toast.makeText(requireContext(), "Xóa sản phẩm thành công", Toast.LENGTH_SHORT).show();
                         loadProducts();
                     } catch (Exception e) {
-                        Toast.makeText(requireContext(), "Lỗi xóa sản phẩm: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.e("ProductManagement", "Lỗi xóa sản phẩm: " + e.getMessage(), e);
+                        Toast.makeText(requireContext(), "Lỗi xóa sản phẩm: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 })
                 .setNegativeButton("Hủy", null)

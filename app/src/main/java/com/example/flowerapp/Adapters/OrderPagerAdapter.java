@@ -10,7 +10,6 @@ import com.example.flowerapp.User.Fragments.MyOrder_Fragment.ChoVanChuyenFragmen
 import com.example.flowerapp.User.Fragments.MyOrder_Fragment.ChoGiaoHangFragment;
 import com.example.flowerapp.User.Fragments.MyOrder_Fragment.ChuaDanhGiaFragment;
 import com.example.flowerapp.User.Fragments.MyOrder_Fragment.TraHangFragment;
-import com.example.flowerapp.User.Fragments.MyOrder_Fragment.HuyDonFragment;
 
 public class OrderPagerAdapter extends FragmentStateAdapter {
     public OrderPagerAdapter(@NonNull FragmentActivity fragmentActivity) {
@@ -31,8 +30,6 @@ public class OrderPagerAdapter extends FragmentStateAdapter {
                 return new ChuaDanhGiaFragment(); // Not Reviewed
             case 4:
                 return new TraHangFragment(); // Returned
-            case 5:
-                return new HuyDonFragment(); // Canceled
             default:
                 return new ChoThanhToanFragment();
         }
@@ -40,6 +37,6 @@ public class OrderPagerAdapter extends FragmentStateAdapter {
 
     @Override
     public int getItemCount() {
-        return 6; // Số lượng tabs
+        return 5; // Số lượng tabs
     }
 }

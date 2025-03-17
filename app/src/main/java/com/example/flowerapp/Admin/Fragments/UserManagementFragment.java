@@ -1,9 +1,11 @@
 package com.example.flowerapp.Admin.Fragments;
 
 import android.database.Cursor;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,9 +18,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.flowerapp.Adapters.UserAdapter;
-import com.example.flowerapp.Security.Helper.DatabaseHelper;
 import com.example.flowerapp.Models.User;
 import com.example.flowerapp.R;
+import com.example.flowerapp.Security.Helper.DatabaseHelper;
+import com.example.flowerapp.Security.DangNhap;
 
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -49,8 +52,9 @@ public class UserManagementFragment extends Fragment {
 
     private void loadUsers() {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            Cursor cursor = db.rawQuery("SELECT * FROM Users", null);
+            Cursor cursor = db.rawQuery("SELECT user_id, username, email, role, status, full_name, phone, avatar_uri FROM Users", null);
             userList.clear();
+            Log.d("UserManagement", "Số lượng bản ghi: " + cursor.getCount());
             while (cursor.moveToNext()) {
                 int userId = cursor.getInt(cursor.getColumnIndexOrThrow("user_id"));
                 String username = cursor.getString(cursor.getColumnIndexOrThrow("username"));
@@ -61,12 +65,15 @@ public class UserManagementFragment extends Fragment {
                 String phone = cursor.getString(cursor.getColumnIndexOrThrow("phone"));
                 String avatarUri = cursor.getString(cursor.getColumnIndexOrThrow("avatar_uri"));
                 userList.add(new User(userId, username, email, role, status, fullName, phone, avatarUri));
+                Log.d("UserManagement", "Thêm người dùng: " + username);
             }
             cursor.close();
             adapter.notifyDataSetChanged();
             recyclerView.scheduleLayoutAnimation();
+            Log.d("UserManagement", "Số lượng người dùng trong list: " + userList.size());
         } catch (Exception e) {
-            Toast.makeText(requireContext(), "Lỗi tải người dùng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e("UserManagement", "Lỗi tải người dùng: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi tải người dùng: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -92,7 +99,7 @@ public class UserManagementFragment extends Fragment {
                     String fullName = editFullName.getText().toString().trim();
                     String phone = editPhone.getText().toString().trim();
 
-                    if (TextUtils.isEmpty(username) || TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
+                    if (TextUtils.isEmpty(username) || TextUtils.isEmpty(email) || TextUtils.isEmpty(password) || TextUtils.isEmpty(role) || TextUtils.isEmpty(status)) {
                         Toast.makeText(requireContext(), "Vui lòng điền đầy đủ thông tin bắt buộc!", Toast.LENGTH_SHORT).show();
                         return;
                     }
@@ -132,7 +139,7 @@ public class UserManagementFragment extends Fragment {
                     String fullName = editFullName.getText().toString().trim();
                     String phone = editPhone.getText().toString().trim();
 
-                    if (TextUtils.isEmpty(username) || TextUtils.isEmpty(email)) {
+                    if (TextUtils.isEmpty(username) || TextUtils.isEmpty(email) || TextUtils.isEmpty(role) || TextUtils.isEmpty(status)) {
                         Toast.makeText(requireContext(), "Vui lòng điền đầy đủ thông tin bắt buộc!", Toast.LENGTH_SHORT).show();
                         return;
                     }
@@ -150,7 +157,8 @@ public class UserManagementFragment extends Fragment {
             cursor.close();
             return exists;
         } catch (Exception e) {
-            Toast.makeText(requireContext(), "Lỗi kiểm tra username: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e("UserManagement", "Lỗi kiểm tra username: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi kiểm tra username: " + e.getMessage(), Toast.LENGTH_LONG).show();
             return false;
         }
     }
@@ -164,9 +172,14 @@ public class UserManagementFragment extends Fragment {
             String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
             db.execSQL("INSERT INTO Users (username, password, email, role, status, full_name, phone, avatar_uri) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                     new Object[]{username, hashedPassword, email, role, status, fullName, phone, avatarUri});
+            Log.d("UserManagement", "Thêm người dùng thành công: " + username);
             Toast.makeText(requireContext(), "Thêm người dùng thành công", Toast.LENGTH_SHORT).show();
+        } catch (SQLiteConstraintException e) {
+            Log.e("UserManagement", "Lỗi ràng buộc: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi: Dữ liệu không hợp lệ (có thể thiếu thông tin bắt buộc)", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
-            Toast.makeText(requireContext(), "Lỗi thêm người dùng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e("UserManagement", "Lỗi thêm người dùng: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi thêm người dùng: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -184,9 +197,14 @@ public class UserManagementFragment extends Fragment {
                 db.execSQL("UPDATE Users SET username = ?, password = ?, email = ?, role = ?, status = ?, full_name = ?, phone = ?, avatar_uri = ? WHERE user_id = ?",
                         new Object[]{username, hashedPassword, email, role, status, fullName, phone, avatarUri, userId});
             }
+            Log.d("UserManagement", "Cập nhật người dùng thành công: " + username);
             Toast.makeText(requireContext(), "Cập nhật người dùng thành công", Toast.LENGTH_SHORT).show();
+        } catch (SQLiteConstraintException e) {
+            Log.e("UserManagement", "Lỗi ràng buộc: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi: Dữ liệu không hợp lệ", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
-            Toast.makeText(requireContext(), "Lỗi cập nhật người dùng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e("UserManagement", "Lỗi cập nhật người dùng: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi cập nhật người dùng: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -200,7 +218,8 @@ public class UserManagementFragment extends Fragment {
             cursor.close();
             return false;
         } catch (Exception e) {
-            Toast.makeText(requireContext(), "Lỗi kiểm tra tham chiếu: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e("UserManagement", "Lỗi kiểm tra tham chiếu: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi kiểm tra tham chiếu: " + e.getMessage(), Toast.LENGTH_LONG).show();
             return true;
         }
     }
@@ -216,10 +235,12 @@ public class UserManagementFragment extends Fragment {
                 .setPositiveButton("Xóa", (dialog, which) -> {
                     try (SQLiteDatabase db = dbHelper.openDatabase()) {
                         db.execSQL("DELETE FROM Users WHERE user_id = ?", new Object[]{userId});
+                        Log.d("UserManagement", "Xóa người dùng thành công: " + userId);
                         Toast.makeText(requireContext(), "Xóa người dùng thành công", Toast.LENGTH_SHORT).show();
                         loadUsers();
                     } catch (Exception e) {
-                        Toast.makeText(requireContext(), "Lỗi xóa người dùng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.e("UserManagement", "Lỗi xóa người dùng: " + e.getMessage(), e);
+                        Toast.makeText(requireContext(), "Lỗi xóa người dùng: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 })
                 .setNegativeButton("Hủy", null)

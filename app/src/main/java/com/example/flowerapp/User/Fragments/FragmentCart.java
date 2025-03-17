@@ -26,6 +26,7 @@ import com.example.flowerapp.CheckoutActivity;
 import com.example.flowerapp.Models.CartItem;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.Helper.DatabaseHelper;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +37,7 @@ public class FragmentCart extends Fragment {
     private CartAdapter adapter;
     private List<CartItem> cartList;
     private LinearLayout emptyMessage;
+    private TextView totalPriceTextView;
     private Button checkoutButton;
     private Button continueShoppingButton;
     private DatabaseHelper dbHelper;
@@ -47,11 +49,12 @@ public class FragmentCart extends Fragment {
 
         recyclerView = view.findViewById(R.id.recycler_cart_items);
         emptyMessage = view.findViewById(R.id.empty_message);
+        totalPriceTextView = view.findViewById(R.id.total_price);
         checkoutButton = view.findViewById(R.id.checkout_button);
         continueShoppingButton = view.findViewById(R.id.continue_shopping_button);
         dbHelper = new DatabaseHelper(getContext());
 
-        if (recyclerView == null || emptyMessage == null || checkoutButton == null || continueShoppingButton == null) {
+        if (recyclerView == null || emptyMessage == null || totalPriceTextView == null || checkoutButton == null || continueShoppingButton == null) {
             Log.e(TAG, "One or more views not found in layout");
             Toast.makeText(getContext(), "Error: Missing views in layout", Toast.LENGTH_SHORT).show();
             return view;
@@ -60,14 +63,14 @@ public class FragmentCart extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         cartList = new ArrayList<>();
 
-        loadCartItems();
-
         adapter = new CartAdapter(cartList, getContext(),
                 this::increaseQuantity,
                 this::decreaseQuantity,
                 this::deleteCartItem);
         recyclerView.setAdapter(adapter);
 
+        loadCartItems();
+        updateTotalPrice();
         updateEmptyState();
 
         checkoutButton.setOnClickListener(v -> {
@@ -80,7 +83,6 @@ public class FragmentCart extends Fragment {
         });
 
         continueShoppingButton.setOnClickListener(v -> {
-            // Chuyển đến FragmentShop
             FragmentShop fragmentShop = new FragmentShop();
             FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
             transaction.replace(R.id.fragment_container, fragmentShop);
@@ -109,6 +111,7 @@ public class FragmentCart extends Fragment {
                             "INNER JOIN Products p ON c.product_id = p.product_id " +
                             "WHERE c.user_id = ?", new String[]{String.valueOf(userId)});
 
+            cartList.clear();
             if (cursor != null) {
                 int cartIdIndex = cursor.getColumnIndex("cart_id");
                 int productIdIndex = cursor.getColumnIndex("product_id");
@@ -135,6 +138,7 @@ public class FragmentCart extends Fragment {
                 }
                 cursor.close();
             }
+            adapter.notifyDataSetChanged();
         } catch (Exception e) {
             Log.e(TAG, "Error loading cart items: " + e.getMessage());
             Toast.makeText(getContext(), "Error loading cart: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -145,48 +149,71 @@ public class FragmentCart extends Fragment {
         }
     }
 
-    private void increaseQuantity(CartItem item) {
-        item.quantity = item.getQuantity() + 1;
-        updateCartItemQuantity(item);
-        adapter.notifyDataSetChanged();
-    }
-
-    private void decreaseQuantity(CartItem item) {
-        if (item.getQuantity() > 1) {
-            item.quantity = item.getQuantity() - 1;
-            updateCartItemQuantity(item);
-            adapter.notifyDataSetChanged();
-        }
-    }
-
-    private void deleteCartItem(CartItem item) {
-        deleteItemFromCart(item.getCartId());
-        cartList.remove(item);
-        updateEmptyState();
-        adapter.notifyDataSetChanged();
-    }
-
-    private void updateCartItemQuantity(CartItem item) {
-        boolean success = dbHelper.updateCartQuantity(item.getCartId(), item.getQuantity());
-        if (!success) {
+    private void increaseQuantity(CartItem item, int position) {
+        int newQuantity = item.getQuantity() + 1;
+        item.setQuantity(newQuantity);
+        if (updateCartItemQuantity(item)) {
+            adapter.notifyItemChanged(position);
+            updateTotalPrice();
+        } else {
+            // Hoàn tác nếu cập nhật thất bại
+            item.setQuantity(newQuantity - 1);
             Toast.makeText(getContext(), "Failed to update quantity", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void deleteItemFromCart(int cartId) {
-        boolean success = dbHelper.deleteCartItem(cartId);
-        if (!success) {
+    private void decreaseQuantity(CartItem item, int position) {
+        if (item.getQuantity() > 1) {
+            int newQuantity = item.getQuantity() - 1;
+            item.setQuantity(newQuantity);
+            if (updateCartItemQuantity(item)) {
+                adapter.notifyItemChanged(position);
+                updateTotalPrice();
+            } else {
+                // Hoàn tác nếu cập nhật thất bại
+                item.setQuantity(newQuantity + 1);
+                Toast.makeText(getContext(), "Failed to update quantity", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void deleteCartItem(CartItem item, int position) {
+        if (deleteItemFromCart(item.getCartId())) {
+            cartList.remove(item);
+            adapter.notifyItemRemoved(position);
+            updateTotalPrice();
+            updateEmptyState();
+        } else {
             Toast.makeText(getContext(), "Failed to delete item", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private boolean updateCartItemQuantity(CartItem item) {
+        return dbHelper.updateCartQuantity(item.getCartId(), item.getQuantity());
+    }
+
+    private boolean deleteItemFromCart(int cartId) {
+        return dbHelper.deleteCartItem(cartId);
+    }
+
+    private void updateTotalPrice() {
+        double totalPrice = 0.0;
+        for (CartItem item : cartList) {
+            totalPrice += item.getPrice() * item.getQuantity();
+        }
+        totalPriceTextView.setText(String.format("Tổng tiền: %.2f VND", totalPrice));
+        totalPriceTextView.setVisibility(cartList.isEmpty() ? View.GONE : View.VISIBLE);
     }
 
     private void updateEmptyState() {
         if (cartList.isEmpty()) {
             recyclerView.setVisibility(View.GONE);
+            totalPriceTextView.setVisibility(View.GONE);
             emptyMessage.setVisibility(View.VISIBLE);
             checkoutButton.setEnabled(false);
         } else {
             recyclerView.setVisibility(View.VISIBLE);
+            totalPriceTextView.setVisibility(View.VISIBLE);
             emptyMessage.setVisibility(View.GONE);
             checkoutButton.setEnabled(true);
         }

@@ -6,13 +6,11 @@ import java.text.SimpleDateFormat;
 
 public class Order implements Serializable {
     private int id, userId;
-    private String orderDate, status, shippingAddress, title;
+    private String orderDate, status, shippingAddress, title, imageUrl;
     private double totalAmount;
-    private int imageResId;
-    private String imageUrl;
 
-    public Order(int id, int userId, String orderDate, String status, double totalAmount, String shippingAddress,
-                 String title, int imageResId, String imageUrl) {
+    public Order(int id, int userId, String orderDate, String status, double totalAmount,
+                 String shippingAddress, String title, String imageUrl) {
         if (totalAmount < 0) {
             throw new IllegalArgumentException("Tổng tiền không được âm");
         }
@@ -29,9 +27,8 @@ public class Order implements Serializable {
         this.status = status;
         this.totalAmount = totalAmount;
         this.shippingAddress = shippingAddress;
-        this.title = title;
-        this.imageResId = imageResId;
-        this.imageUrl = imageUrl;
+        this.title = title != null ? title : "Unknown Product";
+        this.imageUrl = imageUrl != null ? imageUrl : "";
     }
 
     // Getters
@@ -42,10 +39,9 @@ public class Order implements Serializable {
     public double getTotalAmount() { return totalAmount; }
     public String getShippingAddress() { return shippingAddress; }
     public String getTitle() { return title; }
-    public int getImageResId() { return imageResId; }
     public String getImageUrl() { return imageUrl; }
 
-    // Setters (nếu cần)
+    // Setters
     public void setId(int id) { this.id = id; }
     public void setUserId(int userId) { this.userId = userId; }
     public void setOrderDate(String orderDate) { this.orderDate = orderDate; }
@@ -53,9 +49,7 @@ public class Order implements Serializable {
     public void setTotalAmount(double totalAmount) { this.totalAmount = totalAmount; }
     public void setShippingAddress(String shippingAddress) { this.shippingAddress = shippingAddress; }
     public void setTitle(String title) { this.title = title; }
-    public void setImageResId(int imageResId) { this.imageResId = imageResId; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
-    // Để tương thích với phiên bản cũ, thêm getDate() ánh xạ tới getOrderDate()
     public String getDate() { return orderDate; }
 }

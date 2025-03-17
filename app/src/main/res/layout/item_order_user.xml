@@ -53,4 +53,23 @@
         android:textSize="12sp"
         android:padding="4dp" />
 
+    <Button
+        android:id="@+id/edit_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Edit"
+        android:visibility="gone"
+        android:backgroundTint="#FFCA28"
+        android:textSize="12sp"
+        android:padding="4dp" />
+
+    <Button
+        android:id="@+id/delete_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Delete"
+        android:visibility="gone"
+        android:backgroundTint="#F44336"
+        android:textSize="12sp"
+        android:padding="4dp" />
 </LinearLayout>
