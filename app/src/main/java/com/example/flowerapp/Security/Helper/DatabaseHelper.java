@@ -14,9 +14,30 @@ import java.io.OutputStream;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "FlowerApp.db";
-    private static final int DATABASE_VERSION = 4;
+    private static final int DATABASE_VERSION = 6; // Tăng version để thêm cột stock
     private static final String TAG = "DatabaseHelper";
     private final Context context;
+
+    private static final String CREATE_ORDERS_TABLE = "CREATE TABLE IF NOT EXISTS Orders (" +
+            "order_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+            "user_id INTEGER," +
+            "order_date TEXT," +
+            "status TEXT," +
+            "total_price REAL," +
+            "address TEXT," +
+            "order_number TEXT," +
+            "quantity INTEGER," +
+            "note TEXT," +
+            "FOREIGN KEY (user_id) REFERENCES Users(user_id))";
+
+    private static final String CREATE_ORDER_ITEMS_TABLE = "CREATE TABLE IF NOT EXISTS Order_Items (" +
+            "order_item_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+            "order_id INTEGER," +
+            "product_id INTEGER," +
+            "quantity INTEGER," +
+            "price REAL," +
+            "FOREIGN KEY (order_id) REFERENCES Orders(order_id)," +
+            "FOREIGN KEY (product_id) REFERENCES Products(product_id))";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -26,7 +47,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        Log.d(TAG, "Cơ sở dữ liệu đã được sao chép từ assets, không tạo bảng mới.");
+        Log.d(TAG, "Cơ sở dữ liệu đã được sao chép từ assets, không tạo bảng mới trong onCreate.");
     }
 
     @Override
@@ -47,6 +68,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 db.execSQL("ALTER TABLE Users ADD COLUMN avatar_uri TEXT DEFAULT NULL");
                 Log.d(TAG, "Đã thêm cột full_name, phone, và avatar_uri vào bảng Users.");
             }
+            if (oldVersion < 5) {
+                db.execSQL(CREATE_ORDERS_TABLE);
+                db.execSQL(CREATE_ORDER_ITEMS_TABLE);
+                Log.d(TAG, "Đã tạo bảng Orders và Order_Items.");
+            }
+            if (oldVersion < 6) {
+                db.execSQL("ALTER TABLE Products ADD COLUMN stock INTEGER DEFAULT 10");
+                Log.d(TAG, "Đã thêm cột stock vào bảng Products với giá trị mặc định là 10.");
+            }
         } catch (Exception e) {
             Log.e(TAG, "Lỗi khi nâng cấp cơ sở dữ liệu: " + e.getMessage());
             Toast.makeText(context, "Lỗi nâng cấp cơ sở dữ liệu", Toast.LENGTH_SHORT).show();
@@ -61,6 +91,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         try {
             SQLiteDatabase db = SQLiteDatabase.openDatabase(dbFile.getPath(), null, SQLiteDatabase.OPEN_READWRITE);
+            createTablesIfNotExist(db);
             db.rawQuery("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='Users'", null).close();
             Log.d(TAG, "Mở cơ sở dữ liệu thành công: " + dbFile.getPath());
             return db;
@@ -78,7 +109,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    // Thêm phương thức để cập nhật số lượng trong giỏ hàng
     public boolean updateCartQuantity(int cartId, int newQuantity) {
         SQLiteDatabase db = null;
         try {
@@ -98,7 +128,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    // Thêm phương thức để xóa mục khỏi giỏ hàng
     public boolean deleteCartItem(int cartId) {
         SQLiteDatabase db = null;
         try {
@@ -115,6 +144,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             if (db != null) {
                 closeDatabase(db);
             }
+        }
+    }
+
+    private void createTablesIfNotExist(SQLiteDatabase db) {
+        try {
+            db.execSQL(CREATE_ORDERS_TABLE);
+            db.execSQL(CREATE_ORDER_ITEMS_TABLE);
+            Log.d(TAG, "Kiểm tra và tạo bảng Orders và Order_Items nếu chưa tồn tại.");
+        } catch (Exception e) {
+            Log.e(TAG, "Lỗi khi kiểm tra/tạo bảng Orders và Order_Items: " + e.getMessage());
+            Toast.makeText(context, "Lỗi tạo bảng Orders và Order_Items", Toast.LENGTH_SHORT).show();
         }
     }
 

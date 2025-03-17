@@ -1,72 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
     android:background="#BFD8AF">
 
-    <!-- Thanh Spacer để tạo khoảng cách với thanh trạng thái -->
-    <LinearLayout
-        android:id="@+id/status_bar_spacer"
-        android:layout_width="match_parent"
-        android:layout_height="35dp"
-        android:orientation="vertical"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-    </RelativeLayout>
-
-    <!-- Tiêu đề Cart, đặt dưới status_bar_spacer để tránh dính vào menu trên -->
     <TextView
-        android:id="@+id/textview_cart_title"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Cart"
-        android:textColor="#333333"
-        android:textSize="28sp"
+        android:text="Your Cart"
+        android:textSize="24sp"
         android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@id/status_bar_spacer"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:gravity="center"
+        android:paddingBottom="16dp" />
 
-    <!-- Thông báo giỏ hàng trống -->
-    <TextView
+    <!-- Phần hiển thị khi giỏ hàng trống -->
+    <LinearLayout
         android:id="@+id/empty_message"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Your cart is empty"
-        android:textSize="16sp"
-        android:textColor="#666666"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/textview_cart_title"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Your cart is empty"
+            android:textSize="20sp"
+            android:textColor="#FF5722"
+            android:textStyle="bold"
+            android:paddingBottom="16dp" />
+
+        <Button
+            android:id="@+id/continue_shopping_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Continue Shopping"
+            android:backgroundTint="#4CAF50"
+            android:textColor="@color/white" />
+    </LinearLayout>
 
     <!-- Danh sách sản phẩm trong giỏ hàng -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_cart_items"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:padding="8dp"
-        app:layout_constraintBottom_toTopOf="@id/checkout_button"
-        app:layout_constraintTop_toBottomOf="@id/textview_cart_title"
-        app:layout_constraintVertical_bias="1.0"
-        tools:layout_editor_absoluteX="0dp" />
+        android:layout_weight="1"
+        android:paddingTop="8dp" />
 
     <!-- Nút Checkout -->
-    <com.google.android.material.button.MaterialButton
+    <Button
         android:id="@+id/checkout_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
         android:text="Checkout"
+        android:backgroundTint="#4CAF50"
         android:textColor="@color/white"
-        app:backgroundTint="#98BB84"
-        app:layout_constraintBottom_toBottomOf="parent"
-        tools:layout_editor_absoluteX="16dp" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:layout_marginTop="16dp" />
+
+</LinearLayout>

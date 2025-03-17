@@ -1,5 +1,6 @@
 package com.example.flowerapp.User.Fragments;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -9,20 +10,22 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.flowerapp.Adapters.CartAdapter;
+import com.example.flowerapp.CheckoutActivity;
 import com.example.flowerapp.Models.CartItem;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.Helper.DatabaseHelper;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,8 +35,9 @@ public class FragmentCart extends Fragment {
     private RecyclerView recyclerView;
     private CartAdapter adapter;
     private List<CartItem> cartList;
-    private TextView emptyMessage;
+    private LinearLayout emptyMessage;
     private Button checkoutButton;
+    private Button continueShoppingButton;
     private DatabaseHelper dbHelper;
 
     @Nullable
@@ -44,9 +48,10 @@ public class FragmentCart extends Fragment {
         recyclerView = view.findViewById(R.id.recycler_cart_items);
         emptyMessage = view.findViewById(R.id.empty_message);
         checkoutButton = view.findViewById(R.id.checkout_button);
+        continueShoppingButton = view.findViewById(R.id.continue_shopping_button);
         dbHelper = new DatabaseHelper(getContext());
 
-        if (recyclerView == null || emptyMessage == null || checkoutButton == null) {
+        if (recyclerView == null || emptyMessage == null || checkoutButton == null || continueShoppingButton == null) {
             Log.e(TAG, "One or more views not found in layout");
             Toast.makeText(getContext(), "Error: Missing views in layout", Toast.LENGTH_SHORT).show();
             return view;
@@ -67,10 +72,20 @@ public class FragmentCart extends Fragment {
 
         checkoutButton.setOnClickListener(v -> {
             if (cartList.isEmpty()) {
-                Toast.makeText(getContext(), "Your cart is empty", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Your cart is empty. Add products to proceed!", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(getContext(), "Proceed to checkout", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getActivity(), CheckoutActivity.class);
+                startActivity(intent);
             }
+        });
+
+        continueShoppingButton.setOnClickListener(v -> {
+            // Chuyển đến FragmentShop
+            FragmentShop fragmentShop = new FragmentShop();
+            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+            transaction.replace(R.id.fragment_container, fragmentShop);
+            transaction.addToBackStack(null);
+            transaction.commit();
         });
 
         return view;
@@ -169,7 +184,6 @@ public class FragmentCart extends Fragment {
         if (cartList.isEmpty()) {
             recyclerView.setVisibility(View.GONE);
             emptyMessage.setVisibility(View.VISIBLE);
-            emptyMessage.setText("Your cart is empty");
             checkoutButton.setEnabled(false);
         } else {
             recyclerView.setVisibility(View.VISIBLE);
