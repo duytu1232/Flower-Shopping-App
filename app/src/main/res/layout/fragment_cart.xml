@@ -42,6 +42,18 @@
             android:textColor="@color/white" />
     </LinearLayout>
 
+    <!-- Tổng giá trị giỏ hàng -->
+    <TextView
+        android:id="@+id/total_price"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Tổng tiền: 0.00 VND"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#333333"
+        android:paddingBottom="8dp"
+        android:visibility="gone" />
+
     <!-- Danh sách sản phẩm trong giỏ hàng -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_cart_items"

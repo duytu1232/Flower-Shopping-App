@@ -1,8 +1,10 @@
 package com.example.flowerapp.Adapters;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -12,28 +14,31 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.flowerapp.Models.Order;
 import com.example.flowerapp.R;
-import com.google.android.material.button.MaterialButton;
+import com.example.flowerapp.User.Fragments.MyOrder_Fragment.OrderDetailActivity;
 
 import java.util.List;
 import java.util.function.Consumer;
 
 public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHolder> {
     private List<Order> orderList;
-    private Consumer<Order> onEditClick;
-    private Consumer<Integer> onDeleteClick;
+    private Consumer<Order> onReviewClick; // Dành cho User
+    private Consumer<Order> onEditClick;   // Dành cho Admin
+    private Consumer<Order> onDeleteClick; // Dành cho Admin
+    private boolean isAdminMode;           // Cờ để xác định chế độ User hay Admin
 
-    // Constructor mới cho hiển thị (không cần edit/delete)
-    public OrderAdapter(List<Order> orderList) {
+    // Constructor cho User (có nút Review)
+    public OrderAdapter(List<Order> orderList, Consumer<Order> onReviewClick) {
         this.orderList = orderList;
-        this.onEditClick = null;
-        this.onDeleteClick = null;
+        this.onReviewClick = onReviewClick;
+        this.isAdminMode = false;
     }
 
-    // Constructor cũ cho quản lý (giữ nguyên)
-    public OrderAdapter(List<Order> orderList, Consumer<Order> onEditClick, Consumer<Integer> onDeleteClick) {
+    // Constructor cho Admin (có nút Edit và Delete)
+    public OrderAdapter(List<Order> orderList, Consumer<Order> onEditClick, Consumer<Order> onDeleteClick) {
         this.orderList = orderList;
         this.onEditClick = onEditClick;
         this.onDeleteClick = onDeleteClick;
+        this.isAdminMode = true;
     }
 
     @NonNull
@@ -46,35 +51,53 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
     @Override
     public void onBindViewHolder(@NonNull OrderViewHolder holder, int position) {
         Order order = orderList.get(position);
-        holder.orderTitle.setText(order.getTitle());
-        holder.orderDate.setText("Ngày đặt: " + order.getOrderDate());
-        holder.orderStatus.setText("Trạng thái: " + order.getStatus());
-        holder.orderTotal.setText("Tổng tiền: " + String.format("%.2f VND", order.getTotalAmount()));
-        holder.orderAddress.setText("Địa chỉ: " + order.getShippingAddress());
 
-        // Tải hình ảnh nếu có
-        if (order.getImageUrl() != null && !order.getImageUrl().isEmpty()) {
+        holder.orderTitle.setText(order.getTitle());
+        holder.orderStatus.setText("Trạng thái: " + order.getStatus());
+        holder.orderDate.setText("Ngày đặt: " + order.getOrderDate());
+
+        // Xử lý hiển thị ảnh
+        String imageUrl = order.getImageUrl();
+        if (imageUrl != null && !imageUrl.isEmpty()) {
             Glide.with(holder.itemView.getContext())
-                    .load(order.getImageUrl())
-                    .placeholder(R.drawable.order_base_line)
+                    .load(imageUrl)
+                    .placeholder(R.drawable.shop)
+                    .error(R.drawable.shop)
                     .into(holder.orderImage);
         } else {
-            holder.orderImage.setImageResource(R.drawable.order_base_line);
+            holder.orderImage.setImageResource(R.drawable.shop);
         }
 
-        // Ẩn các nút edit và delete nếu không cần
-        if (onEditClick == null || onDeleteClick == null) {
-            if (holder.btnEditOrder != null) holder.btnEditOrder.setVisibility(View.GONE);
-            if (holder.btnDeleteOrder != null) holder.btnDeleteOrder.setVisibility(View.GONE);
+        // Xử lý nút theo chế độ
+        if (isAdminMode) {
+            holder.reviewButton.setVisibility(View.GONE);
+            holder.editButton.setVisibility(View.VISIBLE);
+            holder.deleteButton.setVisibility(View.VISIBLE);
+
+            holder.editButton.setOnClickListener(v -> {
+                if (onEditClick != null) onEditClick.accept(order);
+            });
+            holder.deleteButton.setOnClickListener(v -> {
+                if (onDeleteClick != null) onDeleteClick.accept(order);
+            });
         } else {
-            if (holder.btnEditOrder != null) {
-                holder.btnEditOrder.setVisibility(View.VISIBLE);
-                holder.btnEditOrder.setOnClickListener(v -> onEditClick.accept(order));
+            holder.editButton.setVisibility(View.GONE);
+            holder.deleteButton.setVisibility(View.GONE);
+            if (onReviewClick != null && "delivered".equals(order.getStatus())) {
+                holder.reviewButton.setVisibility(View.VISIBLE);
+                holder.reviewButton.setOnClickListener(v -> onReviewClick.accept(order));
+            } else {
+                holder.reviewButton.setVisibility(View.GONE);
             }
-            if (holder.btnDeleteOrder != null) {
-                holder.btnDeleteOrder.setVisibility(View.VISIBLE);
-                holder.btnDeleteOrder.setOnClickListener(v -> onDeleteClick.accept(order.getId()));
-            }
+        }
+
+        // Thêm sự kiện click trên toàn bộ item để mở OrderDetailActivity (cho User)
+        if (!isAdminMode) {
+            holder.itemView.setOnClickListener(v -> {
+                Intent intent = new Intent(holder.itemView.getContext(), OrderDetailActivity.class);
+                intent.putExtra("order", order);
+                holder.itemView.getContext().startActivity(intent);
+            });
         }
     }
 
@@ -84,20 +107,19 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
     }
 
     public static class OrderViewHolder extends RecyclerView.ViewHolder {
-        TextView orderTitle, orderDate, orderStatus, orderTotal, orderAddress;
         ImageView orderImage;
-        MaterialButton btnEditOrder, btnDeleteOrder;
+        TextView orderTitle, orderStatus, orderDate;
+        Button reviewButton, editButton, deleteButton;
 
         public OrderViewHolder(@NonNull View itemView) {
             super(itemView);
-            orderTitle = itemView.findViewById(R.id.order_title);
-            orderDate = itemView.findViewById(R.id.order_date);
-            orderStatus = itemView.findViewById(R.id.order_status);
-            orderTotal = itemView.findViewById(R.id.order_total);
-            orderAddress = itemView.findViewById(R.id.order_address);
-            orderImage = itemView.findViewById(R.id.order_image);
-            btnEditOrder = itemView.findViewById(R.id.btn_edit_order);
-            btnDeleteOrder = itemView.findViewById(R.id.btn_delete_order);
+            orderImage = itemView.findViewById(R.id.orderImage);
+            orderTitle = itemView.findViewById(R.id.orderTitle);
+            orderStatus = itemView.findViewById(R.id.orderStatus);
+            orderDate = itemView.findViewById(R.id.orderDate);
+            reviewButton = itemView.findViewById(R.id.review_button);
+            editButton = itemView.findViewById(R.id.edit_button);
+            deleteButton = itemView.findViewById(R.id.delete_button);
         }
     }
 }

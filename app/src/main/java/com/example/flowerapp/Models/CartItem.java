@@ -5,7 +5,7 @@ public class CartItem {
     private int productId;
     private String name;
     private double price;
-    public int quantity; // Thay đổi từ private thành public để có thể chỉnh sửa trực tiếp
+    private int quantity; // Quay lại private để đảm bảo đóng gói
     private String imageUrl;
 
     public CartItem(int cartId, int productId, String name, double price, int quantity, String imageUrl) {
@@ -35,6 +35,13 @@ public class CartItem {
 
     public int getQuantity() {
         return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        if (quantity < 1) {
+            throw new IllegalArgumentException("Quantity must be at least 1");
+        }
+        this.quantity = quantity;
     }
 
     public String getImageUrl() {

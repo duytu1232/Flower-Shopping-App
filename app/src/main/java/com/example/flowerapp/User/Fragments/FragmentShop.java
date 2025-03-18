@@ -32,12 +32,14 @@ public class FragmentShop extends Fragment {
     private ProductAdapter adapter;
     private List<Product> productList;
     private TextView emptyMessage;
+    private DatabaseHelper dbHelper;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_shop, container, false);
 
+        dbHelper = new DatabaseHelper(requireContext());
         recyclerView = view.findViewById(R.id.recycler_shop_products);
         emptyMessage = view.findViewById(R.id.empty_message);
 
@@ -50,11 +52,10 @@ public class FragmentShop extends Fragment {
         recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 2));
         productList = new ArrayList<>();
 
-        loadProducts();
-
         adapter = new ProductAdapter(productList, requireContext());
         recyclerView.setAdapter(adapter);
 
+        loadProducts();
         updateEmptyState();
 
         // Xử lý nút Sort (nếu cần)
@@ -69,11 +70,11 @@ public class FragmentShop extends Fragment {
     }
 
     private void loadProducts() {
-        DatabaseHelper dbHelper = new DatabaseHelper(requireContext());
         SQLiteDatabase db = null;
+        Cursor cursor = null;
         try {
             db = dbHelper.openDatabase();
-            String query = "SELECT * FROM Products";
+            String query = "SELECT product_id, name, description, price, stock, image_url, category FROM Products";
             List<String> selectionArgs = new ArrayList<>();
             String searchQuery = null;
             String flowerType = null;
@@ -102,45 +103,37 @@ public class FragmentShop extends Fragment {
                 }
 
                 if (!conditions.isEmpty()) {
-                    query = "SELECT * FROM Products WHERE " + String.join(" AND ", conditions);
+                    query = "SELECT product_id, name, description, price, stock, image_url, category FROM Products WHERE " + String.join(" AND ", conditions);
                 }
             }
 
-            Cursor cursor = db.rawQuery(query, selectionArgs.toArray(new String[0]));
+            cursor = db.rawQuery(query, selectionArgs.toArray(new String[0]));
+            productList.clear();
+            while (cursor.moveToNext()) {
+                int id = cursor.getInt(cursor.getColumnIndexOrThrow("product_id"));
+                String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
+                String description = cursor.getString(cursor.getColumnIndexOrThrow("description"));
+                double price = cursor.getDouble(cursor.getColumnIndexOrThrow("price"));
+                int stock = cursor.getInt(cursor.getColumnIndexOrThrow("stock"));
+                String imageUrl = cursor.getString(cursor.getColumnIndexOrThrow("image_url"));
+                String category = cursor.getString(cursor.getColumnIndexOrThrow("category"));
+                productList.add(new Product(id, name, description, price, stock, imageUrl, category));
+                Log.d(TAG, "Thêm sản phẩm: " + name);
+            }
+            Log.d(TAG, "Số lượng sản phẩm trong list: " + productList.size());
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading products: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi tải sản phẩm: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        } finally {
             if (cursor != null) {
-                int idIndex = cursor.getColumnIndex("product_id");
-                int nameIndex = cursor.getColumnIndex("name");
-                int descriptionIndex = cursor.getColumnIndex("description");
-                int priceIndex = cursor.getColumnIndex("price");
-                int stockIndex = cursor.getColumnIndex("stock");
-                int imageUrlIndex = cursor.getColumnIndex("image_url");
-                int categoryIndex = cursor.getColumnIndex("category");
-
-                if (idIndex == -1 || nameIndex == -1 || descriptionIndex == -1 || priceIndex == -1 ||
-                        stockIndex == -1 || imageUrlIndex == -1 || categoryIndex == -1) {
-                    Log.e(TAG, "One or more columns do not exist in Products table!");
-                    return;
-                }
-
-                while (cursor.moveToNext()) {
-                    int id = cursor.getInt(idIndex);
-                    String name = cursor.getString(nameIndex);
-                    String description = cursor.getString(descriptionIndex);
-                    double price = cursor.getDouble(priceIndex);
-                    int stock = cursor.getInt(stockIndex);
-                    String imageUrl = cursor.getString(imageUrlIndex);
-                    String category = cursor.getString(categoryIndex);
-                    productList.add(new Product(id, name, description, price, stock, imageUrl, category));
-                }
                 cursor.close();
             }
-        } catch (Exception e) {
-            Log.e(TAG, "Error loading products: " + e.getMessage());
-        } finally {
             if (db != null) {
                 dbHelper.closeDatabase(db);
             }
         }
+        adapter.notifyDataSetChanged();
+        updateEmptyState();
     }
 
     private void updateEmptyState() {

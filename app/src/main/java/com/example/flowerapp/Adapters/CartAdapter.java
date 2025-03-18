@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,13 +24,12 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
     private OnQuantityChangeListener decreaseListener;
     private OnDeleteListener deleteListener;
 
-    // Interface để xử lý tăng/giảm số lượng và xóa sản phẩm
     public interface OnQuantityChangeListener {
-        void onQuantityChange(CartItem item);
+        void onQuantityChange(CartItem item, int position);
     }
 
     public interface OnDeleteListener {
-        void onDelete(CartItem item);
+        void onDelete(CartItem item, int position);
     }
 
     public CartAdapter(List<CartItem> cartItems, Context context,
@@ -58,41 +56,17 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
 
         // Hiển thị thông tin sản phẩm
         holder.cartItemName.setText(cartItem.getName());
-        holder.cartItemPrice.setText(String.format("Giá: %.2f VND", cartItem.getPrice()));
+        holder.cartItemPrice.setText(String.format("Giá: %.2f VND", cartItem.getPrice() * cartItem.getQuantity())); // Hiển thị giá * số lượng
         holder.cartItemQuantity.setText("Số lượng: " + cartItem.getQuantity());
 
         // Xử lý hiển thị ảnh
         String imageUrl = cartItem.getImageUrl();
         if (imageUrl != null && !imageUrl.isEmpty()) {
-            if (imageUrl.startsWith("assets/") || imageUrl.contains("/")) {
-                // Xử lý ảnh trong assets
-                String assetPath = "file:///android_asset/" + imageUrl.replace("assets/", "").replace("\\", "/");
-                Glide.with(context)
-                        .load(assetPath)
-                        .placeholder(android.R.drawable.ic_menu_gallery)
-                        .error(android.R.drawable.ic_dialog_alert)
-                        .into(holder.cartItemImage);
-            } else if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
-                // Xử lý ảnh từ URL
-                Glide.with(context)
-                        .load(imageUrl)
-                        .placeholder(android.R.drawable.ic_menu_gallery)
-                        .error(android.R.drawable.ic_dialog_alert)
-                        .into(holder.cartItemImage);
-            } else {
-                // Xử lý ảnh từ drawable
-                int resourceId = context.getResources().getIdentifier(
-                        imageUrl.replace(".png", "").replace(".jpg", ""), "drawable",
-                        context.getPackageName());
-                if (resourceId != 0) {
-                    Glide.with(context)
-                            .load(resourceId)
-                            .placeholder(android.R.drawable.ic_menu_gallery)
-                            .into(holder.cartItemImage);
-                } else {
-                    holder.cartItemImage.setImageResource(android.R.drawable.ic_menu_gallery);
-                }
-            }
+            Glide.with(context)
+                    .load(imageUrl)
+                    .placeholder(android.R.drawable.ic_menu_gallery)
+                    .error(android.R.drawable.ic_dialog_alert)
+                    .into(holder.cartItemImage);
         } else {
             holder.cartItemImage.setImageResource(android.R.drawable.ic_menu_gallery);
         }
@@ -100,21 +74,21 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         // Xử lý nút tăng số lượng
         holder.btnIncreaseQuantity.setOnClickListener(v -> {
             if (increaseListener != null) {
-                increaseListener.onQuantityChange(cartItem);
+                increaseListener.onQuantityChange(cartItem, position);
             }
         });
 
         // Xử lý nút giảm số lượng
         holder.btnDecreaseQuantity.setOnClickListener(v -> {
             if (decreaseListener != null) {
-                decreaseListener.onQuantityChange(cartItem);
+                decreaseListener.onQuantityChange(cartItem, position);
             }
         });
 
         // Xử lý nút xóa sản phẩm
         holder.btnDeleteItem.setOnClickListener(v -> {
             if (deleteListener != null) {
-                deleteListener.onDelete(cartItem);
+                deleteListener.onDelete(cartItem, position);
             }
         });
     }

@@ -1,60 +1,175 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#BFD8AF"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="#E6F0FA">
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Order Details"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:paddingBottom="16dp" />
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <TextView
-        android:id="@+id/order_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Order Title"
-        android:textSize="18sp" />
+        <!-- Tiêu đề -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Order Details"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#1A3C34"
+            android:gravity="center"
+            android:paddingBottom="16dp" />
 
-    <TextView
-        android:id="@+id/order_status"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Status: Pending"
-        android:textSize="16sp" />
+        <!-- CardView chứa thông tin đơn hàng -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="6dp"
+            app:cardBackgroundColor="#FFFFFF"
+            android:layout_marginBottom="16dp">
 
-    <TextView
-        android:id="@+id/order_date"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Date: 2025-03-02"
-        android:textSize="16sp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
 
-    <TextView
-        android:id="@+id/order_total"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Total: $0.00"
-        android:textSize="16sp" />
+                <!-- Ảnh sản phẩm -->
+                <ImageView
+                    android:id="@+id/order_image"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/rose"
+                    android:clipToOutline="true"
+                    android:background="@drawable/rounded_image"
+                    android:layout_marginBottom="16dp" />
 
-    <TextView
-        android:id="@+id/order_address"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Address: Not specified"
-        android:textSize="16sp" />
+                <!-- Tiêu đề đơn hàng -->
+                <TextView
+                    android:id="@+id/order_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Order Title"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A3C34"
+                    android:paddingBottom="8dp" />
 
-    <ImageView
-        android:id="@+id/order_image"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_gravity="center"
-        android:src="@drawable/rose" />
+                <!-- Trạng thái -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingBottom="8dp">
 
-</LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Status: "
+                        android:textSize="16sp"
+                        android:textColor="#666666" />
+
+                    <TextView
+                        android:id="@+id/order_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Pending"
+                        android:textSize="16sp"
+                        android:textColor="#D4A373"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Ngày đặt -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingBottom="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Date: "
+                        android:textSize="16sp"
+                        android:textColor="#666666" />
+
+                    <TextView
+                        android:id="@+id/order_date"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="2025-03-02"
+                        android:textSize="16sp"
+                        android:textColor="#1A3C34" />
+                </LinearLayout>
+
+                <!-- Tổng tiền -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingBottom="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Total: "
+                        android:textSize="16sp"
+                        android:textColor="#666666" />
+
+                    <TextView
+                        android:id="@+id/order_total"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="$0.00"
+                        android:textSize="16sp"
+                        android:textColor="#E63946"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Địa chỉ giao hàng -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingBottom="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Address: "
+                        android:textSize="16sp"
+                        android:textColor="#666666" />
+
+                    <TextView
+                        android:id="@+id/order_address"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Not specified"
+                        android:textSize="16sp"
+                        android:textColor="#1A3C34" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Nút quay lại -->
+        <Button
+            android:id="@+id/btn_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Back"
+            android:textSize="16sp"
+            android:paddingHorizontal="24dp"
+            android:backgroundTint="#99BC85"
+            android:textColor="#FFFFFF"
+            app:cornerRadius="8dp" />
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

@@ -106,7 +106,6 @@ public class ReviewDetail extends Fragment {
                         0.0,
                         "Default Address",
                         "Order #" + orderId,
-                        0,
                         ""
                 );
                 Intent intent = new Intent(getContext(), ReviewActivity.class);

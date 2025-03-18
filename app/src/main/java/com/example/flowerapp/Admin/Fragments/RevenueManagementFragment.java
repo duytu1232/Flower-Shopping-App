@@ -12,6 +12,7 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -101,6 +102,7 @@ public class RevenueManagementFragment extends Fragment {
         }
 
         try (Cursor cursor = db.rawQuery(query, null)) {
+            Log.d("RevenueManagement", "Số lượng bản ghi: " + cursor.getCount());
             if (cursor.moveToFirst()) {
                 do {
                     String method = cursor.getString(cursor.getColumnIndexOrThrow("payment_method"));
@@ -109,10 +111,12 @@ public class RevenueManagementFragment extends Fragment {
 
                     totalRevenue += amount;
                     revenueList.add(new Revenue(method, amount, date));
+                    Log.d("RevenueManagement", "Thêm doanh thu: " + method + ", " + amount);
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
-            Log.e("RevenueManagement", "Lỗi truy vấn: " + e.getMessage());
+            Log.e("RevenueManagement", "Lỗi truy vấn: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Lỗi tải doanh thu: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
 
         progressBar.setVisibility(View.GONE);
@@ -121,7 +125,10 @@ public class RevenueManagementFragment extends Fragment {
         if (!revenueList.isEmpty()) {
             RevenueAdapter adapter = new RevenueAdapter(revenueList);
             recyclerView.setAdapter(adapter);
-            recyclerView.scheduleLayoutAnimation(); // Animation khi load
+            recyclerView.scheduleLayoutAnimation();
+        } else {
+            recyclerView.setAdapter(null);
+            Log.d("RevenueManagement", "Không có dữ liệu doanh thu");
         }
 
         dbHelper.closeDatabase(db);
