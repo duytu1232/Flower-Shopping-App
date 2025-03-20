@@ -1,18 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="flower_types">
-        <item>Tất cả</item>
+    <array name="flower_types">
         <item>Hoa hồng</item>
-        <item>Hoa cẩm chướng</item>
         <item>Hoa lan</item>
-    </string-array>
-    <string-array name="rating_filters">
+        <item>Hoa cúc</item>
+        <item>Hoa tulip</item>
+    </array>
+
+    <!-- Thêm mảng review_filters -->
+    <array name="review_filters">
         <item>All</item>
-        <item>5 Stars</item>
-        <item>4 Stars</item>
-        <item>3 Stars</item>
-        <item>2 Stars</item>
-        <item>1 Star</item>
-    </string-array>
-    <string name="select_rating">Select Rating</string>
+        <item>5 stars</item>
+        <item>4 stars</item>
+        <item>3 stars</item>
+        <item>2 stars</item>
+        <item>1 star</item>
+    </array>
+
+    <array name="price_range_default">
+        <item>0</item>
+        <item>1000000</item>
+    </array>
 </resources>

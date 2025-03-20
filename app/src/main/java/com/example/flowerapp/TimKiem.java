@@ -30,6 +30,7 @@ import com.google.android.material.slider.RangeSlider;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class TimKiem extends AppCompatActivity {
     private EditText searchEditText;
@@ -49,6 +50,14 @@ public class TimKiem extends AppCompatActivity {
         setupWindowInsets();
         setupSearchHistory();
         setupListeners();
+
+        // Kiểm tra Intent để lấy từ khóa tìm kiếm ban đầu
+        Intent intent = getIntent();
+        if (intent != null && intent.hasExtra("search_query")) {
+            String initialQuery = intent.getStringExtra("search_query");
+            searchEditText.setText(initialQuery);
+            performSearch();
+        }
     }
 
     private void initViews() {
@@ -60,7 +69,7 @@ public class TimKiem extends AppCompatActivity {
         sharedPreferences = getSharedPreferences("SearchPrefs", MODE_PRIVATE);
 
         if (searchEditText == null || backButton == null || searchIcon == null || filterIcon == null || searchHistoryRecyclerView == null) {
-            Toast.makeText(this, "Error: Missing UI components", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Lỗi: Thiếu thành phần giao diện", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -80,7 +89,14 @@ public class TimKiem extends AppCompatActivity {
     }
 
     private void setupSearchHistory() {
-        // Đã xử lý trong initViews
+        // Hiển thị lịch sử tìm kiếm khi người dùng tập trung vào thanh tìm kiếm
+        searchEditText.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus && !searchHistoryList.isEmpty() && searchEditText.getText().toString().trim().isEmpty()) {
+                searchHistoryRecyclerView.setVisibility(View.VISIBLE);
+            } else {
+                searchHistoryRecyclerView.setVisibility(View.GONE);
+            }
+        });
     }
 
     private void setupListeners() {
@@ -95,12 +111,16 @@ public class TimKiem extends AppCompatActivity {
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.length() > 0) {
+                    searchHistoryRecyclerView.setVisibility(View.GONE);
+                } else if (searchEditText.hasFocus() && !searchHistoryList.isEmpty()) {
+                    searchHistoryRecyclerView.setVisibility(View.VISIBLE);
+                }
+            }
 
             @Override
-            public void afterTextChanged(Editable s) {
-                // Có thể thêm gợi ý tìm kiếm real-time nếu cần
-            }
+            public void afterTextChanged(Editable s) {}
         });
 
         findViewById(R.id.clear_all).setOnClickListener(v -> clearSearchHistory());
@@ -118,25 +138,38 @@ public class TimKiem extends AppCompatActivity {
             startActivity(intent);
             finish();
         } else {
-            Toast.makeText(this, "Please enter a search query", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Vui lòng nhập từ khóa tìm kiếm", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void saveSearchHistory(String query) {
-        searchHistoryList.remove(query); // Xóa nếu đã tồn tại để tránh trùng lặp
-        searchHistoryList.add(0, query); // Thêm vào đầu danh sách
-        if (searchHistoryList.size() > 10) searchHistoryList.remove(searchHistoryList.size() - 1); // Giới hạn 10 mục
-        historyAdapter.notifyDataSetChanged();
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putStringSet("history", new HashSet<>(searchHistoryList));
-        editor.apply();
+        new Thread(() -> {
+            searchHistoryList.remove(query); // Xóa nếu đã tồn tại để tránh trùng lặp
+            searchHistoryList.add(0, query); // Thêm vào đầu danh sách
+            if (searchHistoryList.size() > 10) searchHistoryList.remove(searchHistoryList.size() - 1); // Giới hạn 10 mục
+
+            // Cập nhật SharedPreferences
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putStringSet("history", new HashSet<>(searchHistoryList));
+            editor.apply();
+
+            // Cập nhật UI trên main thread
+            runOnUiThread(() -> historyAdapter.notifyDataSetChanged());
+        }).start();
     }
 
     private void clearSearchHistory() {
-        searchHistoryList.clear();
-        historyAdapter.notifyDataSetChanged();
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.remove("history").apply();
+        new Thread(() -> {
+            searchHistoryList.clear();
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.remove("history").apply();
+
+            // Cập nhật UI trên main thread
+            runOnUiThread(() -> {
+                historyAdapter.notifyDataSetChanged();
+                searchHistoryRecyclerView.setVisibility(View.GONE);
+            });
+        }).start();
     }
 
     private void searchFromHistory(String query) {
@@ -145,31 +178,74 @@ public class TimKiem extends AppCompatActivity {
     }
 
     private void deleteHistoryItem(String query) {
-        int position = searchHistoryList.indexOf(query);
-        if (position != -1) {
-            searchHistoryList.remove(position);
-            historyAdapter.notifyItemRemoved(position);
-            historyAdapter.notifyItemRangeChanged(position, searchHistoryList.size());
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putStringSet("history", new HashSet<>(searchHistoryList));
-            editor.apply();
-        }
+        new Thread(() -> {
+            int position = searchHistoryList.indexOf(query);
+            if (position != -1) {
+                searchHistoryList.remove(position);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putStringSet("history", new HashSet<>(searchHistoryList));
+                editor.apply();
+
+                // Cập nhật UI trên main thread
+                runOnUiThread(() -> {
+                    historyAdapter.notifyItemRemoved(position);
+                    historyAdapter.notifyItemRangeChanged(position, searchHistoryList.size());
+                    if (searchHistoryList.isEmpty()) {
+                        searchHistoryRecyclerView.setVisibility(View.GONE);
+                    }
+                });
+            }
+        }).start();
     }
 
     private void showFilterDialog() {
         BottomSheetDialog dialog = new BottomSheetDialog(this);
-        View view = LayoutInflater.from(this).inflate(R.layout.dialog_filter, findViewById(R.id.main));
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_filter, null);
         dialog.setContentView(view);
 
         Spinner flowerTypeSpinner = view.findViewById(R.id.spinner_flower_type);
         RangeSlider priceRangeSlider = view.findViewById(R.id.price_range_slider);
+        TextView priceRangeText = view.findViewById(R.id.price_range_text);
         Button applyFilterBtn = view.findViewById(R.id.apply_filter_btn);
+        Button cancelFilterBtn = view.findViewById(R.id.cancel_filter_btn);
+
+        // Đảm bảo RangeSlider có giá trị mặc định
+        if (priceRangeSlider != null) {
+            priceRangeSlider.setValues(0f, 1000000f); // Giá trị mặc định
+            // Cập nhật TextView với giá trị ban đầu
+            if (priceRangeText != null) {
+                priceRangeText.setText("Giá: 0 - 1,000,000");
+            }
+
+            // Cập nhật TextView khi giá trị RangeSlider thay đổi
+            priceRangeSlider.addOnChangeListener((slider, value, fromUser) -> {
+                List<Float> values = slider.getValues();
+                if (values != null && values.size() == 2) {
+                    priceRangeText.setText("Giá: " + values.get(0).intValue() + " - " + values.get(1).intValue());
+                }
+            });
+        }
 
         if (applyFilterBtn != null) {
             applyFilterBtn.setOnClickListener(v -> {
                 String flowerType = flowerTypeSpinner != null && flowerTypeSpinner.getSelectedItem() != null ?
                         flowerTypeSpinner.getSelectedItem().toString() : "Tất cả";
-                List<Float> priceRange = priceRangeSlider != null ? priceRangeSlider.getValues() : new ArrayList<>(List.of(0f, 1000000f));
+
+                // Kiểm tra giá trị của RangeSlider
+                List<Float> priceRange;
+                if (priceRangeSlider != null) {
+                    priceRange = priceRangeSlider.getValues();
+                    if (priceRange == null || priceRange.size() < 2) {
+                        priceRange = new ArrayList<>();
+                        priceRange.add(0f);
+                        priceRange.add(1000000f);
+                    }
+                } else {
+                    priceRange = new ArrayList<>();
+                    priceRange.add(0f);
+                    priceRange.add(1000000f);
+                }
+
                 // Chuyển bộ lọc sang MainActivity để áp dụng trong FragmentShop
                 Intent intent = new Intent(TimKiem.this, MainActivity.class);
                 intent.putExtra("openFragment", "shop");
@@ -179,9 +255,20 @@ public class TimKiem extends AppCompatActivity {
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
                 finish();
+
+                // Thông báo áp dụng bộ lọc thành công
+                Toast.makeText(this, "Đã áp dụng bộ lọc: " + flowerType + ", Giá từ " + priceRange.get(0).intValue() + " đến " + priceRange.get(1).intValue(), Toast.LENGTH_SHORT).show();
+
                 dialog.dismiss();
             });
+        } else {
+            Toast.makeText(this, "Lỗi: Không tìm thấy nút áp dụng bộ lọc", Toast.LENGTH_SHORT).show();
         }
+
+        if (cancelFilterBtn != null) {
+            cancelFilterBtn.setOnClickListener(v -> dialog.dismiss());
+        }
+
         dialog.show();
     }
 

@@ -1,13 +1,16 @@
 package com.example.flowerapp.User.Fragments;
 
+import android.app.AlertDialog;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,7 +24,9 @@ import com.example.flowerapp.Adapters.ProductAdapter;
 import com.example.flowerapp.Models.Product;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.Helper.DatabaseHelper;
+import com.google.android.material.slider.RangeSlider;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +38,10 @@ public class FragmentShop extends Fragment {
     private List<Product> productList;
     private TextView emptyMessage;
     private DatabaseHelper dbHelper;
+    private String searchQuery;
+    private String filterType;
+    private float filterPriceMin;
+    private float filterPriceMax;
 
     @Nullable
     @Override
@@ -55,85 +64,138 @@ public class FragmentShop extends Fragment {
         adapter = new ProductAdapter(productList, requireContext());
         recyclerView.setAdapter(adapter);
 
-        loadProducts();
-        updateEmptyState();
+        // Khởi tạo giá trị mặc định
+        searchQuery = "";
+        filterType = "Tất cả";
+        filterPriceMin = 0f;
+        filterPriceMax = 5000000f;
 
-        // Xử lý nút Sort (nếu cần)
+        // Lấy dữ liệu từ Bundle
+        Bundle args = getArguments();
+        if (args != null) {
+            searchQuery = args.getString("search_query", "");
+            filterType = args.getString("filter_type", "Tất cả");
+            filterPriceMin = args.getFloat("filter_price_min", 0f);
+            filterPriceMax = args.getFloat("filter_price_max", 5000000f);
+        }
+
+        // Tải sản phẩm ban đầu
+        new LoadProductsTask().execute();
+
+        // Xử lý nút Sort để mở dialog bộ lọc
         ImageView sortIcon = view.findViewById(R.id.sort_icon);
         if (sortIcon != null) {
-            sortIcon.setOnClickListener(v -> {
-                Toast.makeText(requireContext(), "Sort functionality coming soon!", Toast.LENGTH_SHORT).show();
-            });
+            sortIcon.setOnClickListener(v -> showFilterDialog());
         }
 
         return view;
     }
 
-    private void loadProducts() {
-        SQLiteDatabase db = null;
-        Cursor cursor = null;
-        try {
-            db = dbHelper.openDatabase();
-            String query = "SELECT product_id, name, description, price, stock, image_url, category FROM Products";
-            List<String> selectionArgs = new ArrayList<>();
-            String searchQuery = null;
-            String flowerType = null;
-            float priceMin = 0f;
-            float priceMax = Float.MAX_VALUE;
+    private void showFilterDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_filter, null);
+        builder.setView(dialogView);
 
-            if (getArguments() != null) {
-                searchQuery = getArguments().getString("search_query");
-                flowerType = getArguments().getString("filter_type");
-                priceMin = getArguments().getFloat("filter_price_min", 0f);
-                priceMax = getArguments().getFloat("filter_price_max", Float.MAX_VALUE);
+        Spinner flowerTypeSpinner = dialogView.findViewById(R.id.spinner_flower_type);
+        RangeSlider priceSlider = dialogView.findViewById(R.id.price_range_slider);
+        TextView priceRangeText = dialogView.findViewById(R.id.price_range_text);
 
-                List<String> conditions = new ArrayList<>();
+        // Cập nhật TextView khi RangeSlider thay đổi
+        DecimalFormat formatter = new DecimalFormat("#,###");
+        priceSlider.addOnChangeListener((slider, value, fromUser) -> {
+            List<Float> values = slider.getValues();
+            float min = values.get(0);
+            float max = values.get(1);
+            priceRangeText.setText("Giá: " + formatter.format(min) + " - " + formatter.format(max));
+        });
+
+        // Đặt giá trị ban đầu cho RangeSlider
+        priceSlider.setValues(filterPriceMin, filterPriceMax);
+        priceRangeText.setText("Giá: " + formatter.format(filterPriceMin) + " - " + formatter.format(filterPriceMax));
+
+        // Xử lý nút Apply
+        dialogView.findViewById(R.id.apply_filter_btn).setOnClickListener(v -> {
+            filterType = flowerTypeSpinner.getSelectedItem().toString();
+            List<Float> values = priceSlider.getValues();
+            filterPriceMin = values.get(0);
+            filterPriceMax = values.get(1);
+            // Đặt lại searchQuery để ưu tiên bộ lọc
+            searchQuery = "";
+            new LoadProductsTask().execute();
+        });
+
+        // Xử lý nút Cancel
+        dialogView.findViewById(R.id.cancel_filter_btn).setOnClickListener(v -> {
+            // Đóng dialog mà không áp dụng bộ lọc
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    private class LoadProductsTask extends AsyncTask<Void, Void, List<Product>> {
+        @Override
+        protected List<Product> doInBackground(Void... voids) {
+            List<Product> products = new ArrayList<>();
+            SQLiteDatabase db = null;
+            Cursor cursor = null;
+            try {
+                db = dbHelper.openDatabase();
+                String query = "SELECT product_id, name, description, price, stock, image_url, category FROM Products WHERE 1=1";
+                List<String> selectionArgs = new ArrayList<>();
+
+                // Ưu tiên tìm kiếm nếu có searchQuery
                 if (searchQuery != null && !searchQuery.isEmpty()) {
-                    conditions.add("name LIKE ?");
+                    query += " AND name LIKE ?";
                     selectionArgs.add("%" + searchQuery + "%");
-                }
-                if (flowerType != null && !flowerType.equals("Tất cả")) {
-                    conditions.add("category = ?");
-                    selectionArgs.add(flowerType);
-                }
-                if (priceMin > 0 || priceMax < Float.MAX_VALUE) {
-                    conditions.add("price BETWEEN ? AND ?");
-                    selectionArgs.add(String.valueOf(priceMin));
-                    selectionArgs.add(String.valueOf(priceMax));
+                } else {
+                    // Nếu không có searchQuery, áp dụng bộ lọc loại hoa
+                    if (filterType != null && !filterType.equals("Tất cả")) {
+                        query += " AND name LIKE ?";
+                        selectionArgs.add("%" + filterType + "%");
+                    }
                 }
 
-                if (!conditions.isEmpty()) {
-                    query = "SELECT product_id, name, description, price, stock, image_url, category FROM Products WHERE " + String.join(" AND ", conditions);
+                // Thêm điều kiện lọc theo giá
+                if (filterPriceMin > 0 || filterPriceMax < Float.MAX_VALUE) {
+                    query += " AND price BETWEEN ? AND ?";
+                    selectionArgs.add(String.valueOf(filterPriceMin));
+                    selectionArgs.add(String.valueOf(filterPriceMax));
+                }
+
+                cursor = db.rawQuery(query, selectionArgs.toArray(new String[0]));
+                while (cursor.moveToNext()) {
+                    int id = cursor.getInt(cursor.getColumnIndexOrThrow("product_id"));
+                    String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
+                    String description = cursor.getString(cursor.getColumnIndexOrThrow("description"));
+                    double price = cursor.getDouble(cursor.getColumnIndexOrThrow("price"));
+                    int stock = cursor.getInt(cursor.getColumnIndexOrThrow("stock"));
+                    String imageUrl = cursor.getString(cursor.getColumnIndexOrThrow("image_url"));
+                    String category = cursor.getString(cursor.getColumnIndexOrThrow("category"));
+                    products.add(new Product(id, name, description, price, stock, imageUrl, category));
+                    Log.d(TAG, "Thêm sản phẩm: " + name);
+                }
+                Log.d(TAG, "Số lượng sản phẩm trong list: " + products.size());
+            } catch (Exception e) {
+                Log.e(TAG, "Error loading products: " + e.getMessage(), e);
+            } finally {
+                if (cursor != null) {
+                    cursor.close();
+                }
+                if (db != null) {
+                    dbHelper.closeDatabase(db);
                 }
             }
-
-            cursor = db.rawQuery(query, selectionArgs.toArray(new String[0]));
-            productList.clear();
-            while (cursor.moveToNext()) {
-                int id = cursor.getInt(cursor.getColumnIndexOrThrow("product_id"));
-                String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
-                String description = cursor.getString(cursor.getColumnIndexOrThrow("description"));
-                double price = cursor.getDouble(cursor.getColumnIndexOrThrow("price"));
-                int stock = cursor.getInt(cursor.getColumnIndexOrThrow("stock"));
-                String imageUrl = cursor.getString(cursor.getColumnIndexOrThrow("image_url"));
-                String category = cursor.getString(cursor.getColumnIndexOrThrow("category"));
-                productList.add(new Product(id, name, description, price, stock, imageUrl, category));
-                Log.d(TAG, "Thêm sản phẩm: " + name);
-            }
-            Log.d(TAG, "Số lượng sản phẩm trong list: " + productList.size());
-        } catch (Exception e) {
-            Log.e(TAG, "Error loading products: " + e.getMessage(), e);
-            Toast.makeText(requireContext(), "Lỗi tải sản phẩm: " + e.getMessage(), Toast.LENGTH_LONG).show();
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
-            if (db != null) {
-                dbHelper.closeDatabase(db);
-            }
+            return products;
         }
-        adapter.notifyDataSetChanged();
-        updateEmptyState();
+
+        @Override
+        protected void onPostExecute(List<Product> products) {
+            productList.clear();
+            productList.addAll(products);
+            adapter.notifyDataSetChanged();
+            updateEmptyState();
+        }
     }
 
     private void updateEmptyState() {
@@ -148,9 +210,13 @@ public class FragmentShop extends Fragment {
     }
 
     public void refreshProducts() {
-        productList.clear();
-        loadProducts();
-        adapter.notifyDataSetChanged();
-        updateEmptyState();
+        new LoadProductsTask().execute();
+    }
+
+    public void updateSearchQuery(String newQuery) {
+        this.searchQuery = newQuery;
+        // Đặt lại filterType để ưu tiên tìm kiếm
+        this.filterType = "Tất cả";
+        new LoadProductsTask().execute();
     }
 }

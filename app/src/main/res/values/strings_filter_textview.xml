@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="filter_title">Bộ Lọc Tìm Kiếm</string>
-    <string name="apply_filter">Áp dụng</string>
-    <string name="price_range_description">Kéo để chọn khoảng giá từ 0 đến 1,000,000 VNĐ</string>
-    <string name="spinner_flower_description">Chọn loại hoa để lọc</string>
-    <string name="apply_filter_description">Nút áp dụng bộ lọc tìm kiếm</string>
-</resources>
