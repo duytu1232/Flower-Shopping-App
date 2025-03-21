@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="D:/Project/Java code/App Android/Flower-Shopping-App/app/src/main/assets/FlowerApp.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="250"/><column_width id="3" width="6423"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><current_table name="4,14:mainDiscount_Codes"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="Discount_Codes" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="213"/><column index="2" value="101"/><column index="3" value="272"/><column index="4" value="195"/><column index="5" value="178"/><column index="6" value="300"/><column index="7" value="123"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="sqlite_sequence" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="112"/><column index="2" value="101"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;sqlb_project&gt;&lt;db path=&quot;D:/Project/Java code/App Android/Flower-Shopping-App/app/src/main/assets/FlowerApp.db&quot; readonly=&quot;0&quot; foreign_keys=&quot;1&quot; case_sensitive_like=&quot;0&quot; temp_store=&quot;0&quot; wal_autocheckpoint=&quot;1000&quot; synchronous=&quot;2&quot;/&gt;&lt;attached/&gt;&lt;window&gt;&lt;main_tabs open=&quot;structure browser pragmas query&quot; current=&quot;3&quot;/&gt;&lt;/window&gt;&lt;tab_structure&gt;&lt;column_width id=&quot;0&quot; width=&quot;300&quot;/&gt;&lt;column_width id=&quot;1&quot; width=&quot;0&quot;/&gt;&lt;column_width id=&quot;2&quot; width=&quot;250&quot;/&gt;&lt;column_width id=&quot;3&quot; width=&quot;2502&quot;/&gt;&lt;column_width id=&quot;4&quot; width=&quot;0&quot;/&gt;&lt;expanded_item id=&quot;0&quot; parent=&quot;1&quot;/&gt;&lt;expanded_item id=&quot;1&quot; parent=&quot;1&quot;/&gt;&lt;expanded_item id=&quot;2&quot; parent=&quot;1&quot;/&gt;&lt;expanded_item id=&quot;3&quot; parent=&quot;1&quot;/&gt;&lt;/tab_structure&gt;&lt;tab_browse&gt;&lt;current_table name=&quot;4,5:mainCarts&quot;/&gt;&lt;default_encoding codec=&quot;&quot;/&gt;&lt;browse_table_settings/&gt;&lt;/tab_browse&gt;&lt;tab_sql&gt;&lt;sql name=&quot;SQL 1&quot;&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot;?&amp;gt;&amp;lt;sqlb_project&amp;gt;&amp;lt;db path=&amp;quot;D:/Project/Java code/App Android/Flower-Shopping-App/app/src/main/assets/FlowerApp.db&amp;quot; readonly=&amp;quot;0&amp;quot; foreign_keys=&amp;quot;1&amp;quot; case_sensitive_like=&amp;quot;0&amp;quot; temp_store=&amp;quot;0&amp;quot; wal_autocheckpoint=&amp;quot;1000&amp;quot; synchronous=&amp;quot;2&amp;quot;/&amp;gt;&amp;lt;attached/&amp;gt;&amp;lt;window&amp;gt;&amp;lt;main_tabs open=&amp;quot;structure browser pragmas query&amp;quot; current=&amp;quot;3&amp;quot;/&amp;gt;&amp;lt;/window&amp;gt;&amp;lt;tab_structure&amp;gt;&amp;lt;column_width id=&amp;quot;0&amp;quot; width=&amp;quot;300&amp;quot;/&amp;gt;&amp;lt;column_width id=&amp;quot;1&amp;quot; width=&amp;quot;0&amp;quot;/&amp;gt;&amp;lt;column_width id=&amp;quot;2&amp;quot; width=&amp;quot;250&amp;quot;/&amp;gt;&amp;lt;column_width id=&amp;quot;3&amp;quot; width=&amp;quot;6423&amp;quot;/&amp;gt;&amp;lt;column_width id=&amp;quot;4&amp;quot; width=&amp;quot;0&amp;quot;/&amp;gt;&amp;lt;expanded_item id=&amp;quot;0&amp;quot; parent=&amp;quot;1&amp;quot;/&amp;gt;&amp;lt;expanded_item id=&amp;quot;1&amp;quot; parent=&amp;quot;1&amp;quot;/&amp;gt;&amp;lt;expanded_item id=&amp;quot;2&amp;quot; parent=&amp;quot;1&amp;quot;/&amp;gt;&amp;lt;expanded_item id=&amp;quot;3&amp;quot; parent=&amp;quot;1&amp;quot;/&amp;gt;&amp;lt;/tab_structure&amp;gt;&amp;lt;tab_browse&amp;gt;&amp;lt;current_table name=&amp;quot;4,8:mainProducts&amp;quot;/&amp;gt;&amp;lt;default_encoding codec=&amp;quot;&amp;quot;/&amp;gt;&amp;lt;browse_table_settings&amp;gt;&amp;lt;table schema=&amp;quot;main&amp;quot; name=&amp;quot;Products&amp;quot; show_row_id=&amp;quot;0&amp;quot; encoding=&amp;quot;&amp;quot; plot_x_axis=&amp;quot;&amp;quot; unlock_view_pk=&amp;quot;_rowid_&amp;quot;&amp;gt;&amp;lt;sort/&amp;gt;&amp;lt;column_widths&amp;gt;&amp;lt;column index=&amp;quot;1&amp;quot; value=&amp;quot;200&amp;quot;/&amp;gt;&amp;lt;column index=&amp;quot;2&amp;quot; value=&amp;quot;112&amp;quot;/&amp;gt;&amp;lt;column index=&amp;quot;3&amp;quot; value=&amp;quot;205&amp;quot;/&amp;gt;&amp;lt;column index=&amp;quot;4&amp;quot; value=&amp;quot;270&amp;quot;/&amp;gt;&amp;lt;column index=&amp;quot;5&amp;quot; value=&amp;quot;183&amp;quot;/&amp;gt;&amp;lt;column index=&amp;quot;6&amp;quot; value=&amp;quot;188&amp;quot;/&amp;gt;&amp;lt;column index=&amp;quot;7&amp;quot; value=&amp;quot;330&amp;quot;/&amp;gt;&amp;lt;/column_widths&amp;gt;&amp;lt;filter_values/&amp;gt;&amp;lt;conditional_formats/&amp;gt;&amp;lt;row_id_formats/&amp;gt;&amp;lt;display_formats/&amp;gt;&amp;lt;hidden_columns/&amp;gt;&amp;lt;plot_y_axes/&amp;gt;&amp;lt;global_filter/&amp;gt;&amp;lt;/table&amp;gt;&amp;lt;table schema=&amp;quot;main&amp;quot; name=&amp;quot;sqlite_sequence&amp;quot; show_row_id=&amp;quot;0&amp;quot; encoding=&amp;quot;&amp;quot; plot_x_axis=&amp;quot;&amp;quot; unlock_view_pk=&amp;quot;_rowid_&amp;quot;&amp;gt;&amp;lt;sort/&amp;gt;&amp;lt;column_widths&amp;gt;&amp;lt;column index=&amp;quot;1&amp;quot; value=&amp;quot;112&amp;quot;/&amp;gt;&amp;lt;column index=&amp;quot;2&amp;quot; value=&amp;quot;101&amp;quot;/&amp;gt;&amp;lt;/column_widths&amp;gt;&amp;lt;filter_values/&amp;gt;&amp;lt;conditional_formats/&amp;gt;&amp;lt;row_id_formats/&amp;gt;&amp;lt;display_formats/&amp;gt;&amp;lt;hidden_columns/&amp;gt;&amp;lt;plot_y_axes/&amp;gt;&amp;lt;global_filter/&amp;gt;&amp;lt;/table&amp;gt;&amp;lt;/browse_table_settings&amp;gt;&amp;lt;/tab_browse&amp;gt;&amp;lt;tab_sql&amp;gt;&amp;lt;sql name=&amp;quot;SQL 1&amp;quot;&amp;gt;-- Xóa các bảng cũ nếu tồn tại-- Đảm bảo xóa các bảng phụ thuộc trước
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="D:/Project/Java code/App Android/Flower-Shopping-App/app/src/main/assets/FlowerApp.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="250"/><column_width id="3" width="6423"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><current_table name="4,8:mainProducts"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="Products" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="200"/><column index="2" value="112"/><column index="3" value="205"/><column index="4" value="270"/><column index="5" value="183"/><column index="6" value="188"/><column index="7" value="330"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="sqlite_sequence" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="112"/><column index="2" value="101"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1">-- Xóa các bảng cũ nếu tồn tại
+-- Đảm bảo xóa các bảng phụ thuộc trước
 DROP TABLE IF EXISTS Order_Items;  -- Phụ thuộc vào Products
 DROP TABLE IF EXISTS Carts;       -- Phụ thuộc vào Products
 DROP TABLE IF EXISTS Reviews;     -- Phụ thuộc vào Products
@@ -10,9 +11,11 @@ DROP TABLE IF EXISTS Payments;
 DROP TABLE IF EXISTS Orders;
 DROP TABLE IF EXISTS Discount_Codes;
 DROP TABLE IF EXISTS Products;    -- Bây giờ có thể xóa Products
-DROP TABLE IF EXISTS Users;
+DROP TABLE IF EXISTS Users;
+
 -- Bật lại kiểm tra khóa ngoại
 PRAGMA foreign_keys = ON;
+
 -- Bảng Users
 CREATE TABLE Users (
     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,6 +28,7 @@ CREATE TABLE Users (
     phone TEXT DEFAULT NULL,
     avatar_uri TEXT DEFAULT NULL
 );
+
 -- Bảng Products
 CREATE TABLE Products (
     product_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,6 +39,7 @@ CREATE TABLE Products (
     image_url TEXT,
     category TEXT
 );
+
 -- Bảng Orders
 CREATE TABLE Orders (
     order_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,6 +51,7 @@ CREATE TABLE Orders (
     return_status TEXT DEFAULT NULL,
     FOREIGN KEY (user_id) REFERENCES Users(user_id)
 );
+
 -- Bảng Order_Items
 CREATE TABLE Order_Items (
     order_item_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -56,6 +62,7 @@ CREATE TABLE Order_Items (
     FOREIGN KEY (order_id) REFERENCES Orders(order_id),
     FOREIGN KEY (product_id) REFERENCES Products(product_id)
 );
+
 -- Bảng Carts
 CREATE TABLE Carts (
     cart_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -65,6 +72,7 @@ CREATE TABLE Carts (
     FOREIGN KEY (user_id) REFERENCES Users(user_id),
     FOREIGN KEY (product_id) REFERENCES Products(product_id)
 );
+
 -- Bảng Discount_Codes
 CREATE TABLE Discount_Codes (
     discount_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -75,16 +83,18 @@ CREATE TABLE Discount_Codes (
     min_order_value REAL,
     status TEXT NOT NULL CHECK(status IN ('active', 'expired'))
 );
+
 -- Bảng Payments
 CREATE TABLE Payments (
     payment_id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_id INTEGER NOT NULL,
-    payment_method TEXT NOT NULL CHECK(payment_method IN ('credit_card', 'momo', 'cod')),
+    payment_method TEXT NOT NULL CHECK(payment_method IN ('credit_card', 'e_wallet', 'cod')),
     amount REAL NOT NULL,
     payment_date TEXT NOT NULL,
     status TEXT NOT NULL CHECK(status IN ('success', 'failed')),
     FOREIGN KEY (order_id) REFERENCES Orders(order_id)
 );
+
 -- Bảng Reviews
 CREATE TABLE Reviews (
     review_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,6 +106,7 @@ CREATE TABLE Reviews (
     FOREIGN KEY (user_id) REFERENCES Users(user_id),
     FOREIGN KEY (product_id) REFERENCES Products(product_id)
 );
+
 -- Bảng Order_Tracking
 CREATE TABLE Order_Tracking (
     tracking_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -105,6 +116,7 @@ CREATE TABLE Order_Tracking (
     note TEXT,
     FOREIGN KEY (order_id) REFERENCES Orders(order_id)
 );
+
 -- Bảng Notifications
 CREATE TABLE Notifications (
     notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -117,38 +129,35 @@ CREATE TABLE Notifications (
     FOREIGN KEY (order_id) REFERENCES Orders(order_id),
     FOREIGN KEY (user_id) REFERENCES Users(user_id)
 );
+
 -- Bảng Favorites
 CREATE TABLE Favorites (
     favorite_id INTEGER PRIMARY KEY AUTOINCREMENT,
     product_id INTEGER NOT NULL,
     FOREIGN KEY (product_id) REFERENCES Products(product_id)
-);
+);
+
 -- Thêm chỉ mục (index)
 CREATE INDEX idx_orders_user_id ON Orders(user_id);
 CREATE INDEX idx_notifications_order_id ON Notifications(order_id);
 CREATE INDEX idx_carts_user_id ON Carts(user_id);
 CREATE INDEX idx_carts_product_id ON Carts(product_id);
 CREATE INDEX idx_order_items_order_id ON Order_Items(order_id);
-CREATE INDEX idx_order_items_product_id ON Order_Items(product_id);
+CREATE INDEX idx_order_items_product_id ON Order_Items(product_id);
+
 -- Đặt phiên bản cơ sở dữ liệu
-PRAGMA user_version = 11;
-ALTER TABLE Orders ADD COLUMN discount_code INTEGER;
+PRAGMA user_version = 10;
 
---kiểm tra danh sách cột trong bảng:
-PRAGMA table_info(Discount_Codes);
-SELECT COUNT(*) FROM pragma_table_info('Discount_Codes') WHERE name='min_order_value';
-ALTER TABLE Discount_Codes ADD COLUMN min_order_value REAL DEFAULT 0;
-
--- Thêm cột shipping_method vào bảng Orders
-ALTER TABLE Orders ADD COLUMN shipping_method TEXT CHECK(shipping_method IN ('home_delivery', 'pickup_point', 'pickup_in_store'));
+ALTER TABLE Orders ADD COLUMN discount_code INTEGER;
 -------------------------------------------------------------------------------------------------------------------------
--- Chèn dữ liệu mẫu
+-- Chèn dữ liệu mẫu
 -- Dữ liệu cho Users (mật khẩu đã mã hóa bằng BCrypt)
 INSERT INTO Users (username, password, email, role, status, full_name, phone, avatar_uri) 
 VALUES
     ('haki', '$2a$10$4X5X5X5X5X5X5X5X5X5X5u', 'duytu1232@gmail.com', 'customer', 'active', 'Duy Tú', '0388140739', NULL),
     ('admin', '$2a$10$6X6X6X6X6X6X6X6X6X6X6u', 'admin123', 'admin', 'active', 'Admin User', '0912345678', NULL),
-    ('staff', '$2a$10$8X8X8X8X8X8X8X8X8X8X8u', 'staff123@gmail.com', 'admin', 'active', 'Staff User', '0912345678', NULL);
+    ('staff', '$2a$10$8X8X8X8X8X8X8X8X8X8X8u', 'staff123@gmail.com', 'admin', 'active', 'Staff User', '0912345678', NULL);
+
 -- Dữ liệu cho Products (đồng nhất đơn vị tiền tệ là VND)
 INSERT INTO Products (name, description, price, stock, image_url, category) VALUES
     ('Rose', 'Red rose bouquet', 1200000, 100, 'rose.png', 'Hoa cao cấp'),
@@ -171,56 +180,56 @@ INSERT INTO Products (name, description, price, stock, image_url, category) VALU
     ('Hoa thạch thảo', 'Hoa thạch thảo nhỏ nhắn, thường dùng trong trang trí', 75000, 15, 'hoa_thach_thao.jpg', 'Hoa cắt cành'),
     ('Hoa thanh liễu', 'Hoa thanh liễu có màu sắc đa dạng, dùng trong cắm hoa nghệ thuật', 95000, 12, 'hoa_thanh_lieu.jpg', 'Hoa cao cấp'),
     ('Hoa tử đinh hương', 'Hoa tử đinh hương có hương thơm ngọt ngào', 130000, 9, 'hoa_tu_dinh_huong.jpg', 'Hoa thơm');
-	
+
 -- Dữ liệu cho Orders (đồng nhất đơn vị tiền tệ là VND)
 INSERT INTO Orders (user_id, order_date, status, total_amount, shipping_address, return_status) 
 VALUES
     (1, '2025-03-02', 'pending', 2400000, '123 Flower Street, Hanoi', NULL),
-    (2, '2025-03-01', 'shipped', 1800000, '456 Blossom Road, Ho Chi Minh', NULL);
+    (2, '2025-03-01', 'shipped', 1800000, '456 Blossom Road, Ho Chi Minh', NULL);
+
 -- Dữ liệu cho Order_Items (đồng nhất đơn vị tiền tệ là VND)
 INSERT INTO Order_Items (order_id, product_id, quantity, unit_price) 
 VALUES
     (1, 1, 2, 1200000),
-    (2, 2, 1, 1800000);
+    (2, 2, 1, 1800000);
+
 -- Dữ liệu cho Carts
 INSERT INTO Carts (user_id, product_id, quantity) 
 VALUES
     (1, 1, 1),
     (1, 2, 2);
-	
+
 -- Dữ liệu cho Discount_Codes
 INSERT INTO Discount_Codes (code, discount_value, start_date, end_date, min_order_value, status) 
 VALUES
     ('FLOWER10', 10.0, '2025-03-01', '2025-03-31', 1000000, 'active'),
-    ('SPRING20', 20.0, '2025-03-01', '2025-04-01', 2000000, 'active');
+    ('SPRING20', 20.0, '2025-03-01', '2025-04-01', 2000000, 'active');
+
 -- Dữ liệu cho Payments (đồng nhất đơn vị tiền tệ là VND)
 INSERT INTO Payments (order_id, payment_method, amount, payment_date, status) 
 VALUES
     (1, 'credit_card', 2400000, '2025-03-02', 'success'),
-    (2, 'cod', 1800000, '2025-03-01', 'success');
-	
+    (2, 'e_wallet', 1800000, '2025-03-01', 'success');
+
 -- Dữ liệu cho Reviews
 INSERT INTO Reviews (user_id, product_id, rating, comment, review_date) 
 VALUES
     (1, 1, 5, 'Beautiful roses!', '2025-03-02'),
     (2, 2, 4, 'Nice lilies, but delivery was late.', '2025-03-01');
-	
+
 -- Dữ liệu cho Order_Tracking
 INSERT INTO Order_Tracking (order_id, status, update_time, note) 
 VALUES
     (1, 'processing', '2025-03-02 10:00:00', 'Order is being prepared'),
     (2, 'shipped', '2025-03-01 15:00:00', 'Shipped via express delivery');
-	
+
 -- Dữ liệu cho Notifications
 INSERT INTO Notifications (order_id, user_id, message, sent_time, channel, status) 
 VALUES
     (1, 1, 'Your order is being processed.', '2025-03-02 09:00:00', 'app', 'sent'),
     (2, 2, 'Your order has been shipped.', '2025-03-01 16:00:00', 'email', 'sent');
-	
+
 -- Dữ liệu cho Favorites
 INSERT INTO Favorites (product_id) VALUES
     (1),
-    (2);
-&amp;lt;/sql&amp;gt;&amp;lt;current_tab id=&amp;quot;0&amp;quot;/&amp;gt;&amp;lt;/tab_sql&amp;gt;&amp;lt;/sqlb_project&amp;gt;
-&lt;/sql&gt;&lt;current_tab id=&quot;0&quot;/&gt;&lt;/tab_sql&gt;&lt;/sqlb_project&gt;
-</sql><current_tab id="0"/></tab_sql></sqlb_project>
+    (2);</sql><current_tab id="0"/></tab_sql></sqlb_project>

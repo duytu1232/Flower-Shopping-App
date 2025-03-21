@@ -22,7 +22,7 @@ import java.util.List;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DB_NAME = "FlowerApp.db";
-    private static final int DB_VERSION = 11; // Tăng version do thay đổi schema
+    private static final int DB_VERSION = 10; // Đồng bộ với PRAGMA user_version trong script SQL
     private final Context context;
 
     public DatabaseHelper(Context context) {
@@ -66,6 +66,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = null;
         try {
             db = openDatabase();
+            // Kiểm tra sự tồn tại của các bảng chính
             Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='Users'", null);
             boolean hasUsersTable = cursor.getCount() > 0;
             cursor.close();
@@ -213,11 +214,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         try {
             db = openDatabase();
             cursor = db.rawQuery(
-                    "SELECT o.*, p.name as product_name, p.image_url as product_image, pm.payment_method " +
+                    "SELECT o.*, p.name as product_name, p.image_url as product_image " +
                             "FROM Orders o " +
                             "LEFT JOIN Order_Items oi ON o.order_id = oi.order_id " +
-                            "LEFT JOIN Products p ON oi.product_id = p.product_id " +
-                            "LEFT JOIN Payments pm ON o.order_id = pm.order_id", null);
+                            "LEFT JOIN Products p ON oi.product_id = p.product_id", null);
             if (cursor.moveToFirst()) {
                 do {
                     Order order = new Order(
@@ -227,8 +227,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                             cursor.getString(cursor.getColumnIndexOrThrow("status")),
                             cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount")),
                             cursor.getString(cursor.getColumnIndexOrThrow("shipping_address")),
-                            cursor.getString(cursor.getColumnIndexOrThrow("shipping_method")),
-                            cursor.getString(cursor.getColumnIndexOrThrow("payment_method")),
                             cursor.getString(cursor.getColumnIndexOrThrow("product_name")),
                             cursor.getString(cursor.getColumnIndexOrThrow("product_image"))
                     );
@@ -241,7 +239,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             if (cursor != null) cursor.close();
             if (db != null) closeDatabase(db);
         }
-        return orderList;
+        return orderList; // Sửa lỗi: trả về orderList thay vì userList
     }
 
     // Phương thức tiện ích để lấy danh sách Revenue
@@ -295,7 +293,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Cursor cursor = null;
         try {
             db = openDatabase();
-            cursor = db.rawQuery("SELECT discount_id, code, discount_value, start_date, end_date, status, min_order_value FROM Discount_Codes", null);
+            cursor = db.rawQuery("SELECT * FROM Discount_Codes", null);
             if (cursor.moveToFirst()) {
                 do {
                     Coupon coupon = new Coupon(
@@ -304,8 +302,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                             cursor.getDouble(cursor.getColumnIndexOrThrow("discount_value")),
                             cursor.getString(cursor.getColumnIndexOrThrow("start_date")),
                             cursor.getString(cursor.getColumnIndexOrThrow("end_date")),
-                            cursor.getString(cursor.getColumnIndexOrThrow("status")),
-                            cursor.getDouble(cursor.getColumnIndexOrThrow("min_order_value"))
+                            cursor.getString(cursor.getColumnIndexOrThrow("status"))
                     );
                     couponList.add(coupon);
                 } while (cursor.moveToNext());
@@ -359,43 +356,5 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 closeDatabase(db);
             }
         }
-    }
-
-    public Order getOrderById(int orderId) {
-        SQLiteDatabase db = null;
-        try {
-            db = openDatabase();
-            Cursor cursor = db.rawQuery(
-                    "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, " +
-                            "o.shipping_method, pm.payment_method, p.name AS product_name, p.image_url " +
-                            "FROM Orders o " +
-                            "LEFT JOIN Order_Items oi ON o.order_id = oi.order_id " +
-                            "LEFT JOIN Products p ON oi.product_id = p.product_id " +
-                            "LEFT JOIN Payments pm ON o.order_id = pm.order_id " +
-                            "WHERE o.order_id = ? LIMIT 1",
-                    new String[]{String.valueOf(orderId)});
-            if (cursor.moveToFirst()) {
-                int userId = cursor.getInt(cursor.getColumnIndexOrThrow("user_id"));
-                String orderDate = cursor.getString(cursor.getColumnIndexOrThrow("order_date"));
-                String status = cursor.getString(cursor.getColumnIndexOrThrow("status"));
-                double totalAmount = cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount"));
-                String shippingAddress = cursor.getString(cursor.getColumnIndexOrThrow("shipping_address"));
-                String shippingMethod = cursor.getString(cursor.getColumnIndexOrThrow("shipping_method"));
-                String paymentMethod = cursor.getString(cursor.getColumnIndexOrThrow("payment_method"));
-                String title = cursor.getString(cursor.getColumnIndexOrThrow("product_name"));
-                String imageUrl = cursor.getString(cursor.getColumnIndexOrThrow("image_url"));
-
-                title = (title != null) ? title : "Unknown Product";
-                imageUrl = (imageUrl != null) ? imageUrl : "";
-
-                return new Order(orderId, userId, orderDate, status, totalAmount, shippingAddress, shippingMethod, paymentMethod, title, imageUrl);
-            }
-            cursor.close();
-        } catch (Exception e) {
-            Log.e("DatabaseHelper", "Error getting order by ID: " + e.getMessage());
-        } finally {
-            if (db != null) closeDatabase(db);
-        }
-        return null;
     }
 }
