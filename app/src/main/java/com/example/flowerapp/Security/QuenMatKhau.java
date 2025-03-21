@@ -44,12 +44,18 @@ public class QuenMatKhau extends AppCompatActivity {
         }
 
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            Cursor cursor = db.rawQuery("SELECT * FROM Users WHERE email = ?", new String[]{email});
+            Cursor cursor = db.rawQuery("SELECT status FROM Users WHERE email = ?", new String[]{email});
 
             try {
                 if (cursor.moveToFirst()) {
+                    String status = cursor.getString(cursor.getColumnIndexOrThrow("status"));
+                    if (!"active".equalsIgnoreCase(status)) {
+                        Toast.makeText(this, "Tài khoản bị khóa, không thể đặt lại mật khẩu!", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
                     // Giả lập gửi email (cần tích hợp thư viện gửi email thực tế)
-                    String resetLink = "https://yourapp.com/reset?email=" + email; // Ví dụ
+                    String resetLink = "https://yourapp.com/reset?email=" + email;
                     Toast.makeText(this, "Đã gửi liên kết đặt lại mật khẩu tới " + email, Toast.LENGTH_SHORT).show();
                     navigateToLogin();
                 } else {

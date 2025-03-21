@@ -1,7 +1,5 @@
 package com.example.flowerapp.Admin.Fragments;
 
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,6 +31,8 @@ public class RevenueManagementFragment extends Fragment {
     private TextView tvRevenueSummary;
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
+    private RevenueAdapter adapter;
+    private List<Revenue> revenueList = new ArrayList<>();
 
     @Nullable
     @Override
@@ -48,6 +48,8 @@ public class RevenueManagementFragment extends Fragment {
         Button btnRefresh = view.findViewById(R.id.btn_refresh);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new RevenueAdapter(revenueList);
+        recyclerView.setAdapter(adapter);
 
         spinnerFilterTime.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -80,57 +82,25 @@ public class RevenueManagementFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
         tvRevenueSummary.setText("Tổng doanh thu: Đang tải...");
 
-        SQLiteDatabase db = dbHelper.openDatabase();
-        if (db == null) {
-            Log.e("RevenueManagement", "Không thể mở cơ sở dữ liệu");
+        try {
+            revenueList.clear();
+            revenueList.addAll(dbHelper.getRevenueByPeriod(timePeriod));
+            float totalRevenue = 0;
+            for (Revenue revenue : revenueList) {
+                totalRevenue += revenue.getAmount();
+            }
             progressBar.setVisibility(View.GONE);
-            return;
-        }
-
-        float totalRevenue = 0;
-        List<Revenue> revenueList = new ArrayList<>();
-        String query = "SELECT payment_method, amount, payment_date FROM Payments WHERE status = 'success'";
-
-        if ("Hôm nay".equals(timePeriod)) {
-            query += " AND date(payment_date) = date('now')";
-        } else if ("Tuần này".equals(timePeriod)) {
-            query += " AND strftime('%Y-%W', payment_date) = strftime('%Y-%W', 'now')";
-        } else if ("Tháng này".equals(timePeriod)) {
-            query += " AND strftime('%Y-%m', payment_date) = strftime('%Y-%m', 'now')";
-        } else if ("Năm này".equals(timePeriod)) {
-            query += " AND strftime('%Y', payment_date) = strftime('%Y', 'now')";
-        }
-
-        try (Cursor cursor = db.rawQuery(query, null)) {
-            Log.d("RevenueManagement", "Số lượng bản ghi: " + cursor.getCount());
-            if (cursor.moveToFirst()) {
-                do {
-                    String method = cursor.getString(cursor.getColumnIndexOrThrow("payment_method"));
-                    float amount = cursor.getFloat(cursor.getColumnIndexOrThrow("amount"));
-                    String date = cursor.getString(cursor.getColumnIndexOrThrow("payment_date"));
-
-                    totalRevenue += amount;
-                    revenueList.add(new Revenue(method, amount, date));
-                    Log.d("RevenueManagement", "Thêm doanh thu: " + method + ", " + amount);
-                } while (cursor.moveToNext());
+            tvRevenueSummary.setText(totalRevenue > 0 ? String.format("Tổng doanh thu: %.2f VND", totalRevenue) : "Tổng doanh thu: 0 VND");
+            adapter.notifyDataSetChanged();
+            recyclerView.scheduleLayoutAnimation();
+            if (revenueList.isEmpty()) {
+                Toast.makeText(requireContext(), "Không có dữ liệu doanh thu", Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
-            Log.e("RevenueManagement", "Lỗi truy vấn: " + e.getMessage(), e);
+            Log.e("RevenueManagement", "Lỗi tải doanh thu: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Lỗi tải doanh thu: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            progressBar.setVisibility(View.GONE);
+            tvRevenueSummary.setText("Tổng doanh thu: 0 VND");
         }
-
-        progressBar.setVisibility(View.GONE);
-        tvRevenueSummary.setText(totalRevenue > 0 ? String.format("Tổng doanh thu: %.2f VND", totalRevenue) : "Tổng doanh thu: 0 VND");
-
-        if (!revenueList.isEmpty()) {
-            RevenueAdapter adapter = new RevenueAdapter(revenueList);
-            recyclerView.setAdapter(adapter);
-            recyclerView.scheduleLayoutAnimation();
-        } else {
-            recyclerView.setAdapter(null);
-            Log.d("RevenueManagement", "Không có dữ liệu doanh thu");
-        }
-
-        dbHelper.closeDatabase(db);
     }
 }

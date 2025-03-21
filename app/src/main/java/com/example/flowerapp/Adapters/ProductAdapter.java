@@ -30,7 +30,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
     private Context context;
     private int layoutId;
 
-    // Constructor cho hiển thị (sử dụng item_product_main.xml)
     public ProductAdapter(List<Product> productList, Context context) {
         this.productList = productList;
         this.context = context;
@@ -39,7 +38,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         this.layoutId = R.layout.item_product_main;
     }
 
-    // Constructor cho quản lý (sử dụng item_product_admin.xml)
     public ProductAdapter(List<Product> productList, Consumer<Product> onEditClick, Consumer<Integer> onDeleteClick) {
         this.productList = productList;
         this.onEditClick = onEditClick;
@@ -59,14 +57,12 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
     public void onBindViewHolder(@NonNull ProductViewHolder holder, int position) {
         Product product = productList.get(position);
         holder.productName.setText(product.getName());
-        holder.productPrice.setText("Giá: " + String.format("%.2f VND", product.getPrice()));
+        holder.productPrice.setText("Giá: " + String.format("%,.0f VND", product.getPrice())); // Sửa định dạng
 
         if (holder.productImage != null) {
             String imageUrl = product.getImageUrl();
             if (imageUrl != null && !imageUrl.isEmpty()) {
-                // Kiểm tra nếu imageUrl là đường dẫn trong assets
                 if (imageUrl.startsWith("assets/") || imageUrl.contains("/")) {
-                    // Loại bỏ "assets/" và sử dụng file:///android_asset/
                     String assetPath = "file:///android_asset/" + imageUrl.replace("assets/", "").replace("\\", "/");
                     Glide.with(holder.itemView.getContext())
                             .load(assetPath)
@@ -74,7 +70,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                             .error(android.R.drawable.ic_dialog_alert)
                             .into(holder.productImage);
                 } else {
-                    // Giả sử là tên file trong drawable (loại bỏ đuôi .png/.jpg)
                     int resourceId = holder.itemView.getContext().getResources().getIdentifier(
                             imageUrl.replace(".png", "").replace(".jpg", ""), "drawable",
                             holder.itemView.getContext().getPackageName());
@@ -84,7 +79,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                                 .placeholder(android.R.drawable.ic_menu_gallery)
                                 .into(holder.productImage);
                     } else {
-                        // Nếu không tìm thấy, hiển thị placeholder
                         holder.productImage.setImageResource(android.R.drawable.ic_menu_gallery);
                     }
                 }
@@ -93,7 +87,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             }
         }
 
-        // Điều hướng đến ProductDetail khi nhấn vào sản phẩm (chỉ áp dụng cho chế độ hiển thị)
         if (onEditClick == null && onDeleteClick == null) {
             holder.itemView.setOnClickListener(v -> {
                 ProductDetail productDetailFragment = new ProductDetail();

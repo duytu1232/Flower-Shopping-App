@@ -1,6 +1,5 @@
 package com.example.flowerapp.Adapters;
 
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +14,6 @@ import com.example.flowerapp.R;
 import java.util.List;
 
 public class RevenueAdapter extends RecyclerView.Adapter<RevenueAdapter.RevenueViewHolder> {
-
     private List<Revenue> revenueList;
 
     public RevenueAdapter(List<Revenue> revenueList) {
@@ -33,7 +31,7 @@ public class RevenueAdapter extends RecyclerView.Adapter<RevenueAdapter.RevenueV
     public void onBindViewHolder(@NonNull RevenueViewHolder holder, int position) {
         Revenue revenue = revenueList.get(position);
         holder.tvPaymentMethod.setText("Phương thức: " + revenue.getPaymentMethod());
-        holder.tvAmount.setText("Số tiền: " + String.format("%.2f VND", revenue.getAmount()));
+        holder.tvAmount.setText("Số tiền: " + String.format("%,.0f VND", revenue.getAmount())); // Sửa định dạng
         holder.tvPaymentDate.setText("Ngày: " + revenue.getPaymentDate());
     }
 

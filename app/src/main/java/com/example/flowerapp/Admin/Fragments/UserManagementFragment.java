@@ -21,7 +21,6 @@ import com.example.flowerapp.Adapters.UserAdapter;
 import com.example.flowerapp.Models.User;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.Helper.DatabaseHelper;
-import com.example.flowerapp.Security.DangNhap;
 
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -33,6 +32,8 @@ public class UserManagementFragment extends Fragment {
     private UserAdapter adapter;
     private List<User> userList = new ArrayList<>();
     private DatabaseHelper dbHelper;
+    private static final String[] VALID_ROLES = {"customer", "admin", "staff"};
+    private static final String[] VALID_STATUSES = {"active", "locked"};
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -99,10 +100,27 @@ public class UserManagementFragment extends Fragment {
                     String fullName = editFullName.getText().toString().trim();
                     String phone = editPhone.getText().toString().trim();
 
-                    if (TextUtils.isEmpty(username) || TextUtils.isEmpty(email) || TextUtils.isEmpty(password) || TextUtils.isEmpty(role) || TextUtils.isEmpty(status)) {
-                        Toast.makeText(requireContext(), "Vui lòng điền đầy đủ thông tin bắt buộc!", Toast.LENGTH_SHORT).show();
+                    if (TextUtils.isEmpty(username)) {
+                        editUsername.setError("Tên người dùng không được để trống");
                         return;
                     }
+                    if (TextUtils.isEmpty(email)) {
+                        editEmail.setError("Email không được để trống");
+                        return;
+                    }
+                    if (TextUtils.isEmpty(password)) {
+                        editPassword.setError("Mật khẩu không được để trống");
+                        return;
+                    }
+                    if (TextUtils.isEmpty(role) || !isValidRole(role)) {
+                        editRole.setError("Vai trò không hợp lệ (customer, admin, staff)");
+                        return;
+                    }
+                    if (TextUtils.isEmpty(status) || !isValidStatus(status)) {
+                        editStatus.setError("Trạng thái không hợp lệ (active, locked)");
+                        return;
+                    }
+
                     addUser(username, password, email, role, status, fullName, phone, null);
                     loadUsers();
                 })
@@ -139,15 +157,46 @@ public class UserManagementFragment extends Fragment {
                     String fullName = editFullName.getText().toString().trim();
                     String phone = editPhone.getText().toString().trim();
 
-                    if (TextUtils.isEmpty(username) || TextUtils.isEmpty(email) || TextUtils.isEmpty(role) || TextUtils.isEmpty(status)) {
-                        Toast.makeText(requireContext(), "Vui lòng điền đầy đủ thông tin bắt buộc!", Toast.LENGTH_SHORT).show();
+                    if (TextUtils.isEmpty(username)) {
+                        editUsername.setError("Tên người dùng không được để trống");
                         return;
                     }
+                    if (TextUtils.isEmpty(email)) {
+                        editEmail.setError("Email không được để trống");
+                        return;
+                    }
+                    if (TextUtils.isEmpty(role) || !isValidRole(role)) {
+                        editRole.setError("Vai trò không hợp lệ (customer, admin, staff)");
+                        return;
+                    }
+                    if (TextUtils.isEmpty(status) || !isValidStatus(status)) {
+                        editStatus.setError("Trạng thái không hợp lệ (active, locked)");
+                        return;
+                    }
+
                     updateUser(user.getUserId(), username, password, email, role, status, fullName, phone, user.getAvatarUri());
                     loadUsers();
                 })
                 .setNegativeButton("Hủy", null)
                 .show();
+    }
+
+    private boolean isValidRole(String role) {
+        for (String validRole : VALID_ROLES) {
+            if (validRole.equalsIgnoreCase(role)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isValidStatus(String status) {
+        for (String validStatus : VALID_STATUSES) {
+            if (validStatus.equalsIgnoreCase(status)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isUsernameExists(String username, int excludeId) {
@@ -208,32 +257,18 @@ public class UserManagementFragment extends Fragment {
         }
     }
 
-    private boolean isUserReferenced(int userId) {
-        try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM Orders WHERE user_id = ?", new String[]{String.valueOf(userId)});
-            if (cursor.moveToFirst() && cursor.getInt(0) > 0) {
-                cursor.close();
-                return true;
-            }
-            cursor.close();
-            return false;
-        } catch (Exception e) {
-            Log.e("UserManagement", "Lỗi kiểm tra tham chiếu: " + e.getMessage(), e);
-            Toast.makeText(requireContext(), "Lỗi kiểm tra tham chiếu: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            return true;
-        }
-    }
-
     private void deleteUser(int userId) {
-        if (isUserReferenced(userId)) {
-            Toast.makeText(requireContext(), "Không thể xóa: Người dùng đang có đơn hàng!", Toast.LENGTH_SHORT).show();
-            return;
-        }
         new AlertDialog.Builder(requireContext())
                 .setTitle("Xác nhận xóa")
-                .setMessage("Bạn có chắc chắn muốn xóa người dùng này?")
+                .setMessage("Bạn có chắc chắn muốn xóa người dùng này? Các thông tin liên quan (Orders, Carts, Reviews, Notifications) cũng sẽ bị xóa.")
                 .setPositiveButton("Xóa", (dialog, which) -> {
                     try (SQLiteDatabase db = dbHelper.openDatabase()) {
+                        // Xóa các bản ghi liên quan trước
+                        db.execSQL("DELETE FROM Orders WHERE user_id = ?", new Object[]{userId});
+                        db.execSQL("DELETE FROM Carts WHERE user_id = ?", new Object[]{userId});
+                        db.execSQL("DELETE FROM Reviews WHERE user_id = ?", new Object[]{userId});
+                        db.execSQL("DELETE FROM Notifications WHERE user_id = ?", new Object[]{userId});
+                        // Xóa người dùng
                         db.execSQL("DELETE FROM Users WHERE user_id = ?", new Object[]{userId});
                         Log.d("UserManagement", "Xóa người dùng thành công: " + userId);
                         Toast.makeText(requireContext(), "Xóa người dùng thành công", Toast.LENGTH_SHORT).show();

@@ -43,7 +43,6 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         holder.userRoleStatus.setText("Vai trò: " + user.getRole() + " | Trạng thái: " + user.getStatus());
 
         holder.btnEditUser.setOnClickListener(v -> onEditClick.accept(user));
-        // Sửa lỗi: thay user.getId() thành user.getUserId()
         holder.btnDeleteUser.setOnClickListener(v -> onDeleteClick.accept(user.getUserId()));
     }
 

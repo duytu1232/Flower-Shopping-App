@@ -2,8 +2,6 @@ package com.example.flowerapp.User.Fragments;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,14 +21,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.flowerapp.Adapters.CartAdapter;
 import com.example.flowerapp.CheckoutActivity;
+import com.example.flowerapp.Managers.CartManager;
 import com.example.flowerapp.Models.CartItem;
 import com.example.flowerapp.R;
-import com.example.flowerapp.Security.Helper.DatabaseHelper;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class FragmentCart extends Fragment {
+public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeListener {
     private static final String TAG = "FragmentCart";
 
     private RecyclerView recyclerView;
@@ -40,7 +38,7 @@ public class FragmentCart extends Fragment {
     private TextView totalPriceTextView;
     private Button checkoutButton;
     private Button continueShoppingButton;
-    private DatabaseHelper dbHelper;
+    private CartManager cartManager;
 
     @Nullable
     @Override
@@ -52,7 +50,7 @@ public class FragmentCart extends Fragment {
         totalPriceTextView = view.findViewById(R.id.total_price);
         checkoutButton = view.findViewById(R.id.checkout_button);
         continueShoppingButton = view.findViewById(R.id.continue_shopping_button);
-        dbHelper = new DatabaseHelper(getContext());
+        cartManager = new CartManager(getContext());
 
         if (recyclerView == null || emptyMessage == null || totalPriceTextView == null || checkoutButton == null || continueShoppingButton == null) {
             Log.e(TAG, "One or more views not found in layout");
@@ -63,10 +61,7 @@ public class FragmentCart extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         cartList = new ArrayList<>();
 
-        adapter = new CartAdapter(cartList, getContext(),
-                this::increaseQuantity,
-                this::decreaseQuantity,
-                this::deleteCartItem);
+        adapter = new CartAdapter(cartList, getContext(), this);
         recyclerView.setAdapter(adapter);
 
         loadCartItems();
@@ -94,113 +89,20 @@ public class FragmentCart extends Fragment {
     }
 
     private void loadCartItems() {
-        SQLiteDatabase db = null;
-        try {
-            db = dbHelper.openDatabase();
-
-            SharedPreferences prefs = requireActivity().getSharedPreferences("MyPrefs", requireActivity().MODE_PRIVATE);
-            int userId = prefs.getInt("user_id", -1);
-            if (userId == -1) {
-                Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            Cursor cursor = db.rawQuery(
-                    "SELECT c.cart_id, c.product_id, c.quantity, p.name, p.price, p.image_url " +
-                            "FROM Carts c " +
-                            "INNER JOIN Products p ON c.product_id = p.product_id " +
-                            "WHERE c.user_id = ?", new String[]{String.valueOf(userId)});
-
-            cartList.clear();
-            if (cursor != null) {
-                int cartIdIndex = cursor.getColumnIndex("cart_id");
-                int productIdIndex = cursor.getColumnIndex("product_id");
-                int quantityIndex = cursor.getColumnIndex("quantity");
-                int nameIndex = cursor.getColumnIndex("name");
-                int priceIndex = cursor.getColumnIndex("price");
-                int imageUrlIndex = cursor.getColumnIndex("image_url");
-
-                if (cartIdIndex == -1 || productIdIndex == -1 || quantityIndex == -1 ||
-                        nameIndex == -1 || priceIndex == -1 || imageUrlIndex == -1) {
-                    Log.e(TAG, "One or more columns do not exist in Carts or Products table!");
-                    Toast.makeText(getContext(), "Error: Database columns missing", Toast.LENGTH_SHORT).show();
-                } else {
-                    while (cursor.moveToNext()) {
-                        int cartId = cursor.getInt(cartIdIndex);
-                        int productId = cursor.getInt(productIdIndex);
-                        int quantity = cursor.getInt(quantityIndex);
-                        String name = cursor.getString(nameIndex);
-                        double price = cursor.getDouble(priceIndex);
-                        String imageUrl = cursor.getString(imageUrlIndex);
-                        if (name == null) name = "Unknown Product";
-                        cartList.add(new CartItem(cartId, productId, name, price, quantity, imageUrl));
-                    }
-                }
-                cursor.close();
-            }
-            adapter.notifyDataSetChanged();
-        } catch (Exception e) {
-            Log.e(TAG, "Error loading cart items: " + e.getMessage());
-            Toast.makeText(getContext(), "Error loading cart: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        } finally {
-            if (db != null) {
-                dbHelper.closeDatabase(db);
-            }
+        SharedPreferences prefs = requireActivity().getSharedPreferences("MyPrefs", requireActivity().MODE_PRIVATE);
+        int userId = prefs.getInt("user_id", -1);
+        if (userId == -1) {
+            Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+            return;
         }
-    }
 
-    private void increaseQuantity(CartItem item, int position) {
-        int newQuantity = item.getQuantity() + 1;
-        item.setQuantity(newQuantity);
-        if (updateCartItemQuantity(item)) {
-            adapter.notifyItemChanged(position);
-            updateTotalPrice();
-        } else {
-            // Hoàn tác nếu cập nhật thất bại
-            item.setQuantity(newQuantity - 1);
-            Toast.makeText(getContext(), "Failed to update quantity", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void decreaseQuantity(CartItem item, int position) {
-        if (item.getQuantity() > 1) {
-            int newQuantity = item.getQuantity() - 1;
-            item.setQuantity(newQuantity);
-            if (updateCartItemQuantity(item)) {
-                adapter.notifyItemChanged(position);
-                updateTotalPrice();
-            } else {
-                // Hoàn tác nếu cập nhật thất bại
-                item.setQuantity(newQuantity + 1);
-                Toast.makeText(getContext(), "Failed to update quantity", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    private void deleteCartItem(CartItem item, int position) {
-        if (deleteItemFromCart(item.getCartId())) {
-            cartList.remove(item);
-            adapter.notifyItemRemoved(position);
-            updateTotalPrice();
-            updateEmptyState();
-        } else {
-            Toast.makeText(getContext(), "Failed to delete item", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private boolean updateCartItemQuantity(CartItem item) {
-        return dbHelper.updateCartQuantity(item.getCartId(), item.getQuantity());
-    }
-
-    private boolean deleteItemFromCart(int cartId) {
-        return dbHelper.deleteCartItem(cartId);
+        cartList.clear();
+        cartList.addAll(cartManager.loadCartItems(userId));
+        adapter.notifyDataSetChanged();
     }
 
     private void updateTotalPrice() {
-        double totalPrice = 0.0;
-        for (CartItem item : cartList) {
-            totalPrice += item.getPrice() * item.getQuantity();
-        }
+        double totalPrice = cartManager.calculateTotalPrice(cartList);
         totalPriceTextView.setText(String.format("Tổng tiền: %.2f VND", totalPrice));
         totalPriceTextView.setVisibility(cartList.isEmpty() ? View.GONE : View.VISIBLE);
     }
@@ -217,5 +119,11 @@ public class FragmentCart extends Fragment {
             emptyMessage.setVisibility(View.GONE);
             checkoutButton.setEnabled(true);
         }
+    }
+
+    @Override
+    public void onCartChanged() {
+        updateTotalPrice();
+        updateEmptyState();
     }
 }
