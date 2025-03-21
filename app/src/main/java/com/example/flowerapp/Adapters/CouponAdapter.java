@@ -37,7 +37,7 @@ public class CouponAdapter extends RecyclerView.Adapter<CouponAdapter.CouponView
     public void onBindViewHolder(@NonNull CouponViewHolder holder, int position) {
         Coupon coupon = couponList.get(position);
         holder.couponCode.setText(coupon.getCode());
-        holder.couponValue.setText("Giá trị: " + String.format("%.2f VND", coupon.getDiscountValue()));
+        holder.couponValue.setText("Giá trị: " + String.format("%,.0f VND", coupon.getDiscountValue()));
         holder.couponPeriod.setText("Từ: " + coupon.getStartDate() + " đến " + coupon.getEndDate() + " | " + coupon.getStatus());
 
         holder.btnEditCoupon.setOnClickListener(v -> onEditClick.accept(coupon));

@@ -52,17 +52,21 @@ public class ProductManagementFragment extends Fragment {
             Cursor cursor = db.rawQuery("SELECT product_id, name, description, price, stock, image_url, category FROM Products", null);
             productList.clear();
             Log.d("ProductManagement", "Số lượng bản ghi: " + cursor.getCount());
-            while (cursor.moveToNext()) {
-                int id = cursor.getInt(cursor.getColumnIndexOrThrow("product_id"));
-                String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
-                String description = cursor.getString(cursor.getColumnIndexOrThrow("description"));
-                double price = cursor.getDouble(cursor.getColumnIndexOrThrow("price"));
-                int stock = cursor.getInt(cursor.getColumnIndexOrThrow("stock"));
-                String imageUrl = cursor.getString(cursor.getColumnIndexOrThrow("image_url"));
-                String category = cursor.getString(cursor.getColumnIndexOrThrow("category"));
-                Product product = new Product(id, name, description, price, stock, imageUrl, category);
-                productList.add(product);
-                Log.d("ProductManagement", "Thêm sản phẩm: " + name);
+            if (cursor.moveToFirst()) {
+                do {
+                    int id = cursor.getInt(cursor.getColumnIndexOrThrow("product_id"));
+                    String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
+                    String description = cursor.getString(cursor.getColumnIndexOrThrow("description"));
+                    double price = cursor.getDouble(cursor.getColumnIndexOrThrow("price"));
+                    int stock = cursor.getInt(cursor.getColumnIndexOrThrow("stock"));
+                    String imageUrl = cursor.getString(cursor.getColumnIndexOrThrow("image_url"));
+                    String category = cursor.getString(cursor.getColumnIndexOrThrow("category"));
+                    Product product = new Product(id, name, description, price, stock, imageUrl, category);
+                    productList.add(product);
+                    Log.d("ProductManagement", "Thêm sản phẩm: " + name);
+                } while (cursor.moveToNext());
+            } else {
+                Log.d("ProductManagement", "Không có sản phẩm nào trong cơ sở dữ liệu");
             }
             cursor.close();
             adapter.notifyDataSetChanged();
@@ -234,5 +238,13 @@ public class ProductManagementFragment extends Fragment {
                 })
                 .setNegativeButton("Hủy", null)
                 .show();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (dbHelper != null) {
+            dbHelper.close();
+        }
     }
 }

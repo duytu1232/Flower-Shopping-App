@@ -21,19 +21,17 @@ import java.util.function.Consumer;
 
 public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHolder> {
     private List<Order> orderList;
-    private Consumer<Order> onReviewClick; // Dành cho User
-    private Consumer<Order> onEditClick;   // Dành cho Admin
-    private Consumer<Order> onDeleteClick; // Dành cho Admin
-    private boolean isAdminMode;           // Cờ để xác định chế độ User hay Admin
+    private Consumer<Order> onReviewClick;
+    private Consumer<Order> onEditClick;
+    private Consumer<Order> onDeleteClick;
+    private boolean isAdminMode;
 
-    // Constructor cho User (có nút Review)
     public OrderAdapter(List<Order> orderList, Consumer<Order> onReviewClick) {
         this.orderList = orderList;
         this.onReviewClick = onReviewClick;
         this.isAdminMode = false;
     }
 
-    // Constructor cho Admin (có nút Edit và Delete)
     public OrderAdapter(List<Order> orderList, Consumer<Order> onEditClick, Consumer<Order> onDeleteClick) {
         this.orderList = orderList;
         this.onEditClick = onEditClick;
@@ -56,7 +54,6 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
         holder.orderStatus.setText("Trạng thái: " + order.getStatus());
         holder.orderDate.setText("Ngày đặt: " + order.getOrderDate());
 
-        // Xử lý hiển thị ảnh
         String imageUrl = order.getImageUrl();
         if (imageUrl != null && !imageUrl.isEmpty()) {
             Glide.with(holder.itemView.getContext())
@@ -68,7 +65,6 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
             holder.orderImage.setImageResource(R.drawable.shop);
         }
 
-        // Xử lý nút theo chế độ
         if (isAdminMode) {
             holder.reviewButton.setVisibility(View.GONE);
             holder.editButton.setVisibility(View.VISIBLE);
@@ -91,7 +87,6 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
             }
         }
 
-        // Thêm sự kiện click trên toàn bộ item để mở OrderDetailActivity (cho User)
         if (!isAdminMode) {
             holder.itemView.setOnClickListener(v -> {
                 Intent intent = new Intent(holder.itemView.getContext(), OrderDetailActivity.class);

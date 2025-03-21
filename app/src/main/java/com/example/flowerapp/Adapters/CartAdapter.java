@@ -6,11 +6,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.example.flowerapp.Managers.CartManager;
 import com.example.flowerapp.Models.CartItem;
 import com.example.flowerapp.R;
 import com.google.android.material.button.MaterialButton;
@@ -20,27 +22,18 @@ import java.util.List;
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder> {
     private List<CartItem> cartItems;
     private Context context;
-    private OnQuantityChangeListener increaseListener;
-    private OnQuantityChangeListener decreaseListener;
-    private OnDeleteListener deleteListener;
+    private CartManager cartManager;
+    private OnCartChangeListener cartChangeListener;
 
-    public interface OnQuantityChangeListener {
-        void onQuantityChange(CartItem item, int position);
+    public interface OnCartChangeListener {
+        void onCartChanged();
     }
 
-    public interface OnDeleteListener {
-        void onDelete(CartItem item, int position);
-    }
-
-    public CartAdapter(List<CartItem> cartItems, Context context,
-                       OnQuantityChangeListener increaseListener,
-                       OnQuantityChangeListener decreaseListener,
-                       OnDeleteListener deleteListener) {
+    public CartAdapter(List<CartItem> cartItems, Context context, OnCartChangeListener listener) {
         this.cartItems = cartItems;
         this.context = context;
-        this.increaseListener = increaseListener;
-        this.decreaseListener = decreaseListener;
-        this.deleteListener = deleteListener;
+        this.cartManager = new CartManager(context);
+        this.cartChangeListener = listener;
     }
 
     @NonNull
@@ -56,7 +49,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
 
         // Hiển thị thông tin sản phẩm
         holder.cartItemName.setText(cartItem.getName());
-        holder.cartItemPrice.setText(String.format("Giá: %.2f VND", cartItem.getPrice() * cartItem.getQuantity())); // Hiển thị giá * số lượng
+        holder.cartItemPrice.setText(String.format("Giá: %.2f VND", cartItem.getPrice() * cartItem.getQuantity()));
         holder.cartItemQuantity.setText("Số lượng: " + cartItem.getQuantity());
 
         // Xử lý hiển thị ảnh
@@ -73,22 +66,47 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
 
         // Xử lý nút tăng số lượng
         holder.btnIncreaseQuantity.setOnClickListener(v -> {
-            if (increaseListener != null) {
-                increaseListener.onQuantityChange(cartItem, position);
+            int newQuantity = cartItem.getQuantity() + 1;
+            cartItem.setQuantity(newQuantity);
+            if (cartManager.updateCartItemQuantity(cartItem)) {
+                notifyItemChanged(position);
+                if (cartChangeListener != null) {
+                    cartChangeListener.onCartChanged();
+                }
+            } else {
+                cartItem.setQuantity(newQuantity - 1);
+                Toast.makeText(context, "Failed to update quantity", Toast.LENGTH_SHORT).show();
             }
         });
 
         // Xử lý nút giảm số lượng
         holder.btnDecreaseQuantity.setOnClickListener(v -> {
-            if (decreaseListener != null) {
-                decreaseListener.onQuantityChange(cartItem, position);
+            if (cartItem.getQuantity() > 1) {
+                int newQuantity = cartItem.getQuantity() - 1;
+                cartItem.setQuantity(newQuantity);
+                if (cartManager.updateCartItemQuantity(cartItem)) {
+                    notifyItemChanged(position);
+                    if (cartChangeListener != null) {
+                        cartChangeListener.onCartChanged();
+                    }
+                } else {
+                    cartItem.setQuantity(newQuantity + 1);
+                    Toast.makeText(context, "Failed to update quantity", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
         // Xử lý nút xóa sản phẩm
         holder.btnDeleteItem.setOnClickListener(v -> {
-            if (deleteListener != null) {
-                deleteListener.onDelete(cartItem, position);
+            if (cartManager.deleteCartItem(cartItem.getCartId())) {
+                int currentPosition = holder.getAdapterPosition();
+                cartItems.remove(currentPosition);
+                notifyItemRemoved(currentPosition);
+                if (cartChangeListener != null) {
+                    cartChangeListener.onCartChanged();
+                }
+            } else {
+                Toast.makeText(context, "Failed to delete item", Toast.LENGTH_SHORT).show();
             }
         });
     }
