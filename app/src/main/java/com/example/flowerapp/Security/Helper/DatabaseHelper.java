@@ -1,129 +1,135 @@
 package com.example.flowerapp.Security.Helper;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+
+import com.example.flowerapp.Models.Coupon;
+import com.example.flowerapp.Models.Order;
+import com.example.flowerapp.Models.Product;
+import com.example.flowerapp.Models.Revenue;
+import com.example.flowerapp.Models.User;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DB_NAME = "FlowerApp.db";
-    private static final int DB_VERSION = 9; // Tăng version để kích hoạt onUpgrade
+    private static final int DB_VERSION = 10; // Đồng bộ với PRAGMA user_version trong script SQL
     private final Context context;
-
-    // Tên bảng và cột
-    private static final String TABLE_USERS = "Users";
-    private static final String TABLE_PRODUCTS = "Products";
-    private static final String TABLE_ORDERS = "Orders";
-    private static final String TABLE_DISCOUNT_CODES = "Discount_Codes";
-    private static final String TABLE_PAYMENTS = "Payments";
-    private static final String TABLE_CARTS = "Carts";
 
     public DatabaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
         this.context = context;
-        // Kiểm tra và tạo cơ sở dữ liệu nếu cần
-        SQLiteDatabase db = getWritableDatabase();
-        db.close();
+        if (!checkDatabaseExists() || !isDatabaseVersionCorrect()) {
+            copyDatabase();
+        }
+        if (!checkDatabaseIntegrity()) {
+            Log.e("DatabaseHelper", "Cơ sở dữ liệu bị lỗi, sao chép lại...");
+            copyDatabase();
+        }
+    }
+
+    private boolean checkDatabaseExists() {
+        File dbFile = context.getDatabasePath(DB_NAME);
+        return dbFile.exists();
+    }
+
+    private boolean isDatabaseVersionCorrect() {
+        SQLiteDatabase db = null;
+        try {
+            db = SQLiteDatabase.openDatabase(
+                    context.getDatabasePath(DB_NAME).getPath(),
+                    null,
+                    SQLiteDatabase.OPEN_READONLY
+            );
+            int userVersion = db.getVersion();
+            return userVersion == DB_VERSION;
+        } catch (Exception e) {
+            Log.e("DatabaseHelper", "Lỗi khi kiểm tra phiên bản: " + e.getMessage(), e);
+            return false;
+        } finally {
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
+        }
+    }
+
+    private boolean checkDatabaseIntegrity() {
+        SQLiteDatabase db = null;
+        try {
+            db = openDatabase();
+            // Kiểm tra sự tồn tại của các bảng chính
+            Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='Users'", null);
+            boolean hasUsersTable = cursor.getCount() > 0;
+            cursor.close();
+            return hasUsersTable;
+        } catch (Exception e) {
+            Log.e("DatabaseHelper", "Lỗi khi kiểm tra tính toàn vẹn: " + e.getMessage(), e);
+            return false;
+        } finally {
+            if (db != null) {
+                closeDatabase(db);
+            }
+        }
+    }
+
+    private void copyDatabase() {
+        try {
+            File dbFile = context.getDatabasePath(DB_NAME);
+            if (!dbFile.getParentFile().exists()) {
+                dbFile.getParentFile().mkdirs();
+            }
+            if (dbFile.exists()) {
+                dbFile.delete();
+            }
+            try (InputStream inputStream = context.getAssets().open(DB_NAME);
+                 OutputStream outputStream = new FileOutputStream(dbFile)) {
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = inputStream.read(buffer)) > 0) {
+                    outputStream.write(buffer, 0, length);
+                }
+                outputStream.flush();
+            }
+            Log.d("DatabaseHelper", "Sao chép cơ sở dữ liệu thành công");
+        } catch (IOException e) {
+            Log.e("DatabaseHelper", "Lỗi sao chép cơ sở dữ liệu: " + e.getMessage(), e);
+        }
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // Tạo bảng Users
-        String createUsersTable = "CREATE TABLE " + TABLE_USERS + " (" +
-                "user_id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "username TEXT NOT NULL," +
-                "full_name TEXT," +
-                "password TEXT NOT NULL," +
-                "email TEXT NOT NULL UNIQUE," +
-                "role TEXT NOT NULL," +
-                "status TEXT NOT NULL)";
-        db.execSQL(createUsersTable);
-
-        // Tạo bảng Products
-        String createProductsTable = "CREATE TABLE " + TABLE_PRODUCTS + " (" +
-                "product_id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "name TEXT NOT NULL," +
-                "description TEXT," +
-                "price REAL NOT NULL," +
-                "stock INTEGER NOT NULL," +
-                "image_url TEXT," +
-                "category TEXT," +
-                "type TEXT)";
-        db.execSQL(createProductsTable);
-
-        // Tạo bảng Orders
-        String createOrdersTable = "CREATE TABLE " + TABLE_ORDERS + " (" +
-                "order_id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "user_id INTEGER," +
-                "order_date TEXT," +
-                "total_amount REAL," +
-                "status TEXT," +
-                "FOREIGN KEY(user_id) REFERENCES Users(user_id))";
-        db.execSQL(createOrdersTable);
-
-        // Tạo bảng Discount_Codes
-        String createDiscountCodesTable = "CREATE TABLE " + TABLE_DISCOUNT_CODES + " (" +
-                "code_id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "code TEXT NOT NULL UNIQUE," +
-                "discount_percentage REAL," +
-                "valid_from TEXT," +
-                "valid_to TEXT)";
-        db.execSQL(createDiscountCodesTable);
-
-        // Tạo bảng Payments
-        String createPaymentsTable = "CREATE TABLE " + TABLE_PAYMENTS + " (" +
-                "payment_id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "order_id INTEGER," +
-                "payment_date TEXT," +
-                "amount REAL," +
-                "payment_method TEXT," +
-                "FOREIGN KEY(order_id) REFERENCES Orders(order_id))";
-        db.execSQL(createPaymentsTable);
-
-        // Tạo bảng Carts
-        String createCartsTable = "CREATE TABLE " + TABLE_CARTS + " (" +
-                "cart_id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "user_id INTEGER," +
-                "product_id INTEGER," +
-                "quantity INTEGER," +
-                "FOREIGN KEY(user_id) REFERENCES Users(user_id)," +
-                "FOREIGN KEY(product_id) REFERENCES Products(product_id))";
-        db.execSQL(createCartsTable);
-
-        // Thêm dữ liệu mẫu
-        insertSampleData(db);
-    }
-
-    private void insertSampleData(SQLiteDatabase db) {
-        // Thêm người dùng mẫu
-        db.execSQL("INSERT INTO Users (username, full_name, password, email, role, status) VALUES " +
-                "('admin', 'Admin User', 'duytu1232', 'duytu1232@gmail.com', 'admin', 'active')");
-        db.execSQL("INSERT INTO Users (username, full_name, password, email, role, status) VALUES " +
-                "('user1', 'User One', 'password123', 'user1@example.com', 'user', 'active')");
-
-        // Thêm sản phẩm mẫu
-        db.execSQL("INSERT INTO Products (name, description, price, stock, image_url, category) VALUES " +
-                "('Hoa Hồng', 'Hoa hồng đỏ tươi', 50.0, 100, 'https://example.com/hoa_hong.jpg', 'Hoa Tươi')");
-        db.execSQL("INSERT INTO Products (name, description, price, stock, image_url, category) VALUES " +
-                "('Hoa Cúc', 'Hoa cúc trắng tinh khôi', 30.0, 150, 'https://example.com/hoa_cuc.jpg', 'Hoa Tươi')");
+        // Không cần tạo bảng vì đã sao chép từ assets
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // Xóa các bảng cũ
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_PRODUCTS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_ORDERS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_DISCOUNT_CODES);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_PAYMENTS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_CARTS);
-        onCreate(db);
+        Log.d("DatabaseHelper", "Nâng cấp database từ phiên bản " + oldVersion + " lên " + newVersion);
+        db.execSQL("DROP TABLE IF EXISTS Notifications");
+        db.execSQL("DROP TABLE IF EXISTS Order_Tracking");
+        db.execSQL("DROP TABLE IF EXISTS Reviews");
+        db.execSQL("DROP TABLE IF EXISTS Order_Items");
+        db.execSQL("DROP TABLE IF EXISTS Payments");
+        db.execSQL("DROP TABLE IF EXISTS Carts");
+        db.execSQL("DROP TABLE IF EXISTS Orders");
+        db.execSQL("DROP TABLE IF EXISTS Discount_Codes");
+        db.execSQL("DROP TABLE IF EXISTS Products");
+        db.execSQL("DROP TABLE IF EXISTS Users");
+        db.execSQL("DROP TABLE IF EXISTS Favorites");
+        copyDatabase();
+    }
+
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        onUpgrade(db, oldVersion, newVersion);
     }
 
     public SQLiteDatabase openDatabase() {
@@ -136,13 +142,187 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    // Phương thức tiện ích để lấy danh sách Users
+    public List<User> getAllUsers() {
+        List<User> userList = new ArrayList<>();
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+        try {
+            db = openDatabase();
+            cursor = db.rawQuery("SELECT * FROM Users", null);
+            if (cursor.moveToFirst()) {
+                do {
+                    User user = new User(
+                            cursor.getInt(cursor.getColumnIndexOrThrow("user_id")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("username")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("password")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("email")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("role")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("status")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("full_name")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("phone")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("avatar_uri"))
+                    );
+                    userList.add(user);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e("DatabaseHelper", "Lỗi khi lấy danh sách Users: " + e.getMessage(), e);
+        } finally {
+            if (cursor != null) cursor.close();
+            if (db != null) closeDatabase(db);
+        }
+        return userList;
+    }
+
+    // Phương thức tiện ích để lấy danh sách Products
+    public List<Product> getAllProducts() {
+        List<Product> productList = new ArrayList<>();
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+        try {
+            db = openDatabase();
+            cursor = db.rawQuery("SELECT * FROM Products", null);
+            if (cursor.moveToFirst()) {
+                do {
+                    Product product = new Product(
+                            cursor.getInt(cursor.getColumnIndexOrThrow("product_id")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("name")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("description")),
+                            cursor.getDouble(cursor.getColumnIndexOrThrow("price")),
+                            cursor.getInt(cursor.getColumnIndexOrThrow("stock")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("image_url")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("category"))
+                    );
+                    productList.add(product);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e("DatabaseHelper", "Lỗi khi lấy danh sách Products: " + e.getMessage(), e);
+        } finally {
+            if (cursor != null) cursor.close();
+            if (db != null) closeDatabase(db);
+        }
+        return productList;
+    }
+
+    // Phương thức tiện ích để lấy danh sách Orders
+    public List<Order> getAllOrders() {
+        List<Order> orderList = new ArrayList<>();
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+        try {
+            db = openDatabase();
+            cursor = db.rawQuery(
+                    "SELECT o.*, p.name as product_name, p.image_url as product_image " +
+                            "FROM Orders o " +
+                            "LEFT JOIN Order_Items oi ON o.order_id = oi.order_id " +
+                            "LEFT JOIN Products p ON oi.product_id = p.product_id", null);
+            if (cursor.moveToFirst()) {
+                do {
+                    Order order = new Order(
+                            cursor.getInt(cursor.getColumnIndexOrThrow("order_id")),
+                            cursor.getInt(cursor.getColumnIndexOrThrow("user_id")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("order_date")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("status")),
+                            cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("shipping_address")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("product_name")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("product_image"))
+                    );
+                    orderList.add(order);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e("DatabaseHelper", "Lỗi khi lấy danh sách Orders: " + e.getMessage(), e);
+        } finally {
+            if (cursor != null) cursor.close();
+            if (db != null) closeDatabase(db);
+        }
+        return orderList; // Sửa lỗi: trả về orderList thay vì userList
+    }
+
+    // Phương thức tiện ích để lấy danh sách Revenue
+    public List<Revenue> getRevenueByPeriod(String period) {
+        List<Revenue> revenueList = new ArrayList<>();
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+        try {
+            db = openDatabase();
+            String query;
+            switch (period) {
+                case "Hôm nay":
+                    query = "SELECT payment_method, amount, payment_date FROM Payments WHERE date(payment_date) = date('now')";
+                    break;
+                case "Tuần này":
+                    query = "SELECT payment_method, amount, payment_date FROM Payments WHERE strftime('%W', payment_date) = strftime('%W', 'now')";
+                    break;
+                case "Tháng này":
+                    query = "SELECT payment_method, amount, payment_date FROM Payments WHERE strftime('%m', payment_date) = strftime('%m', 'now')";
+                    break;
+                case "Năm này":
+                    query = "SELECT payment_method, amount, payment_date FROM Payments WHERE strftime('%Y', payment_date) = strftime('%Y', 'now')";
+                    break;
+                default:
+                    query = "SELECT payment_method, amount, payment_date FROM Payments";
+            }
+            cursor = db.rawQuery(query, null);
+            if (cursor.moveToFirst()) {
+                do {
+                    Revenue revenue = new Revenue(
+                            cursor.getString(cursor.getColumnIndexOrThrow("payment_method")),
+                            cursor.getFloat(cursor.getColumnIndexOrThrow("amount")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("payment_date"))
+                    );
+                    revenueList.add(revenue);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e("DatabaseHelper", "Lỗi khi lấy danh sách Revenue: " + e.getMessage(), e);
+        } finally {
+            if (cursor != null) cursor.close();
+            if (db != null) closeDatabase(db);
+        }
+        return revenueList;
+    }
+
+    // Phương thức tiện ích để lấy danh sách Coupons
+    public List<Coupon> getAllCoupons() {
+        List<Coupon> couponList = new ArrayList<>();
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+        try {
+            db = openDatabase();
+            cursor = db.rawQuery("SELECT * FROM Discount_Codes", null);
+            if (cursor.moveToFirst()) {
+                do {
+                    Coupon coupon = new Coupon(
+                            cursor.getInt(cursor.getColumnIndexOrThrow("discount_id")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("code")),
+                            cursor.getDouble(cursor.getColumnIndexOrThrow("discount_value")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("start_date")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("end_date")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("status"))
+                    );
+                    couponList.add(coupon);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e("DatabaseHelper", "Lỗi khi lấy danh sách Coupons: " + e.getMessage(), e);
+        } finally {
+            if (cursor != null) cursor.close();
+            if (db != null) closeDatabase(db);
+        }
+        return couponList;
+    }
+
     // Thêm phương thức để cập nhật số lượng trong bảng Carts
     public boolean updateCartQuantity(int cartId, int quantity) {
         SQLiteDatabase db = null;
         try {
             db = openDatabase();
             db.execSQL(
-                    "UPDATE " + TABLE_CARTS + " SET quantity = ? WHERE cart_id = ?",
+                    "UPDATE Carts SET quantity = ? WHERE cart_id = ?",
                     new Object[]{quantity, cartId}
             );
             Log.d("DatabaseHelper", "Cập nhật số lượng giỏ hàng thành công: cart_id=" + cartId + ", quantity=" + quantity);
@@ -163,7 +343,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         try {
             db = openDatabase();
             db.execSQL(
-                    "DELETE FROM " + TABLE_CARTS + " WHERE cart_id = ?",
+                    "DELETE FROM Carts WHERE cart_id = ?",
                     new Object[]{cartId}
             );
             Log.d("DatabaseHelper", "Xóa mục giỏ hàng thành công: cart_id=" + cartId);

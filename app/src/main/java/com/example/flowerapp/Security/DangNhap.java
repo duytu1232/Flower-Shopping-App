@@ -20,6 +20,8 @@ import com.example.flowerapp.Models.User;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.Helper.DatabaseHelper;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 public class DangNhap extends AppCompatActivity {
     private static final String TAG = "DangNhap";
     private EditText edit_txt_Username, edit_txt_Password;
@@ -46,7 +48,7 @@ public class DangNhap extends AppCompatActivity {
         String email = edit_txt_Username.getText().toString().trim();
         String password = edit_txt_Password.getText().toString().trim();
 
-        Log.d(TAG, "Đăng nhập với Email: " + email + ", Password: " + password);
+        Log.d(TAG, "Đăng nhập với Email: " + email);
 
         if (TextUtils.isEmpty(email)) {
             edit_txt_Username.setError("Vui lòng nhập email");
@@ -64,8 +66,7 @@ public class DangNhap extends AppCompatActivity {
 
         SQLiteDatabase db = dbHelper.openDatabase();
         try {
-            // Chỉ lấy các cột cơ bản để kiểm tra đăng nhập
-            Cursor cursor = db.rawQuery("SELECT user_id, username, password, email, role, status FROM Users WHERE email = ?", new String[]{email});
+            Cursor cursor = db.rawQuery("SELECT user_id, username, password, email, role, status, full_name, phone, avatar_uri FROM Users WHERE email = ?", new String[]{email});
 
             try {
                 if (cursor.moveToFirst()) {
@@ -75,6 +76,9 @@ public class DangNhap extends AppCompatActivity {
                     int emailIndex = cursor.getColumnIndex("email");
                     int roleIndex = cursor.getColumnIndex("role");
                     int statusIndex = cursor.getColumnIndex("status");
+                    int fullNameIndex = cursor.getColumnIndex("full_name");
+                    int phoneIndex = cursor.getColumnIndex("phone");
+                    int avatarUriIndex = cursor.getColumnIndex("avatar_uri");
 
                     if (userIdIndex == -1 || usernameIndex == -1 || passwordIndex == -1 || emailIndex == -1 ||
                             roleIndex == -1 || statusIndex == -1) {
@@ -84,49 +88,50 @@ public class DangNhap extends AppCompatActivity {
                     }
 
                     String storedPassword = cursor.getString(passwordIndex);
-                    if (storedPassword.equals(password)) { // So sánh trực tiếp (tạm thời, thay bằng BCrypt sau)
-                        // Lấy thêm các cột khác nếu cần (full_name, phone, avatar_uri)
-                        String fullName = cursor.getColumnIndex("full_name") >= 0 ? cursor.getString(cursor.getColumnIndex("full_name")) : null;
-                        String phone = cursor.getColumnIndex("phone") >= 0 ? cursor.getString(cursor.getColumnIndex("phone")) : null;
-                        String avatarUri = cursor.getColumnIndex("avatar_uri") >= 0 ? cursor.getString(cursor.getColumnIndex("avatar_uri")) : null;
+                    String role = cursor.getString(roleIndex);
+                    String status = cursor.getString(statusIndex);
 
-                        User user = new User(
-                                cursor.getInt(userIdIndex),
-                                cursor.getString(usernameIndex),
-                                cursor.getString(passwordIndex),
-                                cursor.getString(emailIndex),
-                                cursor.getString(roleIndex),
-                                cursor.getString(statusIndex),
-                                fullName,
-                                phone,
-                                avatarUri
-                        );
-
-                        Log.d(TAG, "Đăng nhập thành công - Email: " + user.getEmail() + ", Role: " + user.getRole() + ", Status: " + user.getStatus());
-
-                        if ("locked".equals(user.getStatus().toLowerCase())) {
+                    // Kiểm tra mật khẩu bằng BCrypt
+                    if (BCrypt.checkpw(password, storedPassword)) {
+                        // Kiểm tra trạng thái tài khoản
+                        if (!"active".equalsIgnoreCase(status)) {
                             Toast.makeText(this, "Tài khoản bị khóa!", Toast.LENGTH_SHORT).show();
                             return;
                         }
 
+                        // Tạo đối tượng User
+                        User user = new User(
+                                cursor.getInt(userIdIndex),
+                                cursor.getString(usernameIndex),
+                                cursor.getString(emailIndex),
+                                role,
+                                status,
+                                fullNameIndex >= 0 ? cursor.getString(fullNameIndex) : null,
+                                phoneIndex >= 0 ? cursor.getString(phoneIndex) : null,
+                                avatarUriIndex >= 0 ? cursor.getString(avatarUriIndex) : null
+                        );
+
+                        Log.d(TAG, "Đăng nhập thành công - Email: " + user.getEmail() + ", Role: " + user.getRole() + ", Status: " + user.getStatus());
+
+                        // Lưu thông tin người dùng vào SharedPreferences
                         SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
                         SharedPreferences.Editor editor = prefs.edit();
                         editor.putInt("user_id", user.getUserId());
                         editor.putString("username", user.getUsername());
+                        editor.putString("role", user.getRole());
                         editor.apply();
                         Log.d(TAG, "User ID sau khi lưu: " + prefs.getInt("user_id", -1));
 
-                        if ("admin".equals(user.getRole().toLowerCase()) || email.equals("admin123")) {
+                        // Phân quyền
+                        if ("admin".equalsIgnoreCase(role)) {
                             Toast.makeText(this, "Đăng nhập thành công với vai trò Admin!", Toast.LENGTH_SHORT).show();
                             startActivity(new Intent(this, AdminActivity.class));
-                            finish();
-                            return;
+                        } else {
+                            Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(this, MainActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent);
                         }
-
-                        Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(this, MainActivity.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startActivity(intent);
                         finish();
                     } else {
                         Log.d(TAG, "Mật khẩu không đúng cho email: " + email);
@@ -142,14 +147,6 @@ public class DangNhap extends AppCompatActivity {
         } catch (Exception e) {
             Log.e(TAG, "Lỗi khi truy vấn cơ sở dữ liệu: " + e.getMessage());
             Toast.makeText(this, "Lỗi hệ thống, vui lòng thử lại!", Toast.LENGTH_SHORT).show();
-
-            // Loại bỏ logic tạm thời cho admin123/admin (khuyến nghị xóa sau khi hoàn thiện)
-            if (email.equals("admin123") && password.equals("admin")) {
-                Log.w(TAG, "Đăng nhập admin bằng ngoại lệ do lỗi hệ thống");
-                Toast.makeText(this, "Đăng nhập Admin thành công (ngoại lệ do lỗi hệ thống)!", Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(this, AdminActivity.class));
-                finish();
-            }
         } finally {
             dbHelper.closeDatabase(db);
         }

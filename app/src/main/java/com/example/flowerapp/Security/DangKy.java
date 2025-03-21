@@ -19,6 +19,8 @@ import com.example.flowerapp.Models.User;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.Helper.DatabaseHelper;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 public class DangKy extends AppCompatActivity {
     private EditText editTxtUsername, editTxtFullName, editTxtEmail, editTxtPhone, editTxtPassword, editTxtConfirmPassword;
     private CheckBox checkboxTerms;
@@ -61,7 +63,11 @@ public class DangKy extends AppCompatActivity {
         }
 
         if (isEmailExists(email)) {
-            Toast.makeText(this, "Email đã được sử dụng!", Toast.LENGTH_SHORT).show();
+            editTxtEmail.setError("Email đã được sử dụng!");
+            return;
+        }
+        if (isUsernameExists(username)) {
+            editTxtUsername.setError("Tên người dùng đã được sử dụng!");
             return;
         }
 
@@ -74,7 +80,6 @@ public class DangKy extends AppCompatActivity {
     private void saveUserToSQLite(String username, String fullName, String email, String phone, String password) {
         SQLiteDatabase db = dbHelper.openDatabase();
         try {
-            // Tạo đối tượng User với 8 tham số, bỏ password
             User user = new User(
                     0, // userId sẽ được tự động tạo bởi AUTOINCREMENT
                     username,
@@ -86,11 +91,11 @@ public class DangKy extends AppCompatActivity {
                     null // avatarUri mặc định là null
             );
 
-            String hashedPassword = hashPassword(password); // Mã hóa mật khẩu
+            String hashedPassword = hashPassword(password);
 
             ContentValues values = new ContentValues();
             values.put("username", user.getUsername());
-            values.put("password", hashedPassword); // Thêm mật khẩu đã mã hóa
+            values.put("password", hashedPassword);
             values.put("email", user.getEmail());
             values.put("role", user.getRole());
             values.put("status", user.getStatus());
@@ -100,7 +105,7 @@ public class DangKy extends AppCompatActivity {
             long result = db.insert("Users", null, values);
             if (result != -1) {
                 Log.d("DangKy", "Người dùng đã được lưu thành công, ID: " + result);
-                user.setUserId((int) result); // Cập nhật userId sau khi insert
+                user.setUserId((int) result);
             } else {
                 Log.e("DangKy", "Lỗi khi lưu người dùng vào cơ sở dữ liệu");
                 Toast.makeText(this, "Lỗi lưu thông tin người dùng!", Toast.LENGTH_SHORT).show();
@@ -122,6 +127,21 @@ public class DangKy extends AppCompatActivity {
             return exists;
         } catch (Exception e) {
             Log.e("DangKy", "Lỗi kiểm tra email: " + e.getMessage());
+            return false;
+        } finally {
+            dbHelper.closeDatabase(db);
+        }
+    }
+
+    private boolean isUsernameExists(String username) {
+        SQLiteDatabase db = dbHelper.openDatabase();
+        try {
+            Cursor cursor = db.rawQuery("SELECT * FROM Users WHERE username = ?", new String[]{username});
+            boolean exists = cursor.getCount() > 0;
+            cursor.close();
+            return exists;
+        } catch (Exception e) {
+            Log.e("DangKy", "Lỗi kiểm tra username: " + e.getMessage());
             return false;
         } finally {
             dbHelper.closeDatabase(db);
@@ -157,8 +177,6 @@ public class DangKy extends AppCompatActivity {
     }
 
     private String hashPassword(String password) {
-        // Thay bằng logic thực tế với BCrypt hoặc SHA-256
-        // Ví dụ: return BCrypt.hashpw(password, BCrypt.gensalt());
-        return password; // Placeholder, cần thay bằng mã hóa thực tế
+        return BCrypt.hashpw(password, BCrypt.gensalt());
     }
 }

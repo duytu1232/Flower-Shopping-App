@@ -33,6 +33,7 @@ public class CouponManagementFragment extends Fragment {
     private CouponAdapter adapter;
     private List<Coupon> couponList = new ArrayList<>();
     private DatabaseHelper dbHelper;
+    private static final String[] VALID_STATUSES = {"active", "expired"};
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -94,12 +95,28 @@ public class CouponManagementFragment extends Fragment {
                         String endDate = editEnd.getText().toString().trim();
                         String status = editStatus.getText().toString().trim();
 
-                        if (TextUtils.isEmpty(code) || discountValue <= 0 || TextUtils.isEmpty(startDate) || TextUtils.isEmpty(endDate) || TextUtils.isEmpty(status)) {
-                            Toast.makeText(requireContext(), "Vui lòng điền đầy đủ thông tin hợp lệ!", Toast.LENGTH_SHORT).show();
+                        if (TextUtils.isEmpty(code)) {
+                            editCode.setError("Mã giảm giá không được để trống");
                             return;
                         }
-                        if (!isValidDateFormat(startDate) || !isValidDateFormat(endDate) || !isValidDateRange(startDate, endDate)) {
-                            Toast.makeText(requireContext(), "Ngày không hợp lệ (định dạng: yyyy-MM-dd, ngày kết thúc phải sau ngày bắt đầu)", Toast.LENGTH_LONG).show();
+                        if (discountValue <= 0) {
+                            editValue.setError("Giá trị giảm giá phải lớn hơn 0");
+                            return;
+                        }
+                        if (TextUtils.isEmpty(startDate) || !isValidDateFormat(startDate)) {
+                            editStart.setError("Ngày bắt đầu không hợp lệ (định dạng: yyyy-MM-dd)");
+                            return;
+                        }
+                        if (TextUtils.isEmpty(endDate) || !isValidDateFormat(endDate)) {
+                            editEnd.setError("Ngày kết thúc không hợp lệ (định dạng: yyyy-MM-dd)");
+                            return;
+                        }
+                        if (!isValidDateRange(startDate, endDate)) {
+                            editEnd.setError("Ngày kết thúc phải sau ngày bắt đầu");
+                            return;
+                        }
+                        if (TextUtils.isEmpty(status) || !isValidStatus(status)) {
+                            editStatus.setError("Trạng thái không hợp lệ (active, expired)");
                             return;
                         }
 
@@ -138,12 +155,28 @@ public class CouponManagementFragment extends Fragment {
                         String endDate = editEnd.getText().toString().trim();
                         String status = editStatus.getText().toString().trim();
 
-                        if (TextUtils.isEmpty(code) || discountValue <= 0 || TextUtils.isEmpty(startDate) || TextUtils.isEmpty(endDate) || TextUtils.isEmpty(status)) {
-                            Toast.makeText(requireContext(), "Vui lòng điền đầy đủ thông tin hợp lệ!", Toast.LENGTH_SHORT).show();
+                        if (TextUtils.isEmpty(code)) {
+                            editCode.setError("Mã giảm giá không được để trống");
                             return;
                         }
-                        if (!isValidDateFormat(startDate) || !isValidDateFormat(endDate) || !isValidDateRange(startDate, endDate)) {
-                            Toast.makeText(requireContext(), "Ngày không hợp lệ (định dạng: yyyy-MM-dd, ngày kết thúc phải sau ngày bắt đầu)", Toast.LENGTH_LONG).show();
+                        if (discountValue <= 0) {
+                            editValue.setError("Giá trị giảm giá phải lớn hơn 0");
+                            return;
+                        }
+                        if (TextUtils.isEmpty(startDate) || !isValidDateFormat(startDate)) {
+                            editStart.setError("Ngày bắt đầu không hợp lệ (định dạng: yyyy-MM-dd)");
+                            return;
+                        }
+                        if (TextUtils.isEmpty(endDate) || !isValidDateFormat(endDate)) {
+                            editEnd.setError("Ngày kết thúc không hợp lệ (định dạng: yyyy-MM-dd)");
+                            return;
+                        }
+                        if (!isValidDateRange(startDate, endDate)) {
+                            editEnd.setError("Ngày kết thúc phải sau ngày bắt đầu");
+                            return;
+                        }
+                        if (TextUtils.isEmpty(status) || !isValidStatus(status)) {
+                            editStatus.setError("Trạng thái không hợp lệ (active, expired)");
                             return;
                         }
 
@@ -176,6 +209,15 @@ public class CouponManagementFragment extends Fragment {
         } catch (ParseException e) {
             return false;
         }
+    }
+
+    private boolean isValidStatus(String status) {
+        for (String validStatus : VALID_STATUSES) {
+            if (validStatus.equalsIgnoreCase(status)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isCodeExists(String code, int excludeId) {
@@ -232,27 +274,7 @@ public class CouponManagementFragment extends Fragment {
         }
     }
 
-    private boolean isCouponReferenced(int discountId) {
-        try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM Orders WHERE discount_code = ?", new String[]{String.valueOf(discountId)});
-            if (cursor.moveToFirst() && cursor.getInt(0) > 0) {
-                cursor.close();
-                return true;
-            }
-            cursor.close();
-            return false;
-        } catch (Exception e) {
-            Log.e("CouponManagement", "Lỗi kiểm tra tham chiếu: " + e.getMessage(), e);
-            Toast.makeText(requireContext(), "Lỗi kiểm tra tham chiếu: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            return true;
-        }
-    }
-
     private void deleteCoupon(int id) {
-        if (isCouponReferenced(id)) {
-            Toast.makeText(requireContext(), "Không thể xóa: Mã giảm giá đang được sử dụng!", Toast.LENGTH_SHORT).show();
-            return;
-        }
         new AlertDialog.Builder(requireContext())
                 .setTitle("Xác nhận xóa")
                 .setMessage("Bạn có chắc chắn muốn xóa mã giảm giá này?")
