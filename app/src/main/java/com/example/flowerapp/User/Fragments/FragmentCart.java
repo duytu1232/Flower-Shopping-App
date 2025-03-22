@@ -153,29 +153,48 @@ public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeLi
 
         // Kiểm tra đơn hàng tối thiểu 50,000 VND
         if (totalPrice < MINIMUM_ORDER_VALUE) {
-            Toast.makeText(getContext(), "Total price must be at least 50,000 VND to use any coupon", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(),
+                    String.format("Đơn hàng cần tối thiểu %.0f VND để áp dụng coupon.", MINIMUM_ORDER_VALUE),
+                    Toast.LENGTH_LONG).show();
             selectedCoupon = null;
             return 0.0;
         }
 
         // Kiểm tra giá trị tối thiểu của coupon
         if (totalPrice < selectedCoupon.getMinOrderValue()) {
-            Toast.makeText(getContext(), "Total price must be at least " + selectedCoupon.getMinOrderValue() + " VND to use this coupon", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(),
+                    String.format("Đơn hàng cần tối thiểu %.0f VND để sử dụng coupon %s (yêu cầu %.0f VND).",
+                            MINIMUM_ORDER_VALUE, selectedCoupon.getCode(), selectedCoupon.getMinOrderValue()),
+                    Toast.LENGTH_LONG).show();
             selectedCoupon = null;
             return 0.0;
         }
 
         // Kiểm tra ngày hợp lệ
         String today = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-        if (today.compareTo(selectedCoupon.getStartDate()) < 0 || today.compareTo(selectedCoupon.getEndDate()) > 0) {
-            Toast.makeText(getContext(), "Coupon is not valid today", Toast.LENGTH_SHORT).show();
+        if (today.compareTo(selectedCoupon.getStartDate()) < 0) {
+            Toast.makeText(getContext(),
+                    String.format("Coupon %s chưa có hiệu lực. Hiệu lực từ %s.",
+                            selectedCoupon.getCode(), selectedCoupon.getStartDate()),
+                    Toast.LENGTH_LONG).show();
+            selectedCoupon = null;
+            return 0.0;
+        }
+        if (today.compareTo(selectedCoupon.getEndDate()) > 0) {
+            Toast.makeText(getContext(),
+                    String.format("Coupon %s đã hết hạn vào %s.",
+                            selectedCoupon.getCode(), selectedCoupon.getEndDate()),
+                    Toast.LENGTH_LONG).show();
             selectedCoupon = null;
             return 0.0;
         }
 
         // Kiểm tra trạng thái coupon
         if (!"active".equals(selectedCoupon.getStatus())) {
-            Toast.makeText(getContext(), "Coupon is expired", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(),
+                    String.format("Coupon %s hiện không khả dụng (trạng thái: %s).",
+                            selectedCoupon.getCode(), selectedCoupon.getStatus()),
+                    Toast.LENGTH_LONG).show();
             selectedCoupon = null;
             return 0.0;
         }
