@@ -1,7 +1,7 @@
 package com.example.flowerapp.Admin.Fragments;
 
+import android.app.DatePickerDialog;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -25,6 +25,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
@@ -34,6 +35,7 @@ public class CouponManagementFragment extends Fragment {
     private List<Coupon> couponList = new ArrayList<>();
     private DatabaseHelper dbHelper;
     private static final String[] VALID_STATUSES = {"active", "expired"};
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -83,10 +85,16 @@ public class CouponManagementFragment extends Fragment {
         TextInputEditText editStart = view.findViewById(R.id.edit_coupon_start);
         TextInputEditText editEnd = view.findViewById(R.id.edit_coupon_end);
         TextInputEditText editStatus = view.findViewById(R.id.edit_coupon_status);
-        TextInputEditText editMinOrderValue = view.findViewById(R.id.edit_coupon_min_order_value); // Thêm trường này
+        TextInputEditText editMinOrderValue = view.findViewById(R.id.edit_coupon_min_order_value);
 
         // Đặt mặc định nếu cần
         editMinOrderValue.setText("0");
+
+        // Thêm DatePicker cho edit_coupon_start
+        editStart.setOnClickListener(v -> showDatePickerDialog(editStart));
+
+        // Thêm DatePicker cho edit_coupon_end
+        editEnd.setOnClickListener(v -> showDatePickerDialog(editEnd));
 
         builder.setView(view)
                 .setPositiveButton("Thêm", (dialog, which) -> {
@@ -157,6 +165,12 @@ public class CouponManagementFragment extends Fragment {
         editStatus.setText(coupon.getStatus());
         editMinOrderValue.setText(String.valueOf(coupon.getMinOrderValue()));
 
+        // Thêm DatePicker cho edit_coupon_start
+        editStart.setOnClickListener(v -> showDatePickerDialog(editStart));
+
+        // Thêm DatePicker cho edit_coupon_end
+        editEnd.setOnClickListener(v -> showDatePickerDialog(editEnd));
+
         builder.setView(view)
                 .setPositiveButton("Cập nhật", (dialog, which) -> {
                     try {
@@ -208,11 +222,39 @@ public class CouponManagementFragment extends Fragment {
                 .show();
     }
 
-    private boolean isValidDateFormat(String date) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        sdf.setLenient(false);
+    private void showDatePickerDialog(TextInputEditText editText) {
+        Calendar calendar = Calendar.getInstance();
         try {
-            sdf.parse(date);
+            // Nếu đã có ngày, parse để hiển thị ngày hiện tại trong DatePicker
+            String currentDate = editText.getText().toString().trim();
+            if (!TextUtils.isEmpty(currentDate)) {
+                calendar.setTime(dateFormat.parse(currentDate));
+            }
+        } catch (ParseException e) {
+            // Nếu không parse được, giữ ngày hiện tại
+        }
+
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(
+                requireContext(),
+                (view, selectedYear, selectedMonth, selectedDay) -> {
+                    // Định dạng ngày thành yyyy-MM-dd
+                    String selectedDate = String.format(Locale.getDefault(), "%d-%02d-%02d", selectedYear, selectedMonth + 1, selectedDay);
+                    editText.setText(selectedDate);
+                    editText.setError(null); // Xóa lỗi nếu có
+                },
+                year, month, day
+        );
+        datePickerDialog.show();
+    }
+
+    private boolean isValidDateFormat(String date) {
+        dateFormat.setLenient(false);
+        try {
+            dateFormat.parse(date);
             return true;
         } catch (ParseException e) {
             return false;
@@ -220,10 +262,8 @@ public class CouponManagementFragment extends Fragment {
     }
 
     private boolean isValidDateRange(String startDate, String endDate) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        sdf.setLenient(false);
         try {
-            return sdf.parse(startDate).before(sdf.parse(endDate));
+            return dateFormat.parse(startDate).before(dateFormat.parse(endDate));
         } catch (ParseException e) {
             return false;
         }

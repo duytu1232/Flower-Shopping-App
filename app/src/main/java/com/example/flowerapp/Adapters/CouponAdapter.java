@@ -13,17 +13,25 @@ import com.example.flowerapp.R;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 public class CouponAdapter extends RecyclerView.Adapter<CouponAdapter.CouponViewHolder> {
     private List<Coupon> couponList;
-    private Consumer<Coupon> onEditClick;
-    private Consumer<Integer> onDeleteClick;
+    private final OnEditClickListener editClickListener;
+    private final OnDeleteClickListener deleteClickListener;
 
-    public CouponAdapter(List<Coupon> couponList, Consumer<Coupon> onEditClick, Consumer<Integer> onDeleteClick) {
+    // Interface cho sự kiện click
+    public interface OnEditClickListener {
+        void onEditClick(Coupon coupon);
+    }
+
+    public interface OnDeleteClickListener {
+        void onDeleteClick(int couponId);
+    }
+
+    public CouponAdapter(List<Coupon> couponList, OnEditClickListener editClickListener, OnDeleteClickListener deleteClickListener) {
         this.couponList = couponList;
-        this.onEditClick = onEditClick;
-        this.onDeleteClick = onDeleteClick;
+        this.editClickListener = editClickListener;
+        this.deleteClickListener = deleteClickListener;
     }
 
     @NonNull
@@ -37,11 +45,12 @@ public class CouponAdapter extends RecyclerView.Adapter<CouponAdapter.CouponView
     public void onBindViewHolder(@NonNull CouponViewHolder holder, int position) {
         Coupon coupon = couponList.get(position);
         holder.couponCode.setText(coupon.getCode());
-        holder.couponValue.setText(String.format("Giảm: %.0f%% (Min: %.0f VND)", coupon.getDiscountValue(), coupon.getMinOrderValue()));
-        holder.couponPeriod.setText("Từ: " + coupon.getStartDate() + " đến " + coupon.getEndDate() + " | " + coupon.getStatus());
+        holder.couponValue.setText(String.format("Giảm giá: %.2f%%", coupon.getDiscountValue()));
+        holder.couponPeriod.setText(String.format("Thời gian: %s - %s | Trạng thái: %s | Tối thiểu: %.0f VND",
+                coupon.getStartDate(), coupon.getEndDate(), coupon.getStatus(), coupon.getMinOrderValue()));
 
-        holder.btnEditCoupon.setOnClickListener(v -> onEditClick.accept(coupon));
-        holder.btnDeleteCoupon.setOnClickListener(v -> onDeleteClick.accept(coupon.getId()));
+        holder.btnEdit.setOnClickListener(v -> editClickListener.onEditClick(coupon));
+        holder.btnDelete.setOnClickListener(v -> deleteClickListener.onDeleteClick(coupon.getId()));
     }
 
     @Override
@@ -49,17 +58,22 @@ public class CouponAdapter extends RecyclerView.Adapter<CouponAdapter.CouponView
         return couponList.size();
     }
 
-    public static class CouponViewHolder extends RecyclerView.ViewHolder {
+    public void updateData(List<Coupon> newCouponList) {
+        this.couponList = newCouponList;
+        notifyDataSetChanged();
+    }
+
+    static class CouponViewHolder extends RecyclerView.ViewHolder {
         TextView couponCode, couponValue, couponPeriod;
-        MaterialButton btnEditCoupon, btnDeleteCoupon;
+        MaterialButton btnEdit, btnDelete;
 
         public CouponViewHolder(@NonNull View itemView) {
             super(itemView);
             couponCode = itemView.findViewById(R.id.coupon_code);
             couponValue = itemView.findViewById(R.id.coupon_value);
             couponPeriod = itemView.findViewById(R.id.coupon_period);
-            btnEditCoupon = itemView.findViewById(R.id.btn_edit_coupon);
-            btnDeleteCoupon = itemView.findViewById(R.id.btn_delete_coupon);
+            btnEdit = itemView.findViewById(R.id.btn_edit_coupon);
+            btnDelete = itemView.findViewById(R.id.btn_delete_coupon);
         }
     }
 }
