@@ -31,7 +31,7 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Giá trị giảm (USD)"
+            android:hint="Giá trị giảm (%)"
             app:hintTextColor="#99BC85">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -83,6 +83,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="text"
+                android:minHeight="48dp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Giá trị đơn hàng tối thiểu (VND)"
+            app:hintTextColor="#99BC85">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_coupon_min_order_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal"
                 android:minHeight="48dp" />
         </com.google.android.material.textfield.TextInputLayout>
 

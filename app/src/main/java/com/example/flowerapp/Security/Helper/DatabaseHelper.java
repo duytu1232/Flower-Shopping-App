@@ -239,7 +239,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             if (cursor != null) cursor.close();
             if (db != null) closeDatabase(db);
         }
-        return orderList; // Sửa lỗi: trả về orderList thay vì userList
+        return orderList; // Trả về danh sách Orders
     }
 
     // Phương thức tiện ích để lấy danh sách Revenue
@@ -293,7 +293,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Cursor cursor = null;
         try {
             db = openDatabase();
-            cursor = db.rawQuery("SELECT * FROM Discount_Codes", null);
+            cursor = db.rawQuery("SELECT discount_id, code, discount_value, start_date, end_date, status, min_order_value FROM Discount_Codes", null);
             if (cursor.moveToFirst()) {
                 do {
                     Coupon coupon = new Coupon(
@@ -302,7 +302,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                             cursor.getDouble(cursor.getColumnIndexOrThrow("discount_value")),
                             cursor.getString(cursor.getColumnIndexOrThrow("start_date")),
                             cursor.getString(cursor.getColumnIndexOrThrow("end_date")),
-                            cursor.getString(cursor.getColumnIndexOrThrow("status"))
+                            cursor.getString(cursor.getColumnIndexOrThrow("status")),
+                            cursor.getDouble(cursor.getColumnIndexOrThrow("min_order_value"))
                     );
                     couponList.add(coupon);
                 } while (cursor.moveToNext());

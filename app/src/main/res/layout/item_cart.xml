@@ -22,7 +22,8 @@
             android:scaleType="centerCrop"
             android:clipToOutline="true"
             android:background="@drawable/rounded_border_light"
-            android:contentDescription="Cart Item Image" />
+            android:contentDescription="Cart Item Image"
+            android:adjustViewBounds="true" />
 
         <LinearLayout
             android:layout_width="0dp"

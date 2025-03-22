@@ -1,6 +1,7 @@
 package com.example.flowerapp.Adapters;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,9 +10,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.example.flowerapp.Managers.CartManager;
 import com.example.flowerapp.Models.CartItem;
 import com.example.flowerapp.R;
@@ -20,6 +26,7 @@ import com.google.android.material.button.MaterialButton;
 import java.util.List;
 
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder> {
+    private static final String TAG = "CartAdapter";
     private List<CartItem> cartItems;
     private Context context;
     private CartManager cartManager;
@@ -55,12 +62,43 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         // Xử lý hiển thị ảnh
         String imageUrl = cartItem.getImageUrl();
         if (imageUrl != null && !imageUrl.isEmpty()) {
-            Glide.with(context)
-                    .load(imageUrl)
-                    .placeholder(android.R.drawable.ic_menu_gallery)
-                    .error(android.R.drawable.ic_dialog_alert)
-                    .into(holder.cartItemImage);
+            if (imageUrl.startsWith("http")) {
+                // Trường hợp imageUrl là URL HTTP/HTTPS
+                Glide.with(context)
+                        .load(imageUrl)
+                        .placeholder(android.R.drawable.ic_menu_gallery)
+                        .error(android.R.drawable.ic_dialog_alert)
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .listener(new RequestListener<android.graphics.drawable.Drawable>() {
+                            @Override
+                            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<android.graphics.drawable.Drawable> target, boolean isFirstResource) {
+                                Log.e(TAG, "Failed to load image for product " + cartItem.getProductId() + ": " + imageUrl + ", error: " + (e != null ? e.getMessage() : "Unknown error"));
+                                return false;
+                            }
+
+                            @Override
+                            public boolean onResourceReady(android.graphics.drawable.Drawable resource, Object model, Target<android.graphics.drawable.Drawable> target, com.bumptech.glide.load.DataSource dataSource, boolean isFirstResource) {
+                                return false;
+                            }
+                        })
+                        .into(holder.cartItemImage);
+            } else {
+                // Trường hợp imageUrl là tên tài nguyên cục bộ (ví dụ: "hoa_tu_dinh_huong.jpg")
+                String resourceName = imageUrl.replace(".jpg", ""); // Loại bỏ phần mở rộng .jpg
+                int resourceId = context.getResources().getIdentifier(resourceName, "drawable", context.getPackageName());
+                if (resourceId != 0) {
+                    Glide.with(context)
+                            .load(resourceId)
+                            .placeholder(android.R.drawable.ic_menu_gallery)
+                            .error(android.R.drawable.ic_dialog_alert)
+                            .into(holder.cartItemImage);
+                } else {
+                    Log.w(TAG, "Resource not found for product " + cartItem.getProductId() + ": " + imageUrl);
+                    holder.cartItemImage.setImageResource(android.R.drawable.ic_menu_gallery);
+                }
+            }
         } else {
+            Log.w(TAG, "Image URL is null or empty for product " + cartItem.getProductId());
             holder.cartItemImage.setImageResource(android.R.drawable.ic_menu_gallery);
         }
 
