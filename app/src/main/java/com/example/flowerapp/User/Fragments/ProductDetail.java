@@ -6,25 +6,21 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.flowerapp.Adapters.ReviewAdapter;
+import com.example.flowerapp.MainActivity;
 import com.example.flowerapp.Models.Order;
 import com.example.flowerapp.Models.Review;
 import com.example.flowerapp.R;
@@ -35,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class ProductDetail extends Fragment {
+public class ProductDetail extends AppCompatActivity {
     private static final String TAG = "ProductDetail";
     private DatabaseHelper dbHelper;
     private TextView productName, productPrice, productDescription, productStock, seeAllReviews;
@@ -43,59 +39,61 @@ public class ProductDetail extends Fragment {
     private RatingBar averageRating;
     private RecyclerView reviewRecyclerView;
     private Button addReviewButton, addToCartButton;
+    private ImageButton backButton;
     private int productId;
 
-    @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.activity_product_detail, container, false);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_product_detail);
 
-        dbHelper = new DatabaseHelper(getContext());
-        productName = view.findViewById(R.id.product_name);
-        productPrice = view.findViewById(R.id.product_price);
-        productDescription = view.findViewById(R.id.product_description);
-        productStock = view.findViewById(R.id.product_stock);
-        productImage = view.findViewById(R.id.product_image);
-        averageRating = view.findViewById(R.id.average_rating);
-        reviewRecyclerView = view.findViewById(R.id.review_recycler_view);
-        addReviewButton = view.findViewById(R.id.add_review_button);
-        addToCartButton = view.findViewById(R.id.add_to_cart_button);
-        seeAllReviews = view.findViewById(R.id.see_all_reviews);
+        dbHelper = new DatabaseHelper(this);
+        productName = findViewById(R.id.product_name);
+        productPrice = findViewById(R.id.product_price);
+        productDescription = findViewById(R.id.product_description);
+        productStock = findViewById(R.id.product_stock);
+        productImage = findViewById(R.id.product_image);
+        averageRating = findViewById(R.id.average_rating);
+        reviewRecyclerView = findViewById(R.id.review_recycler_view);
+        addReviewButton = findViewById(R.id.add_review_button);
+        addToCartButton = findViewById(R.id.add_to_cart_button);
+        seeAllReviews = findViewById(R.id.see_all_reviews);
+        backButton = findViewById(R.id.back_button);
 
-        // Lấy productId từ Bundle
-        Bundle args = getArguments();
-        if (args != null) {
-            productId = args.getInt("product_id", -1);
-            if (productId == -1) {
-                Toast.makeText(getContext(), "Product ID not found", Toast.LENGTH_SHORT).show();
-                return view;
-            }
-            loadProductDetails();
-            loadReviews();
+        // Lấy productId từ Intent
+        productId = getIntent().getIntExtra("product_id", -1);
+        if (productId == -1) {
+            Toast.makeText(this, "Product ID not found", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
         }
+
+        loadProductDetails();
+        loadReviews();
+
+        // Xử lý nút quay lại
+        backButton.setOnClickListener(v -> {
+            Intent intent = new Intent(ProductDetail.this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
+        });
 
         // Xử lý nút "See All Reviews"
         seeAllReviews.setOnClickListener(v -> {
-            ReviewDetail reviewDetailFragment = new ReviewDetail();
-            Bundle reviewArgs = new Bundle();
-            reviewArgs.putInt("product_id", productId);
-            reviewDetailFragment.setArguments(reviewArgs);
-
-            FragmentManager fragmentManager = getParentFragmentManager();
-            FragmentTransaction transaction = fragmentManager.beginTransaction();
-            transaction.replace(R.id.fragment_container, reviewDetailFragment);
-            transaction.addToBackStack(null);
-            transaction.commit();
+            Intent intent = new Intent(ProductDetail.this, ReviewDetail.class);
+            intent.putExtra("product_id", productId);
+            startActivity(intent);
         });
 
         // Xử lý nút "Add Review"
         addReviewButton.setOnClickListener(v -> {
             int orderId = getOrderIdForProduct();
             if (orderId != -1) {
-                SharedPreferences prefs = requireActivity().getSharedPreferences("MyPrefs", requireActivity().MODE_PRIVATE);
+                SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
                 int userId = prefs.getInt("user_id", -1);
                 if (userId == -1) {
-                    Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -110,11 +108,11 @@ public class ProductDetail extends Fragment {
                         "Order #" + orderId,
                         ""
                 );
-                Intent intent = new Intent(getContext(), ReviewActivity.class);
+                Intent intent = new Intent(this, ReviewActivity.class);
                 intent.putExtra("order", order);
                 startActivity(intent);
             } else {
-                Toast.makeText(getContext(), "No order found for this product", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "No order found for this product", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -122,15 +120,13 @@ public class ProductDetail extends Fragment {
         addToCartButton.setOnClickListener(v -> {
             addToCart();
         });
-
-        return view;
     }
 
     private void addToCart() {
-        SharedPreferences prefs = requireActivity().getSharedPreferences("MyPrefs", requireActivity().MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
         int userId = prefs.getInt("user_id", -1);
         if (userId == -1) {
-            Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -148,20 +144,20 @@ public class ProductDetail extends Fragment {
                 int currentQuantity = cursor.getInt(cursor.getColumnIndexOrThrow("quantity"));
                 boolean success = dbHelper.updateCartQuantity(cartId, currentQuantity + 1);
                 if (success) {
-                    Toast.makeText(getContext(), "Increased quantity in cart", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Increased quantity in cart", Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(getContext(), "Failed to update cart", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Failed to update cart", Toast.LENGTH_SHORT).show();
                 }
             } else {
                 // Sản phẩm chưa có trong giỏ hàng, thêm mới
                 String insertQuery = "INSERT INTO Carts (user_id, product_id, quantity) VALUES (?, ?, ?)";
                 db.execSQL(insertQuery, new Object[]{userId, productId, 1});
-                Toast.makeText(getContext(), "Added to cart", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Added to cart", Toast.LENGTH_SHORT).show();
             }
             cursor.close();
         } catch (Exception e) {
             Log.e(TAG, "Error adding to cart: " + e.getMessage());
-            Toast.makeText(getContext(), "Error adding to cart", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Error adding to cart", Toast.LENGTH_SHORT).show();
         } finally {
             if (db != null) dbHelper.closeDatabase(db);
         }
@@ -172,10 +168,10 @@ public class ProductDetail extends Fragment {
         int orderId = -1;
         try {
             db = dbHelper.openDatabase();
-            SharedPreferences prefs = requireActivity().getSharedPreferences("MyPrefs", requireActivity().MODE_PRIVATE);
+            SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
             int userId = prefs.getInt("user_id", -1);
             if (userId == -1) {
-                Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
                 return -1;
             }
 
@@ -195,7 +191,7 @@ public class ProductDetail extends Fragment {
             cartCursor.close();
         } catch (Exception e) {
             Log.e(TAG, "Error getting order ID: " + e.getMessage());
-            Toast.makeText(getContext(), "Error getting order", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Error getting order", Toast.LENGTH_SHORT).show();
         } finally {
             if (db != null) dbHelper.closeDatabase(db);
         }
@@ -235,7 +231,7 @@ public class ProductDetail extends Fragment {
                         // Xử lý ảnh từ drawable
                         int resourceId = getResources().getIdentifier(
                                 imageUrl.replace(".png", "").replace(".jpg", ""), "drawable",
-                                getContext().getPackageName());
+                                getPackageName());
                         if (resourceId != 0) {
                             Glide.with(this)
                                     .load(resourceId)
@@ -252,7 +248,7 @@ public class ProductDetail extends Fragment {
             cursor.close();
         } catch (Exception e) {
             Log.e(TAG, "Error loading product details: " + e.getMessage());
-            Toast.makeText(getContext(), "Error loading product", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Error loading product", Toast.LENGTH_SHORT).show();
         } finally {
             if (db != null) dbHelper.closeDatabase(db);
         }
@@ -265,18 +261,19 @@ public class ProductDetail extends Fragment {
         try {
             db = dbHelper.openDatabase();
             Cursor cursor = db.rawQuery(
-                    "SELECT r.rating, r.comment, r.review_date, u.username " +
+                    "SELECT r.review_id, r.rating, r.comment, r.review_date, u.username " +
                             "FROM Reviews r " +
                             "JOIN Users u ON r.user_id = u.user_id " +
                             "WHERE r.product_id = ? LIMIT 3",
                     new String[]{String.valueOf(productId)});
             if (cursor.moveToFirst()) {
                 do {
+                    int reviewId = cursor.getInt(cursor.getColumnIndexOrThrow("review_id"));
                     float rating = cursor.getFloat(cursor.getColumnIndexOrThrow("rating"));
                     String comment = cursor.getString(cursor.getColumnIndexOrThrow("comment"));
                     String reviewDate = cursor.getString(cursor.getColumnIndexOrThrow("review_date"));
                     String username = cursor.getString(cursor.getColumnIndexOrThrow("username"));
-                    reviews.add(new Review(rating, comment, reviewDate, username));
+                    reviews.add(new Review(reviewId, rating, comment, reviewDate, username));
                 } while (cursor.moveToNext());
             }
             cursor.close();
@@ -293,8 +290,8 @@ public class ProductDetail extends Fragment {
             float average = calculateAverageRating(reviews);
             averageRating.setRating(average);
 
-            ReviewAdapter adapter = new ReviewAdapter(reviews, getContext());
-            reviewRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+            ReviewAdapter adapter = new ReviewAdapter(reviews, this);
+            reviewRecyclerView.setLayoutManager(new LinearLayoutManager(this));
             reviewRecyclerView.setAdapter(adapter);
 
             // Cập nhật văn bản của nút "See All Reviews"
@@ -302,7 +299,7 @@ public class ProductDetail extends Fragment {
             seeAllReviews.setVisibility(reviews.isEmpty() ? View.GONE : View.VISIBLE);
         } catch (Exception e) {
             Log.e(TAG, "Error loading reviews: " + e.getMessage());
-            Toast.makeText(getContext(), "Error loading reviews", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Error loading reviews", Toast.LENGTH_SHORT).show();
         } finally {
             if (db != null) dbHelper.closeDatabase(db);
         }
@@ -318,9 +315,18 @@ public class ProductDetail extends Fragment {
     }
 
     @Override
-    public void onResume() {
+    protected void onResume() {
         super.onResume();
-        // Tải lại danh sách đánh giá khi quay lại fragment
+        // Tải lại danh sách đánh giá khi quay lại Activity
         loadReviews();
+    }
+
+    @SuppressWarnings("deprecation") // Thêm annotation để tắt cảnh báo
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(ProductDetail.this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+        finish();
     }
 }

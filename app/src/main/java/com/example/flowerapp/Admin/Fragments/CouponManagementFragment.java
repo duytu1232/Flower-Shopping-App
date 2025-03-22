@@ -9,7 +9,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -21,6 +20,7 @@ import com.example.flowerapp.Adapters.CouponAdapter;
 import com.example.flowerapp.Models.Coupon;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.Helper.DatabaseHelper;
+import com.google.android.material.textfield.TextInputEditText;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -53,9 +53,8 @@ public class CouponManagementFragment extends Fragment {
 
     private void loadCoupons() {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            Cursor cursor = db.rawQuery("SELECT discount_id, code, discount_value, start_date, end_date, status FROM Discount_Codes", null);
+            Cursor cursor = db.rawQuery("SELECT discount_id, code, discount_value, start_date, end_date, status, min_order_value FROM Discount_Codes", null);
             couponList.clear();
-            Log.d("CouponManagement", "Số lượng bản ghi: " + cursor.getCount());
             while (cursor.moveToNext()) {
                 int id = cursor.getInt(cursor.getColumnIndexOrThrow("discount_id"));
                 String code = cursor.getString(cursor.getColumnIndexOrThrow("code"));
@@ -63,13 +62,12 @@ public class CouponManagementFragment extends Fragment {
                 String startDate = cursor.getString(cursor.getColumnIndexOrThrow("start_date"));
                 String endDate = cursor.getString(cursor.getColumnIndexOrThrow("end_date"));
                 String status = cursor.getString(cursor.getColumnIndexOrThrow("status"));
-                couponList.add(new Coupon(id, code, discountValue, startDate, endDate, status));
-                Log.d("CouponManagement", "Thêm mã giảm giá: " + code);
+                double minOrderValue = cursor.getDouble(cursor.getColumnIndexOrThrow("min_order_value"));
+                couponList.add(new Coupon(id, code, discountValue, startDate, endDate, status, minOrderValue));
             }
             cursor.close();
             adapter.notifyDataSetChanged();
             recyclerView.scheduleLayoutAnimation();
-            Log.d("CouponManagement", "Số lượng mã giảm giá trong list: " + couponList.size());
         } catch (Exception e) {
             Log.e("CouponManagement", "Lỗi tải mã giảm giá: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Lỗi tải mã giảm giá: " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -80,27 +78,33 @@ public class CouponManagementFragment extends Fragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Thêm Mã Giảm Giá");
         View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_coupon, null);
-        EditText editCode = view.findViewById(R.id.edit_coupon_code);
-        EditText editValue = view.findViewById(R.id.edit_coupon_value);
-        EditText editStart = view.findViewById(R.id.edit_coupon_start);
-        EditText editEnd = view.findViewById(R.id.edit_coupon_end);
-        EditText editStatus = view.findViewById(R.id.edit_coupon_status);
+        TextInputEditText editCode = view.findViewById(R.id.edit_coupon_code);
+        TextInputEditText editValue = view.findViewById(R.id.edit_coupon_value);
+        TextInputEditText editStart = view.findViewById(R.id.edit_coupon_start);
+        TextInputEditText editEnd = view.findViewById(R.id.edit_coupon_end);
+        TextInputEditText editStatus = view.findViewById(R.id.edit_coupon_status);
+        TextInputEditText editMinOrderValue = view.findViewById(R.id.edit_coupon_min_order_value); // Thêm trường này
+
+        // Đặt mặc định nếu cần
+        editMinOrderValue.setText("0");
 
         builder.setView(view)
                 .setPositiveButton("Thêm", (dialog, which) -> {
                     try {
                         String code = editCode.getText().toString().trim();
-                        double discountValue = Double.parseDouble(editValue.getText().toString().trim());
+                        String valueStr = editValue.getText().toString().trim();
                         String startDate = editStart.getText().toString().trim();
                         String endDate = editEnd.getText().toString().trim();
                         String status = editStatus.getText().toString().trim();
+                        String minOrderValueStr = editMinOrderValue.getText().toString().trim();
 
                         if (TextUtils.isEmpty(code)) {
                             editCode.setError("Mã giảm giá không được để trống");
                             return;
                         }
-                        if (discountValue <= 0) {
-                            editValue.setError("Giá trị giảm giá phải lớn hơn 0");
+                        double discountValue = Double.parseDouble(valueStr);
+                        if (discountValue <= 0 || discountValue > 100) {
+                            editValue.setError("Giá trị giảm giá phải từ 0 đến 100%");
                             return;
                         }
                         if (TextUtils.isEmpty(startDate) || !isValidDateFormat(startDate)) {
@@ -119,8 +123,13 @@ public class CouponManagementFragment extends Fragment {
                             editStatus.setError("Trạng thái không hợp lệ (active, expired)");
                             return;
                         }
+                        double minOrderValue = Double.parseDouble(minOrderValueStr);
+                        if (minOrderValue < 0) {
+                            editMinOrderValue.setError("Giá trị tối thiểu phải lớn hơn hoặc bằng 0");
+                            return;
+                        }
 
-                        addCoupon(code, discountValue, startDate, endDate, status);
+                        addCoupon(code, discountValue, startDate, endDate, status, minOrderValue);
                         loadCoupons();
                     } catch (NumberFormatException e) {
                         Toast.makeText(requireContext(), "Vui lòng nhập đúng định dạng số", Toast.LENGTH_SHORT).show();
@@ -134,33 +143,37 @@ public class CouponManagementFragment extends Fragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Sửa Mã Giảm Giá");
         View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_coupon, null);
-        EditText editCode = view.findViewById(R.id.edit_coupon_code);
-        EditText editValue = view.findViewById(R.id.edit_coupon_value);
-        EditText editStart = view.findViewById(R.id.edit_coupon_start);
-        EditText editEnd = view.findViewById(R.id.edit_coupon_end);
-        EditText editStatus = view.findViewById(R.id.edit_coupon_status);
+        TextInputEditText editCode = view.findViewById(R.id.edit_coupon_code);
+        TextInputEditText editValue = view.findViewById(R.id.edit_coupon_value);
+        TextInputEditText editStart = view.findViewById(R.id.edit_coupon_start);
+        TextInputEditText editEnd = view.findViewById(R.id.edit_coupon_end);
+        TextInputEditText editStatus = view.findViewById(R.id.edit_coupon_status);
+        TextInputEditText editMinOrderValue = view.findViewById(R.id.edit_coupon_min_order_value);
 
         editCode.setText(coupon.getCode());
         editValue.setText(String.valueOf(coupon.getDiscountValue()));
         editStart.setText(coupon.getStartDate());
         editEnd.setText(coupon.getEndDate());
         editStatus.setText(coupon.getStatus());
+        editMinOrderValue.setText(String.valueOf(coupon.getMinOrderValue()));
 
         builder.setView(view)
                 .setPositiveButton("Cập nhật", (dialog, which) -> {
                     try {
                         String code = editCode.getText().toString().trim();
-                        double discountValue = Double.parseDouble(editValue.getText().toString().trim());
+                        String valueStr = editValue.getText().toString().trim();
                         String startDate = editStart.getText().toString().trim();
                         String endDate = editEnd.getText().toString().trim();
                         String status = editStatus.getText().toString().trim();
+                        String minOrderValueStr = editMinOrderValue.getText().toString().trim();
 
                         if (TextUtils.isEmpty(code)) {
                             editCode.setError("Mã giảm giá không được để trống");
                             return;
                         }
-                        if (discountValue <= 0) {
-                            editValue.setError("Giá trị giảm giá phải lớn hơn 0");
+                        double discountValue = Double.parseDouble(valueStr);
+                        if (discountValue <= 0 || discountValue > 100) {
+                            editValue.setError("Giá trị giảm giá phải từ 0 đến 100%");
                             return;
                         }
                         if (TextUtils.isEmpty(startDate) || !isValidDateFormat(startDate)) {
@@ -179,8 +192,13 @@ public class CouponManagementFragment extends Fragment {
                             editStatus.setError("Trạng thái không hợp lệ (active, expired)");
                             return;
                         }
+                        double minOrderValue = Double.parseDouble(minOrderValueStr);
+                        if (minOrderValue < 0) {
+                            editMinOrderValue.setError("Giá trị tối thiểu phải lớn hơn hoặc bằng 0");
+                            return;
+                        }
 
-                        updateCoupon(coupon.getId(), code, discountValue, startDate, endDate, status);
+                        updateCoupon(coupon.getId(), code, discountValue, startDate, endDate, status, minOrderValue);
                         loadCoupons();
                     } catch (NumberFormatException e) {
                         Toast.makeText(requireContext(), "Vui lòng nhập đúng định dạng số", Toast.LENGTH_SHORT).show();
@@ -222,7 +240,8 @@ public class CouponManagementFragment extends Fragment {
 
     private boolean isCodeExists(String code, int excludeId) {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM Discount_Codes WHERE code = ? AND discount_id != ?", new String[]{code, String.valueOf(excludeId)});
+            Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM Discount_Codes WHERE code = ? AND discount_id != ?",
+                    new String[]{code, String.valueOf(excludeId)});
             if (cursor.moveToFirst() && cursor.getInt(0) > 0) {
                 cursor.close();
                 return true;
@@ -236,38 +255,30 @@ public class CouponManagementFragment extends Fragment {
         }
     }
 
-    private void addCoupon(String code, double discountValue, String startDate, String endDate, String status) {
+    private void addCoupon(String code, double discountValue, String startDate, String endDate, String status, double minOrderValue) {
         if (isCodeExists(code, -1)) {
             Toast.makeText(requireContext(), "Mã giảm giá đã tồn tại!", Toast.LENGTH_SHORT).show();
             return;
         }
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            db.execSQL("INSERT INTO Discount_Codes (code, discount_value, start_date, end_date, status) VALUES (?, ?, ?, ?, ?)",
-                    new Object[]{code, discountValue, startDate, endDate, status});
-            Log.d("CouponManagement", "Thêm mã giảm giá thành công: " + code);
+            db.execSQL("INSERT INTO Discount_Codes (code, discount_value, start_date, end_date, status, min_order_value) VALUES (?, ?, ?, ?, ?, ?)",
+                    new Object[]{code, discountValue, startDate, endDate, status, minOrderValue});
             Toast.makeText(requireContext(), "Thêm mã giảm giá thành công", Toast.LENGTH_SHORT).show();
-        } catch (SQLiteConstraintException e) {
-            Log.e("CouponManagement", "Lỗi ràng buộc: " + e.getMessage(), e);
-            Toast.makeText(requireContext(), "Lỗi: Dữ liệu không hợp lệ (có thể thiếu thông tin bắt buộc)", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
             Log.e("CouponManagement", "Lỗi thêm mã giảm giá: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Lỗi thêm mã giảm giá: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
-    private void updateCoupon(int id, String code, double discountValue, String startDate, String endDate, String status) {
+    private void updateCoupon(int id, String code, double discountValue, String startDate, String endDate, String status, double minOrderValue) {
         if (isCodeExists(code, id)) {
             Toast.makeText(requireContext(), "Mã giảm giá đã tồn tại!", Toast.LENGTH_SHORT).show();
             return;
         }
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            db.execSQL("UPDATE Discount_Codes SET code = ?, discount_value = ?, start_date = ?, end_date = ?, status = ? WHERE discount_id = ?",
-                    new Object[]{code, discountValue, startDate, endDate, status, id});
-            Log.d("CouponManagement", "Cập nhật mã giảm giá thành công: " + code);
+            db.execSQL("UPDATE Discount_Codes SET code = ?, discount_value = ?, start_date = ?, end_date = ?, status = ?, min_order_value = ? WHERE discount_id = ?",
+                    new Object[]{code, discountValue, startDate, endDate, status, minOrderValue, id});
             Toast.makeText(requireContext(), "Cập nhật mã giảm giá thành công", Toast.LENGTH_SHORT).show();
-        } catch (SQLiteConstraintException e) {
-            Log.e("CouponManagement", "Lỗi ràng buộc: " + e.getMessage(), e);
-            Toast.makeText(requireContext(), "Lỗi: Dữ liệu không hợp lệ", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
             Log.e("CouponManagement", "Lỗi cập nhật mã giảm giá: " + e.getMessage(), e);
             Toast.makeText(requireContext(), "Lỗi cập nhật mã giảm giá: " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -281,7 +292,6 @@ public class CouponManagementFragment extends Fragment {
                 .setPositiveButton("Xóa", (dialog, which) -> {
                     try (SQLiteDatabase db = dbHelper.openDatabase()) {
                         db.execSQL("DELETE FROM Discount_Codes WHERE discount_id = ?", new Object[]{id});
-                        Log.d("CouponManagement", "Xóa mã giảm giá thành công: " + id);
                         Toast.makeText(requireContext(), "Xóa mã giảm giá thành công", Toast.LENGTH_SHORT).show();
                         loadCoupons();
                     } catch (Exception e) {

@@ -23,6 +23,8 @@ import com.google.android.material.button.MaterialButton;
 import java.util.List;
 import java.util.function.Consumer;
 
+import android.content.Intent; // Import này đã có sẵn trong các file khác, nên không vi phạm yêu cầu
+
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHolder> {
     private List<Product> productList;
     private Consumer<Product> onEditClick;
@@ -89,16 +91,10 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
 
         if (onEditClick == null && onDeleteClick == null) {
             holder.itemView.setOnClickListener(v -> {
-                ProductDetail productDetailFragment = new ProductDetail();
-                Bundle args = new Bundle();
-                args.putInt("product_id", product.getId());
-                productDetailFragment.setArguments(args);
-
-                FragmentManager fragmentManager = ((FragmentActivity) holder.itemView.getContext()).getSupportFragmentManager();
-                FragmentTransaction transaction = fragmentManager.beginTransaction();
-                transaction.replace(R.id.fragment_container, productDetailFragment);
-                transaction.addToBackStack(null);
-                transaction.commit();
+                // Sử dụng Intent để mở ProductDetail (là một Activity)
+                Intent intent = new Intent(holder.itemView.getContext(), ProductDetail.class);
+                intent.putExtra("product_id", product.getId());
+                holder.itemView.getContext().startActivity(intent);
             });
         }
 

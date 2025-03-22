@@ -22,6 +22,8 @@ import com.example.flowerapp.User.Fragments.FragmentCart;
 import com.example.flowerapp.User.Fragments.FragmentHome;
 import com.example.flowerapp.User.Fragments.FragmentShop;
 import com.example.flowerapp.Security.DangNhap;
+import com.example.flowerapp.User.Fragments.ProductDetail;
+import com.example.flowerapp.User.Fragments.ReviewDetail;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.HashMap;
@@ -164,17 +166,22 @@ public class MainActivity extends AppCompatActivity {
             transaction.replace(R.id.fragment_container, newFragment);
             transaction.addToBackStack(null);
             transaction.commit();
+
+            // Logic ẩn/hiện header và khoảng trống
             boolean hideHeader = newFragment instanceof FragmentAccountUser ||
                     newFragment instanceof FragmentCart ||
                     newFragment instanceof FragmentShop;
-
             headerLayout.setVisibility(hideHeader ? View.GONE : View.VISIBLE);
             khoangTrongMenu.setVisibility(hideHeader ? View.GONE : View.VISIBLE);
+
+
         } catch (Exception e) {
             Log.e(TAG, "Error replacing fragment: " + e.getMessage());
             Toast.makeText(this, "Error loading fragment", Toast.LENGTH_SHORT).show();
         }
     }
+
+
 
     public void openNotification(View view) {
         Intent intent = new Intent(MainActivity.this, NotificationActivity.class);
