@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -23,13 +24,18 @@ import com.example.flowerapp.Adapters.CartAdapter;
 import com.example.flowerapp.CheckoutActivity;
 import com.example.flowerapp.Managers.CartManager;
 import com.example.flowerapp.Models.CartItem;
+import com.example.flowerapp.Models.Coupon;
 import com.example.flowerapp.R;
+import com.example.flowerapp.Security.Helper.DatabaseHelper;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeListener {
     private static final String TAG = "FragmentCart";
+    private static final double MINIMUM_ORDER_VALUE = 50000.0; // Đơn hàng tối thiểu 50,000 VND
 
     private RecyclerView recyclerView;
     private CartAdapter adapter;
@@ -38,7 +44,12 @@ public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeLi
     private TextView totalPriceTextView;
     private Button checkoutButton;
     private Button continueShoppingButton;
+    private LinearLayout couponContainer;
+    private TextView selectedCouponText;
+    private Button applyCouponButton;
     private CartManager cartManager;
+    private DatabaseHelper dbHelper;
+    private Coupon selectedCoupon;
 
     @Nullable
     @Override
@@ -50,9 +61,15 @@ public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeLi
         totalPriceTextView = view.findViewById(R.id.total_price);
         checkoutButton = view.findViewById(R.id.checkout_button);
         continueShoppingButton = view.findViewById(R.id.continue_shopping_button);
+        couponContainer = view.findViewById(R.id.coupon_container);
+        selectedCouponText = view.findViewById(R.id.selected_coupon);
+        applyCouponButton = view.findViewById(R.id.apply_coupon_button);
         cartManager = new CartManager(getContext());
+        dbHelper = new DatabaseHelper(getContext());
 
-        if (recyclerView == null || emptyMessage == null || totalPriceTextView == null || checkoutButton == null || continueShoppingButton == null) {
+        if (recyclerView == null || emptyMessage == null || totalPriceTextView == null ||
+                checkoutButton == null || continueShoppingButton == null || couponContainer == null ||
+                selectedCouponText == null || applyCouponButton == null) {
             Log.e(TAG, "One or more views not found in layout");
             Toast.makeText(getContext(), "Error: Missing views in layout", Toast.LENGTH_SHORT).show();
             return view;
@@ -68,11 +85,19 @@ public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeLi
         updateTotalPrice();
         updateEmptyState();
 
+        applyCouponButton.setOnClickListener(v -> showCouponDialog());
+
         checkoutButton.setOnClickListener(v -> {
             if (cartList.isEmpty()) {
                 Toast.makeText(getContext(), "Your cart is empty. Add products to proceed!", Toast.LENGTH_SHORT).show();
             } else {
                 Intent intent = new Intent(getActivity(), CheckoutActivity.class);
+                intent.putExtra("total_price", cartManager.calculateTotalPrice(cartList));
+                if (selectedCoupon != null) {
+                    intent.putExtra("coupon_id", selectedCoupon.getId());
+                    intent.putExtra("coupon_code", selectedCoupon.getCode());
+                    intent.putExtra("discount_value", selectedCoupon.getDiscountValue());
+                }
                 startActivity(intent);
             }
         });
@@ -103,19 +128,98 @@ public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeLi
 
     private void updateTotalPrice() {
         double totalPrice = cartManager.calculateTotalPrice(cartList);
+        double discount = 0.0;
+
+        if (selectedCoupon != null) {
+            discount = calculateDiscount(totalPrice);
+            if (discount > 0.0 && selectedCoupon != null) { // Kiểm tra lại selectedCoupon sau khi tính discount
+                totalPrice -= discount;
+                selectedCouponText.setText(selectedCoupon.getCode() + " (-" + String.format("%.2f", discount) + " VND)");
+            } else {
+                selectedCoupon = null; // Đảm bảo selectedCoupon là null nếu không áp dụng được
+                selectedCouponText.setText("None");
+            }
+        } else {
+            selectedCouponText.setText("None");
+        }
+
         totalPriceTextView.setText(String.format("Tổng tiền: %.2f VND", totalPrice));
         totalPriceTextView.setVisibility(cartList.isEmpty() ? View.GONE : View.VISIBLE);
+        couponContainer.setVisibility(cartList.isEmpty() ? View.GONE : View.VISIBLE);
+    }
+
+    private double calculateDiscount(double totalPrice) {
+        if (selectedCoupon == null) return 0.0;
+
+        // Kiểm tra đơn hàng tối thiểu 50,000 VND
+        if (totalPrice < MINIMUM_ORDER_VALUE) {
+            Toast.makeText(getContext(), "Total price must be at least 50,000 VND to use any coupon", Toast.LENGTH_SHORT).show();
+            selectedCoupon = null;
+            return 0.0;
+        }
+
+        // Kiểm tra giá trị tối thiểu của coupon
+        if (totalPrice < selectedCoupon.getMinOrderValue()) {
+            Toast.makeText(getContext(), "Total price must be at least " + selectedCoupon.getMinOrderValue() + " VND to use this coupon", Toast.LENGTH_SHORT).show();
+            selectedCoupon = null;
+            return 0.0;
+        }
+
+        // Kiểm tra ngày hợp lệ
+        String today = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        if (today.compareTo(selectedCoupon.getStartDate()) < 0 || today.compareTo(selectedCoupon.getEndDate()) > 0) {
+            Toast.makeText(getContext(), "Coupon is not valid today", Toast.LENGTH_SHORT).show();
+            selectedCoupon = null;
+            return 0.0;
+        }
+
+        // Kiểm tra trạng thái coupon
+        if (!"active".equals(selectedCoupon.getStatus())) {
+            Toast.makeText(getContext(), "Coupon is expired", Toast.LENGTH_SHORT).show();
+            selectedCoupon = null;
+            return 0.0;
+        }
+
+        return totalPrice * (selectedCoupon.getDiscountValue() / 100.0); // Giảm giá theo phần trăm
+    }
+
+    private void showCouponDialog() {
+        List<Coupon> coupons = dbHelper.getAllCoupons();
+        List<String> couponNames = new ArrayList<>();
+        List<Coupon> validCoupons = new ArrayList<>();
+        for (Coupon coupon : coupons) {
+            if ("active".equals(coupon.getStatus())) {
+                couponNames.add(coupon.getCode() + " (" + coupon.getDiscountValue() + "% off, Min: " + coupon.getMinOrderValue() + " VND)");
+                validCoupons.add(coupon);
+            }
+        }
+        couponNames.add("None");
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Select Coupon")
+                .setItems(couponNames.toArray(new String[0]), (dialog, which) -> {
+                    if (which == couponNames.size() - 1) { // Chọn "None"
+                        selectedCoupon = null;
+                    } else {
+                        selectedCoupon = validCoupons.get(which);
+                    }
+                    updateTotalPrice();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void updateEmptyState() {
         if (cartList.isEmpty()) {
             recyclerView.setVisibility(View.GONE);
             totalPriceTextView.setVisibility(View.GONE);
+            couponContainer.setVisibility(View.GONE);
             emptyMessage.setVisibility(View.VISIBLE);
             checkoutButton.setEnabled(false);
         } else {
             recyclerView.setVisibility(View.VISIBLE);
             totalPriceTextView.setVisibility(View.VISIBLE);
+            couponContainer.setVisibility(View.VISIBLE);
             emptyMessage.setVisibility(View.GONE);
             checkoutButton.setEnabled(true);
         }
@@ -123,6 +227,7 @@ public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeLi
 
     @Override
     public void onCartChanged() {
+        loadCartItems(); // Tải lại để đảm bảo dữ liệu mới nhất
         updateTotalPrice();
         updateEmptyState();
     }

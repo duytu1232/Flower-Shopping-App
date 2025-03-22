@@ -38,6 +38,9 @@ public class CheckoutActivity extends AppCompatActivity {
     private Button confirmCheckoutButton;
     private EditText shippingAddressInput;
     private double totalPrice;
+    private int couponId = -1;
+    private String couponCode;
+    private double discountValue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +53,13 @@ public class CheckoutActivity extends AppCompatActivity {
         confirmCheckoutButton = findViewById(R.id.confirm_checkout_button);
         shippingAddressInput = findViewById(R.id.shipping_address_input);
 
+        // Nhận dữ liệu từ Intent
+        Intent intent = getIntent();
+        totalPrice = intent.getDoubleExtra("total_price", 0.0);
+        couponId = intent.getIntExtra("coupon_id", -1);
+        couponCode = intent.getStringExtra("coupon_code");
+        discountValue = intent.getDoubleExtra("discount_value", 0.0);
+
         checkoutRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         cartItems = new ArrayList<>();
         loadCartItems();
@@ -57,25 +67,21 @@ public class CheckoutActivity extends AppCompatActivity {
         checkoutAdapter = new CheckoutAdapter(cartItems, this);
         checkoutRecyclerView.setAdapter(checkoutAdapter);
 
-        calculateTotalPrice();
-        totalPriceText.setText(String.format("Total: %.2f VND", totalPrice));
+        updateTotalPriceText();
 
-        confirmCheckoutButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (cartItems.isEmpty()) {
-                    Toast.makeText(CheckoutActivity.this, "Your cart is empty", Toast.LENGTH_SHORT).show();
-                } else if (!checkStockAvailability()) {
-                    Toast.makeText(CheckoutActivity.this, "Cannot proceed due to stock issues", Toast.LENGTH_SHORT).show();
-                } else {
-                    saveOrder();
-                    clearCart();
-                    Toast.makeText(CheckoutActivity.this, "Payment successful! Order placed.", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(CheckoutActivity.this, MainActivity.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    startActivity(intent);
-                    finish();
-                }
+        confirmCheckoutButton.setOnClickListener(v -> {
+            if (cartItems.isEmpty()) {
+                Toast.makeText(this, "Your cart is empty", Toast.LENGTH_SHORT).show();
+            } else if (!checkStockAvailability()) {
+                Toast.makeText(this, "Cannot proceed due to stock issues", Toast.LENGTH_SHORT).show();
+            } else {
+                saveOrder();
+                clearCart();
+                Toast.makeText(this, "Payment successful! Order placed.", Toast.LENGTH_SHORT).show();
+                Intent mainIntent = new Intent(this, MainActivity.class);
+                mainIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(mainIntent);
+                finish();
             }
         });
     }
@@ -84,7 +90,6 @@ public class CheckoutActivity extends AppCompatActivity {
         SQLiteDatabase db = null;
         try {
             db = dbHelper.openDatabase();
-
             SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
             int userId = prefs.getInt("user_id", -1);
             if (userId == -1) {
@@ -97,30 +102,16 @@ public class CheckoutActivity extends AppCompatActivity {
                             "FROM Carts c " +
                             "INNER JOIN Products p ON c.product_id = p.product_id " +
                             "WHERE c.user_id = ?", new String[]{String.valueOf(userId)});
-
             if (cursor != null) {
-                int cartIdIndex = cursor.getColumnIndex("cart_id");
-                int productIdIndex = cursor.getColumnIndex("product_id");
-                int quantityIndex = cursor.getColumnIndex("quantity");
-                int nameIndex = cursor.getColumnIndex("name");
-                int priceIndex = cursor.getColumnIndex("price");
-                int imageUrlIndex = cursor.getColumnIndex("image_url");
-
-                if (cartIdIndex == -1 || productIdIndex == -1 || quantityIndex == -1 ||
-                        nameIndex == -1 || priceIndex == -1 || imageUrlIndex == -1) {
-                    Log.e(TAG, "One or more columns do not exist in Carts or Products table!");
-                    Toast.makeText(this, "Error: Database columns missing", Toast.LENGTH_SHORT).show();
-                } else {
-                    while (cursor.moveToNext()) {
-                        int cartId = cursor.getInt(cartIdIndex);
-                        int productId = cursor.getInt(productIdIndex);
-                        int quantity = cursor.getInt(quantityIndex);
-                        String name = cursor.getString(nameIndex);
-                        double price = cursor.getDouble(priceIndex);
-                        String imageUrl = cursor.getString(imageUrlIndex);
-                        if (name == null) name = "Unknown Product";
-                        cartItems.add(new CartItem(cartId, productId, name, price, quantity, imageUrl));
-                    }
+                while (cursor.moveToNext()) {
+                    int cartId = cursor.getInt(cursor.getColumnIndexOrThrow("cart_id"));
+                    int productId = cursor.getInt(cursor.getColumnIndexOrThrow("product_id"));
+                    int quantity = cursor.getInt(cursor.getColumnIndexOrThrow("quantity"));
+                    String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
+                    double price = cursor.getDouble(cursor.getColumnIndexOrThrow("price"));
+                    String imageUrl = cursor.getString(cursor.getColumnIndexOrThrow("image_url"));
+                    if (name == null) name = "Unknown Product";
+                    cartItems.add(new CartItem(cartId, productId, name, price, quantity, imageUrl));
                 }
                 cursor.close();
             }
@@ -132,10 +123,13 @@ public class CheckoutActivity extends AppCompatActivity {
         }
     }
 
-    private void calculateTotalPrice() {
-        totalPrice = 0.0;
-        for (CartItem item : cartItems) {
-            totalPrice += item.getPrice() * item.getQuantity();
+    private void updateTotalPriceText() {
+        if (couponCode != null && discountValue > 0) {
+            double discount = totalPrice * (discountValue / 100.0);
+            totalPrice -= discount;
+            totalPriceText.setText(String.format("Total: %.2f VND (Applied %s)", totalPrice, couponCode));
+        } else {
+            totalPriceText.setText(String.format("Total: %.2f VND", totalPrice));
         }
     }
 
@@ -147,20 +141,14 @@ public class CheckoutActivity extends AppCompatActivity {
                 Cursor cursor = db.rawQuery("SELECT stock FROM Products WHERE product_id = ?",
                         new String[]{String.valueOf(item.getProductId())});
                 if (cursor != null && cursor.moveToFirst()) {
-                    int stockIndex = cursor.getColumnIndex("stock");
-                    if (stockIndex == -1) {
-                        Toast.makeText(this, "Stock column not found in Products table!", Toast.LENGTH_SHORT).show();
-                        cursor.close();
-                        return false;
-                    }
-                    int stock = cursor.getInt(stockIndex);
+                    int stock = cursor.getInt(cursor.getColumnIndexOrThrow("stock"));
                     if (item.getQuantity() > stock) {
                         Toast.makeText(this, "Product " + item.getName() + " is out of stock!", Toast.LENGTH_SHORT).show();
                         cursor.close();
                         return false;
                     }
+                    cursor.close();
                 }
-                if (cursor != null) cursor.close();
             }
             return true;
         } catch (Exception e) {
@@ -176,7 +164,6 @@ public class CheckoutActivity extends AppCompatActivity {
         SQLiteDatabase db = null;
         try {
             db = dbHelper.openDatabase();
-
             SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
             int userId = prefs.getInt("user_id", -1);
             if (userId == -1) {
@@ -192,12 +179,12 @@ public class CheckoutActivity extends AppCompatActivity {
             ContentValues orderValues = new ContentValues();
             orderValues.put("user_id", userId);
             orderValues.put("order_date", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-            orderValues.put("status", "Pending");
-            orderValues.put("total_price", totalPrice);
-            orderValues.put("address", address);
-            orderValues.put("order_number", "Order #" + System.currentTimeMillis());
-            orderValues.put("quantity", cartItems.size());
-            orderValues.put("note", "");
+            orderValues.put("status", "pending"); // Sửa thành "pending" để đồng bộ với schema
+            orderValues.put("total_amount", totalPrice); // Sử dụng totalPrice đã giảm giá
+            orderValues.put("shipping_address", address);
+            if (couponId != -1) {
+                orderValues.put("discount_code", couponId); // Lưu discount_id thay vì code
+            }
 
             long orderId = db.insert("Orders", null, orderValues);
             if (orderId == -1) {
@@ -210,7 +197,7 @@ public class CheckoutActivity extends AppCompatActivity {
                 orderItemValues.put("order_id", orderId);
                 orderItemValues.put("product_id", item.getProductId());
                 orderItemValues.put("quantity", item.getQuantity());
-                orderItemValues.put("price", item.getPrice());
+                orderItemValues.put("unit_price", item.getPrice()); // Đổi thành unit_price để đồng bộ schema
                 db.insert("Order_Items", null, orderItemValues);
             }
         } catch (Exception e) {
@@ -225,14 +212,9 @@ public class CheckoutActivity extends AppCompatActivity {
         SQLiteDatabase db = null;
         try {
             db = dbHelper.openDatabase();
-
             SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
             int userId = prefs.getInt("user_id", -1);
-            if (userId == -1) {
-                Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
+            if (userId == -1) return;
             db.delete("Carts", "user_id = ?", new String[]{String.valueOf(userId)});
             cartItems.clear();
             checkoutAdapter.notifyDataSetChanged();

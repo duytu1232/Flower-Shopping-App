@@ -23,7 +23,6 @@
         android:orientation="vertical"
         android:gravity="center"
         android:visibility="gone">
-
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -32,7 +31,6 @@
             android:textColor="#FF5722"
             android:textStyle="bold"
             android:paddingBottom="16dp" />
-
         <Button
             android:id="@+id/continue_shopping_button"
             android:layout_width="wrap_content"
@@ -54,6 +52,38 @@
         android:paddingBottom="8dp"
         android:visibility="gone" />
 
+    <!-- Phần chọn coupon (mới thêm) -->
+    <LinearLayout
+        android:id="@+id/coupon_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        android:paddingBottom="8dp">
+        <TextView
+            android:id="@+id/coupon_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Coupon: "
+            android:textSize="16sp"
+            android:textColor="#333333" />
+        <TextView
+            android:id="@+id/selected_coupon"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="None"
+            android:textSize="16sp"
+            android:textColor="#666666" />
+        <Button
+            android:id="@+id/apply_coupon_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Apply"
+            android:backgroundTint="#4CAF50"
+            android:textColor="@color/white" />
+    </LinearLayout>
+
     <!-- Danh sách sản phẩm trong giỏ hàng -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_cart_items"
@@ -71,5 +101,4 @@
         android:backgroundTint="#4CAF50"
         android:textColor="@color/white"
         android:layout_marginTop="16dp" />
-
 </LinearLayout>
