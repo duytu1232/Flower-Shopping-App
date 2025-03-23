@@ -1,6 +1,5 @@
 package com.example.flowerapp.User.Fragments.MyOrder_Fragment;
 
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -85,74 +84,31 @@ public class OrderFragment extends Fragment {
                 return;
             }
 
-            // Ánh xạ type với trạng thái trong cơ sở dữ liệu
-            String status;
-            switch (type) {
-                case "pending_payment":
-                    status = "pending";
-                    query = "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, " +
-                            "o.shipping_method, pm.payment_method, p.name AS product_name, p.image_url " +
-                            "FROM Orders o " +
-                            "LEFT JOIN Order_Items oi ON o.order_id = oi.order_id " +
-                            "LEFT JOIN Products p ON oi.product_id = p.product_id " +
-                            "LEFT JOIN Payments pm ON o.order_id = pm.order_id " +
-                            "WHERE o.status = ? AND o.user_id = ?";
-                    selectionArgs = new String[]{status, String.valueOf(userId)};
-                    break;
-                case "shipping":
-                    status = "processing|shipped";
-                    query = "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, " +
-                            "o.shipping_method, pm.payment_method, p.name AS product_name, p.image_url " +
-                            "FROM Orders o " +
-                            "LEFT JOIN Order_Items oi ON o.order_id = oi.order_id " +
-                            "LEFT JOIN Products p ON oi.product_id = p.product_id " +
-                            "LEFT JOIN Payments pm ON o.order_id = pm.order_id " +
-                            "WHERE o.status REGEXP ? AND o.user_id = ?";
-                    selectionArgs = new String[]{status, String.valueOf(userId)};
-                    break;
-                case "delivered":
-                    status = "delivered";
-                    query = "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, " +
-                            "o.shipping_method, pm.payment_method, p.name AS product_name, p.image_url " +
-                            "FROM Orders o " +
-                            "LEFT JOIN Order_Items oi ON o.order_id = oi.order_id " +
-                            "LEFT JOIN Products p ON oi.product_id = p.product_id " +
-                            "LEFT JOIN Payments pm ON o.order_id = pm.order_id " +
-                            "WHERE o.status = ? AND o.user_id = ?";
-                    selectionArgs = new String[]{status, String.valueOf(userId)};
-                    break;
-                case "not_reviewed":
-                    query = "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, " +
-                            "o.shipping_method, pm.payment_method, p.name AS product_name, p.image_url " +
-                            "FROM Orders o " +
-                            "LEFT JOIN Order_Items oi ON o.order_id = oi.order_id " +
-                            "LEFT JOIN Products p ON oi.product_id = p.product_id " +
-                            "LEFT JOIN Payments pm ON o.order_id = pm.order_id " +
-                            "LEFT JOIN Reviews r ON o.order_id = r.order_id " +
-                            "WHERE o.status = 'delivered' AND r.order_id IS NULL AND o.user_id = ?";
-                    selectionArgs = new String[]{String.valueOf(userId)};
-                    break;
-                case "returned":
-                    query = "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, " +
-                            "o.shipping_method, pm.payment_method, p.name AS product_name, p.image_url " +
-                            "FROM Orders o " +
-                            "LEFT JOIN Order_Items oi ON o.order_id = oi.order_id " +
-                            "LEFT JOIN Products p ON oi.product_id = p.product_id " +
-                            "LEFT JOIN Payments pm ON o.order_id = pm.order_id " +
-                            "WHERE o.status = 'canceled' AND o.user_id = ?";
-                    selectionArgs = new String[]{String.valueOf(userId)};
-                    break;
-                default:
-                    // Trường hợp mặc định: lấy tất cả đơn hàng của user
-                    query = "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, " +
-                            "o.shipping_method, pm.payment_method, p.name AS product_name, p.image_url " +
-                            "FROM Orders o " +
-                            "LEFT JOIN Order_Items oi ON o.order_id = oi.order_id " +
-                            "LEFT JOIN Products p ON oi.product_id = p.product_id " +
-                            "LEFT JOIN Payments pm ON o.order_id = pm.order_id " +
-                            "WHERE o.user_id = ?";
-                    selectionArgs = new String[]{String.valueOf(userId)};
-                    break;
+            if ("not_reviewed".equals(type)) {
+                query = "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, " +
+                        "p.name AS product_name, p.image_url " +
+                        "FROM Orders o " +
+                        "LEFT JOIN Order_Items oi ON o.order_id = oi.order_id " +
+                        "LEFT JOIN Products p ON oi.product_id = p.product_id " +
+                        "LEFT JOIN Reviews r ON o.order_id = r.order_id " +
+                        "WHERE o.status = 'delivered' AND r.order_id IS NULL AND o.user_id = ?";
+                selectionArgs = new String[]{String.valueOf(userId)};
+            } else if ("returned".equals(type)) {
+                query = "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, " +
+                        "p.name AS product_name, p.image_url " +
+                        "FROM Orders o " +
+                        "LEFT JOIN Order_Items oi ON o.order_id = oi.order_id " +
+                        "LEFT JOIN Products p ON oi.product_id = p.product_id " +
+                        "WHERE o.return_status = ? AND o.user_id = ?";
+                selectionArgs = new String[]{"returned", String.valueOf(userId)};
+            } else {
+                query = "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, " +
+                        "p.name AS product_name, p.image_url " +
+                        "FROM Orders o " +
+                        "LEFT JOIN Order_Items oi ON o.order_id = oi.order_id " +
+                        "LEFT JOIN Products p ON oi.product_id = p.product_id " +
+                        "WHERE o.status = ? AND o.user_id = ?";
+                selectionArgs = new String[]{type, String.valueOf(userId)};
             }
 
             Cursor cursor = db.rawQuery(query, selectionArgs);
@@ -163,17 +119,13 @@ public class OrderFragment extends Fragment {
                 String orderStatus = cursor.getString(cursor.getColumnIndexOrThrow("status"));
                 double totalAmount = cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount"));
                 String shippingAddress = cursor.getString(cursor.getColumnIndexOrThrow("shipping_address"));
-                String shippingMethod = cursor.getString(cursor.getColumnIndexOrThrow("shipping_method"));
-                String paymentMethod = cursor.getString(cursor.getColumnIndexOrThrow("payment_method"));
                 String title = cursor.getString(cursor.getColumnIndexOrThrow("product_name"));
                 String imageUrl = cursor.getString(cursor.getColumnIndexOrThrow("image_url"));
 
                 title = (title != null) ? title : "Unknown Product";
                 imageUrl = (imageUrl != null) ? imageUrl : "";
-                shippingMethod = (shippingMethod != null) ? formatShippingMethod(shippingMethod) : "Not specified";
-                paymentMethod = (paymentMethod != null) ? formatPaymentMethod(paymentMethod) : "Not specified";
 
-                orderList.add(new Order(orderId, userIdFromDb, orderDate, orderStatus, totalAmount, shippingAddress, shippingMethod, paymentMethod, title, imageUrl));
+                orderList.add(new Order(orderId, userIdFromDb, orderDate, orderStatus, totalAmount, shippingAddress, title, imageUrl));
             }
             cursor.close();
             orderAdapter.notifyDataSetChanged();
@@ -184,32 +136,6 @@ public class OrderFragment extends Fragment {
             if (db != null) {
                 dbHelper.closeDatabase(db);
             }
-        }
-    }
-
-    private String formatShippingMethod(String shippingMethod) {
-        switch (shippingMethod) {
-            case "home_delivery":
-                return "Home Delivery";
-            case "pickup_point":
-                return "Pickup Point";
-            case "pickup_in_store":
-                return "Pickup in Store";
-            default:
-                return shippingMethod;
-        }
-    }
-
-    private String formatPaymentMethod(String paymentMethod) {
-        switch (paymentMethod) {
-            case "credit_card":
-                return "Credit Card";
-            case "momo":
-                return "Momo";
-            case "cod":
-                return "Cash on Delivery";
-            default:
-                return paymentMethod;
         }
     }
 
@@ -229,16 +155,7 @@ public class OrderFragment extends Fragment {
 
     private void onReviewClick(Order order) {
         Toast.makeText(requireContext(), "Review clicked for order: " + order.getId(), Toast.LENGTH_SHORT).show();
-        // Logic chuyển sang màn hình đánh giá (nếu cần)
-        // Ví dụ: Intent intent = new Intent(getActivity(), ReviewActivity.class);
-        // intent.putExtra("order_id", order.getId());
-        // startActivity(intent);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        loadOrders(); // Tải lại đơn hàng khi Fragment được hiển thị lại
+        // Thêm logic chuyển sang màn hình đánh giá (nếu cần)
     }
 
     @Override
