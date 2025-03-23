@@ -37,7 +37,6 @@ public class AdminActivity extends AppCompatActivity {
     private DrawerLayout drawerLayout;
     private NavigationView navView;
     private final HashMap<Integer, Fragment> fragmentMap = new HashMap<>();
-    private ImageView logOutButton;
     private ImageView sideMenuButton;
     private DatabaseHelper dbHelper;
 
@@ -51,7 +50,6 @@ public class AdminActivity extends AppCompatActivity {
         initViews();
         setupBottomNav();
         setupDrawer();
-        setupLogOutButton();
         setupUserInfo();
 
         if (savedInstanceState == null) {
@@ -70,7 +68,6 @@ public class AdminActivity extends AppCompatActivity {
         bottomNavAdmin = findViewById(R.id.bottomNavAdmin);
         drawerLayout = findViewById(R.id.drawer_layout);
         navView = findViewById(R.id.nav_view);
-        logOutButton = findViewById(R.id.LogOut);
         sideMenuButton = findViewById(R.id.side_menu);
 
         fragmentMap.put(R.id.menu_product, new ProductManagementFragment());
@@ -96,8 +93,10 @@ public class AdminActivity extends AppCompatActivity {
                     int navItemId = getNavItemIdFromBottomItemId(itemId);
                     navView.setCheckedItem(navItemId);
                     return true;
+                } else {
+                    Toast.makeText(this, "Không tìm thấy màn hình tương ứng", Toast.LENGTH_SHORT).show();
+                    return false;
                 }
-                return false;
             } catch (Exception e) {
                 Toast.makeText(this, "Lỗi chuyển đổi fragment: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 return false;
@@ -110,15 +109,35 @@ public class AdminActivity extends AppCompatActivity {
         navView.setNavigationItemSelectedListener(item -> {
             try {
                 int itemId = item.getItemId();
-                Fragment selectedFragment = fragmentMap.get(itemId);
-                if (selectedFragment != null) {
-                    replaceFragment(selectedFragment);
-                    int bottomItemId = getBottomItemIdFromNavItemId(itemId);
-                    bottomNavAdmin.setSelectedItemId(bottomItemId);
+                if (itemId == R.id.nav_logout) {
+                    new AlertDialog.Builder(this)
+                            .setTitle("Xác nhận đăng xuất")
+                            .setMessage("Bạn có chắc muốn đăng xuất?")
+                            .setPositiveButton("Đăng xuất", (dialog, which) -> {
+                                clearSession();
+                                Intent intent = new Intent(AdminActivity.this, DangNhap.class);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                startActivity(intent);
+                                finish();
+                                Toast.makeText(this, "Đã đăng xuất thành công!", Toast.LENGTH_SHORT).show();
+                            })
+                            .setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss())
+                            .show();
                     drawerLayout.closeDrawer(GravityCompat.START);
                     return true;
+                } else {
+                    Fragment selectedFragment = fragmentMap.get(itemId);
+                    if (selectedFragment != null) {
+                        replaceFragment(selectedFragment);
+                        int bottomItemId = getBottomItemIdFromNavItemId(itemId);
+                        bottomNavAdmin.setSelectedItemId(bottomItemId);
+                        drawerLayout.closeDrawer(GravityCompat.START);
+                        return true;
+                    } else {
+                        Toast.makeText(this, "Không tìm thấy màn hình tương ứng", Toast.LENGTH_SHORT).show();
+                        return false;
+                    }
                 }
-                return false;
             } catch (Exception e) {
                 Toast.makeText(this, "Lỗi chuyển đổi fragment: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 return false;
@@ -126,28 +145,9 @@ public class AdminActivity extends AppCompatActivity {
         });
     }
 
-    private void setupLogOutButton() {
-        logOutButton.setOnClickListener(v -> {
-            new AlertDialog.Builder(this)
-                    .setTitle("Xác nhận đăng xuất")
-                    .setMessage("Bạn có chắc muốn đăng xuất?")
-                    .setPositiveButton("Đăng xuất", (dialog, which) -> {
-                        clearSession();
-                        Intent intent = new Intent(AdminActivity.this, DangNhap.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startActivity(intent);
-                        finish();
-                        Toast.makeText(this, "Đã đăng xuất thành công!", Toast.LENGTH_SHORT).show();
-                    })
-                    .setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss())
-                    .show();
-        });
-    }
-
     private void setupUserInfo() {
         TextView userNameTextView = navView.getHeaderView(0).findViewById(R.id.user_name);
-        SQLiteDatabase db = dbHelper.openDatabase();
-        try {
+        try (SQLiteDatabase db = dbHelper.openDatabase()) {
             Cursor cursor = db.rawQuery("SELECT user_id, username, full_name FROM Users WHERE role = 'admin' LIMIT 1", null);
             if (cursor.moveToFirst()) {
                 int userIdColumn = cursor.getColumnIndex("user_id");
@@ -175,14 +175,13 @@ public class AdminActivity extends AppCompatActivity {
                     userNameTextView.setText("Admin");
                 }
             } else {
+                Toast.makeText(this, "Không tìm thấy Admin trong cơ sở dữ liệu", Toast.LENGTH_SHORT).show();
                 userNameTextView.setText("Admin");
             }
             cursor.close();
         } catch (Exception e) {
             Toast.makeText(this, "Lỗi tải thông tin admin: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             userNameTextView.setText("Admin");
-        } finally {
-            dbHelper.closeDatabase(db);
         }
     }
 
@@ -233,7 +232,7 @@ public class AdminActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         if (dbHelper != null) {
-            dbHelper.closeDatabase(dbHelper.openDatabase());
+            dbHelper.close(); // Chỉ gọi close() để đóng DatabaseHelper
         }
     }
 }
