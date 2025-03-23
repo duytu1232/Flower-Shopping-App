@@ -84,6 +84,11 @@ public class XemDonHang extends AppCompatActivity {
                         break;
                 }
             }).attach();
+
+            // Nhận tham số selected_tab từ Intent và chọn tab tương ứng
+            Intent intent = getIntent();
+            int selectedTab = intent.getIntExtra("selected_tab", 0); // Mặc định là tab 0
+            viewPager.setCurrentItem(selectedTab, true);
         } else {
             Toast.makeText(this, "TabLayout or ViewPager not found", Toast.LENGTH_SHORT).show();
         }

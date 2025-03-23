@@ -358,4 +358,39 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             }
         }
     }
+
+    public Order getOrderById(int orderId) {
+        SQLiteDatabase db = null;
+        try {
+            db = openDatabase();
+            Cursor cursor = db.rawQuery(
+                    "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, " +
+                            "p.name AS product_name, p.image_url " +
+                            "FROM Orders o " +
+                            "LEFT JOIN Order_Items oi ON o.order_id = oi.order_id " +
+                            "LEFT JOIN Products p ON oi.product_id = p.product_id " +
+                            "WHERE o.order_id = ? LIMIT 1",
+                    new String[]{String.valueOf(orderId)});
+            if (cursor.moveToFirst()) {
+                int userId = cursor.getInt(cursor.getColumnIndexOrThrow("user_id"));
+                String orderDate = cursor.getString(cursor.getColumnIndexOrThrow("order_date"));
+                String status = cursor.getString(cursor.getColumnIndexOrThrow("status"));
+                double totalAmount = cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount"));
+                String shippingAddress = cursor.getString(cursor.getColumnIndexOrThrow("shipping_address"));
+                String title = cursor.getString(cursor.getColumnIndexOrThrow("product_name"));
+                String imageUrl = cursor.getString(cursor.getColumnIndexOrThrow("image_url"));
+
+                title = (title != null) ? title : "Unknown Product";
+                imageUrl = (imageUrl != null) ? imageUrl : "";
+
+                return new Order(orderId, userId, orderDate, status, totalAmount, shippingAddress, title, imageUrl);
+            }
+            cursor.close();
+        } catch (Exception e) {
+            Log.e("DatabaseHelper", "Error getting order by ID: " + e.getMessage());
+        } finally {
+            if (db != null) closeDatabase(db);
+        }
+        return null;
+    }
 }
