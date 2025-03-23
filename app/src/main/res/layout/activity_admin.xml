@@ -38,12 +38,12 @@
                 android:textSize="24sp" />
 
             <ImageView
-                android:id="@+id/LogOut"
+                android:id="@+id/notification_icon"
                 android:layout_width="44dp"
                 android:layout_height="46dp"
-                android:contentDescription="Log out"
+                android:contentDescription="Notifications"
                 android:padding="8dp"
-                app:srcCompat="@drawable/logout_26dp" />
+                app:srcCompat="@drawable/notification_icon" />
         </LinearLayout>
 
         <androidx.fragment.app.FragmentContainerView
