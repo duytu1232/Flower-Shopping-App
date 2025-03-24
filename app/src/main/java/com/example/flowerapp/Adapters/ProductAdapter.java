@@ -1,6 +1,7 @@
 package com.example.flowerapp.Adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,8 +23,6 @@ import com.google.android.material.button.MaterialButton;
 
 import java.util.List;
 import java.util.function.Consumer;
-
-import android.content.Intent; // Import này đã có sẵn trong các file khác, nên không vi phạm yêu cầu
 
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHolder> {
     private List<Product> productList;
@@ -115,7 +114,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
 
     @Override
     public int getItemCount() {
-        return productList.size();
+        return productList != null ? productList.size() : 0; // Thêm kiểm tra null
     }
 
     public static class ProductViewHolder extends RecyclerView.ViewHolder {

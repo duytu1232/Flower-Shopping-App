@@ -125,7 +125,7 @@
                         android:id="@+id/order_total"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="$0.00"
+                        android:text="0.00 VND"
                         android:textSize="16sp"
                         android:textColor="#E63946"
                         android:textStyle="bold" />
@@ -155,6 +155,53 @@
                         android:textColor="#1A3C34" />
                 </LinearLayout>
 
+                <!-- Phương thức vận chuyển -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingBottom="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Shipping Method: "
+                        android:textSize="16sp"
+                        android:textColor="#666666" />
+
+                    <TextView
+                        android:id="@+id/shipping_method"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Not specified"
+                        android:textSize="16sp"
+                        android:textColor="#1A3C34" />
+                </LinearLayout>
+
+                <!-- Phương thức thanh toán -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingBottom="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Payment Method: "
+                        android:textSize="16sp"
+                        android:textColor="#666666" />
+
+                    <TextView
+                        android:id="@+id/payment_method"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Not specified"
+                        android:textSize="16sp"
+                        android:textColor="#1A3C34" />
+                </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -170,6 +217,5 @@
             android:backgroundTint="#99BC85"
             android:textColor="#FFFFFF"
             app:cornerRadius="8dp" />
-
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

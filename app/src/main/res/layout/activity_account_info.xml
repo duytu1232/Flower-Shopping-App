@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#BFD8AF"
-    tools:context=".AccountInfoActivity">
+    android:background="#BFD8AF">
 
     <!-- Status bar spacer -->
     <LinearLayout
@@ -35,11 +34,9 @@
             tools:ignore="TouchTargetSizeCheck" />
 
         <TextView
-            android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:fontFamily="@font/merriweather"
             android:text="Account Information"
             android:textColor="#333333"
             android:textSize="24sp"
@@ -48,6 +45,7 @@
 
     <!-- CardView containing user information -->
     <androidx.cardview.widget.CardView
+        android:id="@+id/user_info_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
@@ -85,8 +83,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="2"
                     android:textColor="#333333"
-                    android:textSize="16sp"
-                    tools:text="Haki" />
+                    android:textSize="16sp" />
             </LinearLayout>
 
             <!-- Email -->
@@ -111,8 +108,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="2"
                     android:textColor="#333333"
-                    android:textSize="16sp"
-                    tools:text="example@gmail.com" />
+                    android:textSize="16sp" />
             </LinearLayout>
 
             <!-- Full Name -->
@@ -137,8 +133,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="2"
                     android:textColor="#333333"
-                    android:textSize="16sp"
-                    tools:text="Haki Go" />
+                    android:textSize="16sp" />
             </LinearLayout>
 
             <!-- Phone -->
@@ -163,10 +158,45 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="2"
                     android:textSize="16sp"
-                    android:textColor="#333333"
-                    tools:text="+1234567890" />
+                    android:textColor="#333333" />
+            </LinearLayout>
+
+            <!-- Address -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="8dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Last Used Address:"
+                    android:textColor="#666666"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/account_address"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2"
+                    android:textSize="16sp"
+                    android:textColor="#333333" />
             </LinearLayout>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
+    <!-- Nút chỉnh sửa -->
+    <Button
+        android:id="@+id/edit_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
+        android:text="Edit Profile"
+        android:backgroundTint="#4CAF50"
+        android:textColor="@color/white"
+        app:layout_constraintTop_toBottomOf="@id/user_info_card" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -32,14 +32,57 @@
             android:textColor="#666666"
             android:layout_marginTop="4dp"/>
 
-        <!-- Chi tiết -->
+        <!-- Ngày đặt -->
         <TextView
-            android:id="@+id/order_details"
+            android:id="@+id/order_date"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="14sp"
             android:textColor="#666666"
             android:layout_marginTop="4dp"/>
+
+        <!-- Tổng tiền -->
+        <TextView
+            android:id="@+id/order_total"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:layout_marginTop="4dp"/>
+
+        <!-- Địa chỉ giao hàng -->
+        <TextView
+            android:id="@+id/shipping_address"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:layout_marginTop="4dp"/>
+
+        <!-- Phương thức vận chuyển -->
+        <TextView
+            android:id="@+id/shipping_method"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:layout_marginTop="4dp"/>
+
+        <!-- Phương thức thanh toán -->
+        <TextView
+            android:id="@+id/payment_method"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:layout_marginTop="4dp"/>
+
+        <!-- Danh sách sản phẩm -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/order_items_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"/>
 
         <!-- Nút Sửa và Xóa -->
         <LinearLayout
@@ -70,7 +113,5 @@
                 app:cornerRadius="8dp"
                 android:paddingHorizontal="12dp"/>
         </LinearLayout>
-
     </LinearLayout>
-
 </androidx.cardview.widget.CardView>
