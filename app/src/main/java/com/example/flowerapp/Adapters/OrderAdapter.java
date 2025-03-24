@@ -12,10 +12,12 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.flowerapp.Models.Order;
 import com.example.flowerapp.R;
 import com.example.flowerapp.User.Fragments.MyOrder_Fragment.OrderDetailActivity;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -27,13 +29,13 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
     private boolean isAdminMode;
 
     public OrderAdapter(List<Order> orderList, Consumer<Order> onReviewClick) {
-        this.orderList = orderList;
+        this.orderList = orderList != null ? orderList : new ArrayList<>();
         this.onReviewClick = onReviewClick;
         this.isAdminMode = false;
     }
 
     public OrderAdapter(List<Order> orderList, Consumer<Order> onEditClick, Consumer<Order> onDeleteClick) {
-        this.orderList = orderList;
+        this.orderList = orderList != null ? orderList : new ArrayList<>();
         this.onEditClick = onEditClick;
         this.onDeleteClick = onDeleteClick;
         this.isAdminMode = true;
@@ -50,9 +52,14 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
     public void onBindViewHolder(@NonNull OrderViewHolder holder, int position) {
         Order order = orderList.get(position);
 
-        holder.orderTitle.setText(order.getTitle());
-        holder.orderStatus.setText("Trạng thái: " + order.getStatus());
-        holder.orderDate.setText("Ngày đặt: " + order.getOrderDate());
+        // Xử lý null cho các giá trị từ Order
+        String title = order.getTitle() != null ? order.getTitle() : "Unknown Product";
+        String status = order.getStatus() != null ? order.getStatus() : "Unknown";
+        String orderDate = order.getOrderDate() != null ? order.getOrderDate() : "Unknown Date";
+
+        holder.orderTitle.setText(title);
+        holder.orderStatus.setText("Trạng thái: " + status);
+        holder.orderDate.setText("Ngày đặt: " + orderDate);
 
         String imageUrl = order.getImageUrl();
         if (imageUrl != null && !imageUrl.isEmpty()) {
@@ -60,6 +67,8 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
                     .load(imageUrl)
                     .placeholder(R.drawable.shop)
                     .error(R.drawable.shop)
+                    .skipMemoryCache(false)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(holder.orderImage);
         } else {
             holder.orderImage.setImageResource(R.drawable.shop);
@@ -71,19 +80,31 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
             holder.deleteButton.setVisibility(View.VISIBLE);
 
             holder.editButton.setOnClickListener(v -> {
-                if (onEditClick != null) onEditClick.accept(order);
+                if (onEditClick != null) {
+                    onEditClick.accept(order);
+                } else {
+                    // Log hoặc thông báo khi callback không được thiết lập
+                    android.util.Log.w("OrderAdapter", "onEditClick callback is not set for order ID: " + order.getId());
+                }
             });
             holder.deleteButton.setOnClickListener(v -> {
-                if (onDeleteClick != null) onDeleteClick.accept(order);
+                if (onDeleteClick != null) {
+                    onDeleteClick.accept(order);
+                } else {
+                    android.util.Log.w("OrderAdapter", "onDeleteClick callback is not set for order ID: " + order.getId());
+                }
             });
         } else {
             holder.editButton.setVisibility(View.GONE);
             holder.deleteButton.setVisibility(View.GONE);
-            if (onReviewClick != null && "delivered".equals(order.getStatus())) {
+            if (onReviewClick != null && "delivered".equals(status)) {
                 holder.reviewButton.setVisibility(View.VISIBLE);
                 holder.reviewButton.setOnClickListener(v -> onReviewClick.accept(order));
             } else {
                 holder.reviewButton.setVisibility(View.GONE);
+                if (onReviewClick == null && "delivered".equals(status)) {
+                    android.util.Log.w("OrderAdapter", "onReviewClick callback is not set for delivered order ID: " + order.getId());
+                }
             }
         }
 
@@ -98,7 +119,13 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
 
     @Override
     public int getItemCount() {
-        return orderList.size();
+        return orderList != null ? orderList.size() : 0;
+    }
+
+    // Phương thức mới để cập nhật danh sách đơn hàng
+    public void updateOrderList(List<Order> newOrderList) {
+        this.orderList = newOrderList != null ? newOrderList : new ArrayList<>();
+        notifyDataSetChanged();
     }
 
     public static class OrderViewHolder extends RecyclerView.ViewHolder {
