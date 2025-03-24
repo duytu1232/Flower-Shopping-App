@@ -1,9 +1,11 @@
 package com.example.flowerapp;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -15,8 +17,9 @@ import com.example.flowerapp.R;
 import com.example.flowerapp.Security.Helper.DatabaseHelper;
 
 public class AccountInfoActivity extends AppCompatActivity {
-    private TextView usernameTextView, emailTextView, fullNameTextView, phoneTextView;
+    private TextView usernameTextView, emailTextView, fullNameTextView, phoneTextView, addressTextView;
     private ImageButton backButton;
+    private Button editButton;
     private DatabaseHelper dbHelper;
 
     @Override
@@ -29,10 +32,15 @@ public class AccountInfoActivity extends AppCompatActivity {
         emailTextView = findViewById(R.id.account_email);
         fullNameTextView = findViewById(R.id.account_full_name);
         phoneTextView = findViewById(R.id.account_phone);
+        addressTextView = findViewById(R.id.account_address); // Thêm TextView cho địa chỉ
         backButton = findViewById(R.id.back_button);
+        editButton = findViewById(R.id.edit_button);
 
-        // Xử lý nút quay lại
         backButton.setOnClickListener(v -> finish());
+        editButton.setOnClickListener(v -> {
+            Intent intent = new Intent(AccountInfoActivity.this, EditAccountInfoActivity.class);
+            startActivity(intent);
+        });
 
         loadUserInfo();
     }
@@ -48,6 +56,7 @@ public class AccountInfoActivity extends AppCompatActivity {
 
         SQLiteDatabase db = dbHelper.openDatabase();
         try {
+            // Tải thông tin người dùng từ bảng Users
             String[] columns = {"user_id", "username", "email", "full_name", "phone", "avatar_uri"};
             Cursor cursor = db.query("Users", columns, "user_id = ?", new String[]{String.valueOf(userId)}, null, null, null);
             if (cursor.moveToFirst()) {
@@ -88,11 +97,38 @@ public class AccountInfoActivity extends AppCompatActivity {
                 Toast.makeText(this, "Không tải được thông tin", Toast.LENGTH_SHORT).show();
             }
             cursor.close();
+
+            // Tải địa chỉ giao hàng gần nhất từ bảng Orders
+            Cursor addressCursor = db.rawQuery(
+                    "SELECT shipping_address FROM Orders WHERE user_id = ? ORDER BY order_date DESC LIMIT 1",
+                    new String[]{String.valueOf(userId)});
+            if (addressCursor != null && addressCursor.moveToFirst()) {
+                String shippingAddress = addressCursor.getString(addressCursor.getColumnIndexOrThrow("shipping_address"));
+                addressTextView.setText(shippingAddress != null ? shippingAddress : "N/A");
+            } else {
+                addressTextView.setText("N/A");
+            }
+            if (addressCursor != null) addressCursor.close();
+
         } catch (Exception e) {
             Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             Log.e("AccountInfoActivity", "Lỗi truy vấn cơ sở dữ liệu: " + e.getMessage());
         } finally {
             dbHelper.closeDatabase(db);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadUserInfo(); // Cập nhật lại thông tin sau khi chỉnh sửa từ EditAccountInfoActivity
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (dbHelper != null) {
+            dbHelper.close();
         }
     }
 }

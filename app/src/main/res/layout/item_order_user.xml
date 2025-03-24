@@ -41,6 +41,19 @@
             android:textSize="12sp"
             android:textColor="#999999" />
 
+        <TextView
+            android:id="@+id/shippingMethod"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="#999999" />
+
+        <TextView
+            android:id="@+id/paymentMethod"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="#999999" />
     </LinearLayout>
 
     <Button

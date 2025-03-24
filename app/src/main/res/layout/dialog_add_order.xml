@@ -85,5 +85,34 @@
                 android:minHeight="48dp" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Thêm Spinner để chọn sản phẩm -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Chọn sản phẩm"
+            app:hintTextColor="#99BC85">
+
+            <Spinner
+                android:id="@+id/spinner_product"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Thêm TextInputLayout để nhập số lượng -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Số lượng"
+            app:hintTextColor="#99BC85">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_quantity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:minHeight="48dp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
     </LinearLayout>
 </androidx.cardview.widget.CardView>
