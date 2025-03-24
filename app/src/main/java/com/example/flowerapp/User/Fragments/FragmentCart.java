@@ -93,6 +93,7 @@ public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeLi
             } else {
                 Intent intent = new Intent(getActivity(), CheckoutActivity.class);
                 intent.putExtra("total_price", cartManager.calculateTotalPrice(cartList));
+                intent.putParcelableArrayListExtra("cart_items", new ArrayList<>(cartList)); // Truyền cartList qua Intent
                 if (selectedCoupon != null) {
                     intent.putExtra("coupon_id", selectedCoupon.getId());
                     intent.putExtra("coupon_code", selectedCoupon.getCode());

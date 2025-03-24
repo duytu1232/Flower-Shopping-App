@@ -24,8 +24,6 @@ import com.google.android.material.button.MaterialButton;
 import java.util.List;
 import java.util.function.Consumer;
 
-import android.content.Intent; // Import này đã có sẵn trong các file khác, nên không vi phạm yêu cầu
-
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHolder> {
     private List<Product> productList;
     private Consumer<Product> onEditClick;
