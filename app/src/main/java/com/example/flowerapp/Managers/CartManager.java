@@ -29,7 +29,7 @@ public class CartManager {
             db = dbHelper.openDatabase();
 
             Cursor cursor = db.rawQuery(
-                    "SELECT c.cart_id, c.product_id, c.quantity, p.name, p.price, p.image_url " +
+                    "SELECT c.cart_id, c.product_id, c.quantity, p.name, p.description, p.category, p.price, p.image_url " +
                             "FROM Carts c " +
                             "INNER JOIN Products p ON c.product_id = p.product_id " +
                             "WHERE c.user_id = ?", new String[]{String.valueOf(userId)});
@@ -39,11 +39,14 @@ public class CartManager {
                 int productIdIndex = cursor.getColumnIndex("product_id");
                 int quantityIndex = cursor.getColumnIndex("quantity");
                 int nameIndex = cursor.getColumnIndex("name");
+                int descriptionIndex = cursor.getColumnIndex("description");
+                int categoryIndex = cursor.getColumnIndex("category");
                 int priceIndex = cursor.getColumnIndex("price");
                 int imageUrlIndex = cursor.getColumnIndex("image_url");
 
                 if (cartIdIndex == -1 || productIdIndex == -1 || quantityIndex == -1 ||
-                        nameIndex == -1 || priceIndex == -1 || imageUrlIndex == -1) {
+                        nameIndex == -1 || descriptionIndex == -1 || categoryIndex == -1 ||
+                        priceIndex == -1 || imageUrlIndex == -1) {
                     Log.e(TAG, "One or more columns do not exist in Carts or Products table!");
                     Toast.makeText(context, "Error: Database columns missing", Toast.LENGTH_SHORT).show();
                 } else {
@@ -52,10 +55,12 @@ public class CartManager {
                         int productId = cursor.getInt(productIdIndex);
                         int quantity = cursor.getInt(quantityIndex);
                         String name = cursor.getString(nameIndex);
+                        String description = cursor.getString(descriptionIndex);
+                        String category = cursor.getString(categoryIndex);
                         double price = cursor.getDouble(priceIndex);
                         String imageUrl = cursor.getString(imageUrlIndex);
                         if (name == null) name = "Unknown Product";
-                        cartList.add(new CartItem(cartId, productId, name, price, quantity, imageUrl));
+                        cartList.add(new CartItem(cartId, productId, name, description, category, price, quantity, imageUrl));
                     }
                 }
                 cursor.close();

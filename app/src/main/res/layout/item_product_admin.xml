@@ -23,6 +23,24 @@
             android:textStyle="bold"
             android:textColor="#333333"/>
 
+        <!-- Mô tả -->
+        <TextView
+            android:id="@+id/product_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:layout_marginTop="4dp"/>
+
+        <!-- Danh mục -->
+        <TextView
+            android:id="@+id/product_category"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:layout_marginTop="4dp"/>
+
         <!-- Giá -->
         <TextView
             android:id="@+id/product_price"
@@ -70,7 +88,5 @@
                 app:cornerRadius="8dp"
                 android:paddingHorizontal="12dp"/>
         </LinearLayout>
-
     </LinearLayout>
-
 </androidx.cardview.widget.CardView>

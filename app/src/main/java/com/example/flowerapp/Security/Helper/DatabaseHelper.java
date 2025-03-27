@@ -3,6 +3,7 @@ package com.example.flowerapp.Security.Helper;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteDatabaseLockedException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
@@ -132,7 +133,25 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public SQLiteDatabase openDatabase() {
-        return this.getWritableDatabase();
+        int retries = 5; // Số lần thử lại
+        int delay = 100; // Thời gian chờ giữa các lần thử (ms)
+
+        for (int i = 0; i < retries; i++) {
+            try {
+                return getWritableDatabase();
+            } catch (SQLiteDatabaseLockedException e) {
+                if (i == retries - 1) {
+                    Log.e("DatabaseHelper", "Không thể mở database sau " + retries + " lần thử: " + e.getMessage(), e);
+                    throw e; // Nếu hết số lần thử, ném ngoại lệ
+                }
+                try {
+                    Thread.sleep(delay); // Chờ trước khi thử lại
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+        throw new SQLiteDatabaseLockedException("Không thể mở database sau " + retries + " lần thử");
     }
 
     public void closeDatabase(SQLiteDatabase db) {

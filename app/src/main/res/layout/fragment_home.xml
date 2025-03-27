@@ -44,6 +44,16 @@
                 android:fontFamily="@font/merriweather"
                 android:textStyle="bold" />
 
+            <TextView
+                android:id="@+id/empty_message_new"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No new products available"
+                android:textSize="16sp"
+                android:textColor="#666666"
+                android:visibility="gone"
+                android:paddingBottom="12dp" />
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/listnewProduct"
                 android:layout_width="match_parent"
@@ -61,6 +71,16 @@
                 android:textSize="22sp"
                 android:fontFamily="@font/merriweather"
                 android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/empty_message_sale"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No sale products available"
+                android:textSize="16sp"
+                android:textColor="#666666"
+                android:visibility="gone"
+                android:paddingBottom="12dp" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/listsaleProduct"

@@ -193,6 +193,7 @@ public class OrderManagementFragment extends Fragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Sửa Đơn Hàng");
         View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_order, null);
+        TextInputEditText editOrderId = view.findViewById(R.id.edit_order_id); // Thêm dòng này
         TextInputEditText editUserId = view.findViewById(R.id.edit_order_user_id);
         TextInputEditText editOrderDate = view.findViewById(R.id.edit_order_date);
         TextInputEditText editStatus = view.findViewById(R.id.edit_order_status);
@@ -207,6 +208,7 @@ public class OrderManagementFragment extends Fragment {
         spinnerProduct.setAdapter(productAdapter);
 
         // Điền dữ liệu hiện tại
+        editOrderId.setText(String.valueOf(order.getId())); // Thêm dòng này
         editUserId.setText(String.valueOf(order.getUserId()));
         editOrderDate.setText(order.getOrderDate());
         editStatus.setText(order.getStatus());
@@ -373,10 +375,16 @@ public class OrderManagementFragment extends Fragment {
             Toast.makeText(requireContext(), "Lỗi thêm đơn hàng: " + e.getMessage(), Toast.LENGTH_LONG).show();
         } finally {
             if (db != null) {
-                if (db.inTransaction()) {
-                    db.endTransaction();
+                try {
+                    if (db.isOpen() && db.inTransaction()) {
+                        db.endTransaction();
+                    }
+                    if (db.isOpen()) {
+                        dbHelper.closeDatabase(db);
+                    }
+                } catch (Exception e) {
+                    Log.e("OrderManagement", "Lỗi khi đóng database: " + e.getMessage(), e);
                 }
-                dbHelper.closeDatabase(db);
             }
         }
     }
@@ -437,10 +445,16 @@ public class OrderManagementFragment extends Fragment {
             Toast.makeText(requireContext(), "Lỗi cập nhật đơn hàng: " + e.getMessage(), Toast.LENGTH_LONG).show();
         } finally {
             if (db != null) {
-                if (db.inTransaction()) {
-                    db.endTransaction();
+                try {
+                    if (db.isOpen() && db.inTransaction()) {
+                        db.endTransaction();
+                    }
+                    if (db.isOpen()) {
+                        dbHelper.closeDatabase(db);
+                    }
+                } catch (Exception e) {
+                    Log.e("OrderManagement", "Lỗi khi đóng database: " + e.getMessage(), e);
                 }
-                dbHelper.closeDatabase(db);
             }
         }
     }
@@ -487,10 +501,16 @@ public class OrderManagementFragment extends Fragment {
                         Toast.makeText(requireContext(), "Lỗi xóa đơn hàng: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     } finally {
                         if (db != null) {
-                            if (db.inTransaction()) {
-                                db.endTransaction();
+                            try {
+                                if (db.isOpen() && db.inTransaction()) {
+                                    db.endTransaction(); // Đảm bảo giao dịch kết thúc ngay cả khi có lỗi
+                                }
+                                if (db.isOpen()) {
+                                    dbHelper.closeDatabase(db);
+                                }
+                            } catch (Exception e) {
+                                Log.e("OrderManagement", "Lỗi khi đóng database: " + e.getMessage(), e);
                             }
-                            dbHelper.closeDatabase(db);
                         }
                     }
                 })
@@ -501,8 +521,8 @@ public class OrderManagementFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (dbHelper != null) {
-            dbHelper.close();
-        }
+//        if (dbHelper != null) {
+//            dbHelper.close();
+//        }
     }
 }

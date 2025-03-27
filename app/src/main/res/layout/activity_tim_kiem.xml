@@ -8,7 +8,7 @@
     android:background="#E1F0DA"
     android:orientation="vertical"
     android:padding="16dp"
-    tools:context=".search">
+    tools:context=".TimKiem">
 
     <!-- Header -->
     <androidx.constraintlayout.widget.ConstraintLayout

@@ -55,15 +55,16 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         CartItem cartItem = cartItems.get(position);
 
         // Hiển thị thông tin sản phẩm
-        holder.cartItemName.setText(cartItem.getName());
+        holder.cartItemName.setText(cartItem.getName() != null ? cartItem.getName() : "Unknown Product");
         holder.cartItemPrice.setText(String.format("Giá: %.2f VND", cartItem.getPrice() * cartItem.getQuantity()));
         holder.cartItemQuantity.setText("Số lượng: " + cartItem.getQuantity());
+        holder.cartItemDescription.setText(cartItem.getDescription() != null ? "Mô tả: " + cartItem.getDescription() : "Mô tả: N/A");
+        holder.cartItemCategory.setText(cartItem.getCategory() != null ? "Danh mục: " + cartItem.getCategory() : "Danh mục: N/A");
 
         // Xử lý hiển thị ảnh
         String imageUrl = cartItem.getImageUrl();
         if (imageUrl != null && !imageUrl.isEmpty()) {
             if (imageUrl.startsWith("http")) {
-                // Trường hợp imageUrl là URL HTTP/HTTPS
                 Glide.with(context)
                         .load(imageUrl)
                         .placeholder(android.R.drawable.ic_menu_gallery)
@@ -83,8 +84,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
                         })
                         .into(holder.cartItemImage);
             } else {
-                // Trường hợp imageUrl là tên tài nguyên cục bộ (ví dụ: "hoa_tu_dinh_huong.jpg")
-                String resourceName = imageUrl.replace(".jpg", ""); // Loại bỏ phần mở rộng .jpg
+                String resourceName = imageUrl.replace(".jpg", "");
                 int resourceId = context.getResources().getIdentifier(resourceName, "drawable", context.getPackageName());
                 if (resourceId != 0) {
                     Glide.with(context)
@@ -151,12 +151,12 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
 
     @Override
     public int getItemCount() {
-        return cartItems.size();
+        return cartItems != null ? cartItems.size() : 0;
     }
 
     public static class CartViewHolder extends RecyclerView.ViewHolder {
         ImageView cartItemImage;
-        TextView cartItemName, cartItemPrice, cartItemQuantity;
+        TextView cartItemName, cartItemPrice, cartItemQuantity, cartItemDescription, cartItemCategory;
         MaterialButton btnDecreaseQuantity, btnIncreaseQuantity, btnDeleteItem;
 
         public CartViewHolder(@NonNull View itemView) {
@@ -165,6 +165,8 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
             cartItemName = itemView.findViewById(R.id.cart_item_name);
             cartItemPrice = itemView.findViewById(R.id.cart_item_price);
             cartItemQuantity = itemView.findViewById(R.id.cart_item_quantity);
+            cartItemDescription = itemView.findViewById(R.id.cart_item_description);
+            cartItemCategory = itemView.findViewById(R.id.cart_item_category);
             btnDecreaseQuantity = itemView.findViewById(R.id.btn_decrease_quantity);
             btnIncreaseQuantity = itemView.findViewById(R.id.btn_increase_quantity);
             btnDeleteItem = itemView.findViewById(R.id.btn_delete_item);

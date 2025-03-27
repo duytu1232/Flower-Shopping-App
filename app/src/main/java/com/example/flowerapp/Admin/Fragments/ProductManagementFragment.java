@@ -25,7 +25,7 @@ import com.example.flowerapp.Security.Helper.DatabaseHelper;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProductManagementFragment extends Fragment {
+public class ProductManagementFragment extends Fragment implements ProductAdapter.OnProductActionListener {
     private RecyclerView recyclerView;
     private ProductAdapter adapter;
     private List<Product> productList = new ArrayList<>();
@@ -38,7 +38,7 @@ public class ProductManagementFragment extends Fragment {
         dbHelper = new DatabaseHelper(requireContext());
         recyclerView = view.findViewById(R.id.recycler_product_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        adapter = new ProductAdapter(productList, this::showEditProductDialog, this::deleteProduct);
+        adapter = new ProductAdapter(productList, this); // Truyền this làm OnProductActionListener
         recyclerView.setAdapter(adapter);
 
         view.findViewById(R.id.btn_add_product).setOnClickListener(v -> showAddProductDialog());
@@ -119,6 +119,11 @@ public class ProductManagementFragment extends Fragment {
                 })
                 .setNegativeButton("Hủy", null)
                 .show();
+    }
+
+    @Override
+    public void onEditProduct(Product product) {
+        showEditProductDialog(product);
     }
 
     private void showEditProductDialog(Product product) {
@@ -217,8 +222,9 @@ public class ProductManagementFragment extends Fragment {
         }
     }
 
-    private void deleteProduct(int id) {
-        if (isProductReferenced(id)) {
+    @Override
+    public void onDeleteProduct(int productId) {
+        if (isProductReferenced(productId)) {
             Toast.makeText(requireContext(), "Không thể xóa: Sản phẩm đang được sử dụng trong đơn hàng!", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -227,8 +233,8 @@ public class ProductManagementFragment extends Fragment {
                 .setMessage("Bạn có chắc chắn muốn xóa sản phẩm này?")
                 .setPositiveButton("Xóa", (dialog, which) -> {
                     try (SQLiteDatabase db = dbHelper.openDatabase()) {
-                        db.execSQL("DELETE FROM Products WHERE product_id = ?", new Object[]{id});
-                        Log.d("ProductManagement", "Xóa sản phẩm thành công: " + id);
+                        db.execSQL("DELETE FROM Products WHERE product_id = ?", new Object[]{productId});
+                        Log.d("ProductManagement", "Xóa sản phẩm thành công: " + productId);
                         Toast.makeText(requireContext(), "Xóa sản phẩm thành công", Toast.LENGTH_SHORT).show();
                         loadProducts();
                     } catch (Exception e) {

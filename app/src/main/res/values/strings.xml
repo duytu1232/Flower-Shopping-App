@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="notification_icon_description">Notification Icon</string>
     <string name="timestamp_2min">2 min ago</string>
@@ -15,15 +14,4 @@
     <string name="tab_not_reviewed">Not Reviewed</string>
     <string name="tab_returned">Returned</string>
     <string name="tab_canceled">Canceled</string>
-    <string name="filter_title">Bộ lọc</string>
-    <string name="spinner_flower_description">Chọn loại hoa</string>
-    <string name="price_range_description">Chọn khoảng giá</string>
-    <string name="apply_filter">Áp dụng bộ lọc</string>
-    <string name="apply_filter_description">Áp dụng bộ lọc tìm kiếm</string>
-    <string name="cancel_filter">Hủy</string>
-
-    <!-- Thêm các string cho activity_review_detail.xml -->
-    <string name="review_title">Viết đánh giá</string>
-    <string name="review_hint">Nhập nội dung đánh giá của bạn...</string>
-    <string name="submit_review">Gửi đánh giá</string>
 </resources>

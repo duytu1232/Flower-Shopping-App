@@ -35,33 +35,44 @@ public class CheckoutAdapter extends RecyclerView.Adapter<CheckoutAdapter.Checko
     @Override
     public void onBindViewHolder(@NonNull CheckoutViewHolder holder, int position) {
         CartItem cartItem = cartItems.get(position);
-        holder.productName.setText(cartItem.getName());
-        holder.productPrice.setText(String.format("Giá: %.2f VND", cartItem.getPrice()));
-        holder.productQuantity.setText("Số lượng: " + cartItem.getQuantity());
-        holder.totalItemPrice.setText(String.format("Tổng: %.2f VND", cartItem.getPrice() * cartItem.getQuantity()));
+        // Kiểm tra null và hiển thị thông tin
+        holder.productName.setText(cartItem.getName() != null ? cartItem.getName() : "Không có tên");
+        holder.productPrice.setText(String.format("Giá: %.2f VND", cartItem.getPrice() >= 0 ? cartItem.getPrice() : 0));
+        holder.productQuantity.setText("Số lượng: " + (cartItem.getQuantity() >= 0 ? cartItem.getQuantity() : 0));
+        holder.totalItemPrice.setText(String.format("Tổng: %.2f VND",
+                (cartItem.getPrice() >= 0 && cartItem.getQuantity() >= 0) ? cartItem.getPrice() * cartItem.getQuantity() : 0));
+
+        // Thêm mô tả và danh mục
+        holder.productDescription.setText(cartItem.getDescription() != null ? "Mô tả: " + cartItem.getDescription() : "Mô tả: N/A");
+        holder.productCategory.setText(cartItem.getCategory() != null ? "Danh mục: " + cartItem.getCategory() : "Danh mục: N/A");
 
         // Xử lý hiển thị ảnh
         String imageUrl = cartItem.getImageUrl();
         if (imageUrl != null && !imageUrl.isEmpty()) {
-            if (imageUrl.startsWith("assets/") || imageUrl.contains("/")) {
-                String assetPath = "file:///android_asset/" + imageUrl.replace("assets/", "").replace("\\", "/");
-                Glide.with(context)
-                        .load(assetPath)
-                        .placeholder(android.R.drawable.ic_menu_gallery)
-                        .error(android.R.drawable.ic_dialog_alert)
-                        .into(holder.productImage);
-            } else {
-                int resourceId = context.getResources().getIdentifier(
-                        imageUrl.replace(".png", "").replace(".jpg", ""), "drawable",
-                        context.getPackageName());
-                if (resourceId != 0) {
+            try {
+                if (imageUrl.startsWith("assets/") || imageUrl.contains("/")) {
+                    String assetPath = "file:///android_asset/" + imageUrl.replace("assets/", "").replace("\\", "/");
                     Glide.with(context)
-                            .load(resourceId)
+                            .load(assetPath)
                             .placeholder(android.R.drawable.ic_menu_gallery)
+                            .error(android.R.drawable.ic_dialog_alert)
                             .into(holder.productImage);
                 } else {
-                    holder.productImage.setImageResource(android.R.drawable.ic_menu_gallery);
+                    int resourceId = context.getResources().getIdentifier(
+                            imageUrl.replace(".png", "").replace(".jpg", ""), "drawable",
+                            context.getPackageName());
+                    if (resourceId != 0) {
+                        Glide.with(context)
+                                .load(resourceId)
+                                .placeholder(android.R.drawable.ic_menu_gallery)
+                                .error(android.R.drawable.ic_dialog_alert)
+                                .into(holder.productImage);
+                    } else {
+                        holder.productImage.setImageResource(android.R.drawable.ic_menu_gallery);
+                    }
                 }
+            } catch (Exception e) {
+                holder.productImage.setImageResource(android.R.drawable.ic_dialog_alert);
             }
         } else {
             holder.productImage.setImageResource(android.R.drawable.ic_menu_gallery);
@@ -70,12 +81,12 @@ public class CheckoutAdapter extends RecyclerView.Adapter<CheckoutAdapter.Checko
 
     @Override
     public int getItemCount() {
-        return cartItems.size();
+        return cartItems != null ? cartItems.size() : 0;
     }
 
     public static class CheckoutViewHolder extends RecyclerView.ViewHolder {
         ImageView productImage;
-        TextView productName, productPrice, productQuantity, totalItemPrice;
+        TextView productName, productPrice, productQuantity, totalItemPrice, productDescription, productCategory;
 
         public CheckoutViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -84,6 +95,8 @@ public class CheckoutAdapter extends RecyclerView.Adapter<CheckoutAdapter.Checko
             productPrice = itemView.findViewById(R.id.checkout_product_price);
             productQuantity = itemView.findViewById(R.id.checkout_product_quantity);
             totalItemPrice = itemView.findViewById(R.id.checkout_total_item_price);
+            productDescription = itemView.findViewById(R.id.checkout_product_description);
+            productCategory = itemView.findViewById(R.id.checkout_product_category);
         }
     }
 }

@@ -32,6 +32,7 @@ public class OrderFragment extends Fragment {
     private List<Order> orderList;
     private LinearLayout emptyLayout;
     private DatabaseHelper dbHelper;
+    private SQLiteDatabase db;
 
     public static OrderFragment newInstance(String type) {
         OrderFragment fragment = new OrderFragment();
@@ -71,20 +72,18 @@ public class OrderFragment extends Fragment {
 
     private void loadOrders() {
         orderList.clear();
-        SQLiteDatabase db = null;
+//        SQLiteDatabase db = null;
         try {
             db = dbHelper.openDatabase();
             String query;
             String[] selectionArgs;
 
-            // Lấy user_id từ SharedPreferences
             int userId = requireContext().getSharedPreferences("MyPrefs", requireContext().MODE_PRIVATE)
                     .getInt("user_id", -1);
             if (userId == -1) {
                 Toast.makeText(requireContext(), "User not logged in", Toast.LENGTH_SHORT).show();
                 return;
             }
-
             // Ánh xạ type với trạng thái trong cơ sở dữ liệu
             String status;
             switch (type) {
@@ -100,15 +99,14 @@ public class OrderFragment extends Fragment {
                     selectionArgs = new String[]{status, String.valueOf(userId)};
                     break;
                 case "shipping":
-                    status = "processing|shipped";
                     query = "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, " +
                             "o.shipping_method, pm.payment_method, p.name AS product_name, p.image_url " +
                             "FROM Orders o " +
                             "LEFT JOIN Order_Items oi ON o.order_id = oi.order_id " +
                             "LEFT JOIN Products p ON oi.product_id = p.product_id " +
                             "LEFT JOIN Payments pm ON o.order_id = pm.order_id " +
-                            "WHERE o.status REGEXP ? AND o.user_id = ?";
-                    selectionArgs = new String[]{status, String.valueOf(userId)};
+                            "WHERE o.status IN ('processing', 'shipped') AND o.user_id = ?";
+                    selectionArgs = new String[]{String.valueOf(userId)};
                     break;
                 case "delivered":
                     status = "delivered";
@@ -244,8 +242,9 @@ public class OrderFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (dbHelper != null) {
-            dbHelper.closeDatabase(dbHelper.openDatabase());
+        if (db != null && db.isOpen()) {
+            dbHelper.closeDatabase(db);
         }
+        // Không gọi dbHelper.close() để tránh ảnh hưởng toàn cục
     }
 }

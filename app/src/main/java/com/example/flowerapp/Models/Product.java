@@ -3,15 +3,15 @@ package com.example.flowerapp.Models;
 import android.util.Patterns;
 
 public class Product {
-    private Object type;
-    private int id;
-    private String name;
-    private String description;
-    private double price;
-    private int stock;
-    private String imageUrl;
-    private String category;
+    private int id;           // product_id
+    private String name;      // name
+    private String description; // description
+    private double price;     // price
+    private int stock;        // stock
+    private String imageUrl;  // image_url
+    private String category;  // category
 
+    // Constructor
     public Product(int id, String name, String description, double price, int stock, String imageUrl, String category) {
         this.id = id;
         this.name = name;
@@ -20,9 +20,9 @@ public class Product {
         this.stock = stock;
         this.imageUrl = imageUrl;
         this.category = category;
-        this.type = type;
     }
 
+    // Getters and setters
     public int getId() { return id; }
     public String getName() { return name; }
     public String getDescription() { return description; }
@@ -33,8 +33,6 @@ public class Product {
 
     public void setId(int id) { this.id = id; }
     public void setName(String name) { this.name = name; }
-    public String getType() { return (String) type; }
-    public void setType(String type) { this.type = type; }
     public void setDescription(String description) { this.description = description; }
     public void setPrice(double price) {
         if (price <= 0) {
@@ -42,12 +40,14 @@ public class Product {
         }
         this.price = price;
     }
+
     public void setStock(int stock) {
         if (stock < 0) {
             throw new IllegalArgumentException("Số lượng không được âm");
         }
         this.stock = stock;
     }
+
     public void setImageUrl(String imageUrl) {
         if (imageUrl != null && !Patterns.WEB_URL.matcher(imageUrl).matches()) {
             throw new IllegalArgumentException("URL hình ảnh không hợp lệ");

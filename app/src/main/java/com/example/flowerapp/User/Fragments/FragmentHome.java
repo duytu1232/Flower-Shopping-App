@@ -1,5 +1,6 @@
 package com.example.flowerapp.User.Fragments;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -10,6 +11,7 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.ViewFlipper;
 
 import androidx.fragment.app.Fragment;
@@ -30,6 +32,7 @@ public class FragmentHome extends Fragment {
 
     private ViewFlipper viewFlipper;
     private RecyclerView recyclerNewProducts, recyclerSaleProducts;
+    private TextView emptyMessageNew, emptyMessageSale;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -40,6 +43,13 @@ public class FragmentHome extends Fragment {
 
         recyclerNewProducts = view.findViewById(R.id.listnewProduct);
         recyclerSaleProducts = view.findViewById(R.id.listsaleProduct);
+        emptyMessageNew = view.findViewById(R.id.empty_message_new);
+        emptyMessageSale = view.findViewById(R.id.empty_message_sale);
+
+        if (recyclerNewProducts == null || recyclerSaleProducts == null) {
+            Log.e(TAG, "RecyclerView not found in layout");
+            return view;
+        }
 
         LinearLayoutManager newLayoutManager = new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false);
         LinearLayoutManager saleLayoutManager = new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false);
@@ -97,13 +107,52 @@ public class FragmentHome extends Fragment {
             }
         }
 
-        ProductAdapter newProductAdapter = new ProductAdapter(newProducts, requireContext());
-        ProductAdapter saleProductAdapter = new ProductAdapter(saleProducts, requireContext());
+        // Truyền OnProductClickListener vào ProductAdapter
+        ProductAdapter newProductAdapter = new ProductAdapter(newProducts, requireContext(), product -> {
+            Intent intent = new Intent(requireContext(), ProductDetail.class);
+            intent.putExtra("product_id", product.getId());
+            startActivity(intent);
+        });
+        ProductAdapter saleProductAdapter = new ProductAdapter(saleProducts, requireContext(), product -> {
+            Intent intent = new Intent(requireContext(), ProductDetail.class);
+            intent.putExtra("product_id", product.getId());
+            startActivity(intent);
+        });
 
         recyclerNewProducts.setAdapter(newProductAdapter);
         recyclerSaleProducts.setAdapter(saleProductAdapter);
 
+        updateEmptyState(newProducts, saleProducts);
+
         return view;
+    }
+
+    private void updateEmptyState(List<Product> newProducts, List<Product> saleProducts) {
+        if (newProducts.isEmpty()) {
+            recyclerNewProducts.setVisibility(View.GONE);
+            if (emptyMessageNew != null) {
+                emptyMessageNew.setVisibility(View.VISIBLE);
+                emptyMessageNew.setText("No new products available");
+            }
+        } else {
+            recyclerNewProducts.setVisibility(View.VISIBLE);
+            if (emptyMessageNew != null) {
+                emptyMessageNew.setVisibility(View.GONE);
+            }
+        }
+
+        if (saleProducts.isEmpty()) {
+            recyclerSaleProducts.setVisibility(View.GONE);
+            if (emptyMessageSale != null) {
+                emptyMessageSale.setVisibility(View.VISIBLE);
+                emptyMessageSale.setText("No sale products available");
+            }
+        } else {
+            recyclerSaleProducts.setVisibility(View.VISIBLE);
+            if (emptyMessageSale != null) {
+                emptyMessageSale.setVisibility(View.GONE);
+            }
+        }
     }
 
     private void setupViewFlipper() {
