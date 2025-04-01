@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.flowerapp.Adapters.OrderAdapter;
 import com.example.flowerapp.Models.Order;
+import com.example.flowerapp.Models.OrderItem;
 import com.example.flowerapp.Models.Product;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.Helper.DatabaseHelper;
@@ -37,15 +38,15 @@ public class OrderManagementFragment extends Fragment {
     private List<Order> orderList = new ArrayList<>();
     private DatabaseHelper dbHelper;
     private static final String[] VALID_STATUSES = {"pending", "processing", "shipped", "delivered", "canceled"};
-    private List<Product> productList = new ArrayList<>(); // Danh sách sản phẩm để chọn
+    private static final String[] SHIPPING_METHODS = {"home_delivery", "pickup_point", "pickup_in_store"};
+    private static final String[] PAYMENT_METHODS = {"credit_card", "momo", "cod"};
+    private List<Product> productList = new ArrayList<>();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_order_management, container, false);
 
         dbHelper = new DatabaseHelper(requireContext());
-
-        // Khởi tạo RecyclerView cho danh sách đơn hàng
         recyclerViewOrders = view.findViewById(R.id.recycler_order_list);
         recyclerViewOrders.setLayoutManager(new LinearLayoutManager(requireContext()));
         orderAdapter = new OrderAdapter(orderList, this::showEditOrderDialog, this::deleteOrder);
@@ -53,7 +54,7 @@ public class OrderManagementFragment extends Fragment {
 
         view.findViewById(R.id.btn_add_order).setOnClickListener(v -> showAddOrderDialog());
 
-        loadProducts(); // Tải danh sách sản phẩm để chọn
+        loadProducts();
         loadOrders();
         return view;
     }
@@ -71,222 +72,259 @@ public class OrderManagementFragment extends Fragment {
             }
             cursor.close();
         } catch (Exception e) {
-            Log.e("OrderManagement", "Lỗi tải sản phẩm: " + e.getMessage(), e);
-            Toast.makeText(requireContext(), "Lỗi tải sản phẩm: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Log.e("OrderManagement", "Error loading products: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Error loading products: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
     private void loadOrders() {
         try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            Cursor cursor = db.rawQuery(
-                    "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, " +
-                            "o.shipping_method, pm.payment_method, p.name AS product_name, p.image_url " +
-                            "FROM Orders o " +
-                            "LEFT JOIN Order_Items oi ON o.order_id = oi.order_id " +
-                            "LEFT JOIN Products p ON oi.product_id = p.product_id " +
-                            "LEFT JOIN Payments pm ON o.order_id = pm.order_id", null);
             orderList.clear();
-            Log.d("OrderManagement", "Số lượng bản ghi: " + cursor.getCount());
-            while (cursor.moveToNext()) {
-                int id = cursor.getInt(cursor.getColumnIndexOrThrow("order_id"));
-                int userId = cursor.getInt(cursor.getColumnIndexOrThrow("user_id"));
-                String orderDate = cursor.getString(cursor.getColumnIndexOrThrow("order_date"));
-                String status = cursor.getString(cursor.getColumnIndexOrThrow("status"));
-                double totalAmount = cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount"));
-                String shippingAddress = cursor.getString(cursor.getColumnIndexOrThrow("shipping_address"));
-                String shippingMethod = cursor.getString(cursor.getColumnIndexOrThrow("shipping_method"));
-                String paymentMethod = cursor.getString(cursor.getColumnIndexOrThrow("payment_method"));
-                String productName = cursor.getString(cursor.getColumnIndexOrThrow("product_name"));
-                String imageUrl = cursor.getString(cursor.getColumnIndexOrThrow("image_url"));
+            Cursor orderCursor = db.rawQuery(
+                    "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, " +
+                            "o.shipping_method, pm.payment_method " +
+                            "FROM Orders o " +
+                            "LEFT JOIN Payments pm ON o.order_id = pm.order_id", null);
+            while (orderCursor.moveToNext()) {
+                int id = orderCursor.getInt(orderCursor.getColumnIndexOrThrow("order_id"));
+                int userId = orderCursor.getInt(orderCursor.getColumnIndexOrThrow("user_id"));
+                String orderDate = orderCursor.getString(orderCursor.getColumnIndexOrThrow("order_date"));
+                String status = orderCursor.getString(orderCursor.getColumnIndexOrThrow("status"));
+                double totalAmount = orderCursor.getDouble(orderCursor.getColumnIndexOrThrow("total_amount"));
+                String shippingAddress = orderCursor.getString(orderCursor.getColumnIndexOrThrow("shipping_address"));
+                String shippingMethod = orderCursor.getString(orderCursor.getColumnIndexOrThrow("shipping_method"));
+                String paymentMethod = orderCursor.getString(orderCursor.getColumnIndexOrThrow("payment_method"));
 
-                productName = (productName != null) ? productName : "Unknown Product";
-                imageUrl = (imageUrl != null) ? imageUrl : "";
-                shippingMethod = (shippingMethod != null) ? shippingMethod : "home_delivery";
-                paymentMethod = (paymentMethod != null) ? paymentMethod : "Unknown";
+                List<OrderItem> orderItems = new ArrayList<>();
+                Cursor itemCursor = db.rawQuery(
+                        "SELECT oi.order_item_id, oi.product_id, p.name, p.image_url, oi.quantity, oi.unit_price " +
+                                "FROM Order_Items oi " +
+                                "JOIN Products p ON oi.product_id = p.product_id " +
+                                "WHERE oi.order_id = ?", new String[]{String.valueOf(id)});
+                while (itemCursor.moveToNext()) {
+                    int orderItemId = itemCursor.getInt(itemCursor.getColumnIndexOrThrow("order_item_id"));
+                    int productId = itemCursor.getInt(itemCursor.getColumnIndexOrThrow("product_id"));
+                    String productName = itemCursor.getString(itemCursor.getColumnIndexOrThrow("name"));
+                    String imageUrl = itemCursor.getString(itemCursor.getColumnIndexOrThrow("image_url"));
+                    int quantity = itemCursor.getInt(itemCursor.getColumnIndexOrThrow("quantity"));
+                    double unitPrice = itemCursor.getDouble(itemCursor.getColumnIndexOrThrow("unit_price"));
+                    orderItems.add(new OrderItem(orderItemId, id, productId, productName, imageUrl, quantity, unitPrice));
+                }
+                itemCursor.close();
 
-                orderList.add(new Order(id, userId, orderDate, status, totalAmount, shippingAddress, shippingMethod, paymentMethod, productName, imageUrl));
-                Log.d("OrderManagement", "Thêm đơn hàng: " + id);
+                shippingMethod = shippingMethod != null ? shippingMethod : "home_delivery";
+                paymentMethod = paymentMethod != null ? paymentMethod : "Unknown";
+                String title = orderItems.isEmpty() ? "Unknown Product" : orderItems.get(0).getProductName();
+                String imageUrl = orderItems.isEmpty() ? "" : orderItems.get(0).getImageUrl();
+
+                orderList.add(new Order(id, userId, orderDate, status, totalAmount, shippingAddress, shippingMethod, paymentMethod, title, imageUrl, orderItems));
             }
-            cursor.close();
+            orderCursor.close();
             orderAdapter.notifyDataSetChanged();
             recyclerViewOrders.scheduleLayoutAnimation();
-            Log.d("OrderManagement", "Số lượng đơn hàng trong list: " + orderList.size());
         } catch (Exception e) {
-            Log.e("OrderManagement", "Lỗi tải đơn hàng: " + e.getMessage(), e);
-            Toast.makeText(requireContext(), "Lỗi tải đơn hàng: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Log.e("OrderManagement", "Error loading orders: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Error loading orders: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
     private void showAddOrderDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Thêm Đơn Hàng");
+        builder.setTitle("Add Order");
         View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_order, null);
         TextInputEditText editUserId = view.findViewById(R.id.edit_order_user_id);
         TextInputEditText editOrderDate = view.findViewById(R.id.edit_order_date);
-        TextInputEditText editStatus = view.findViewById(R.id.edit_order_status);
+        Spinner spinnerStatus = view.findViewById(R.id.spinner_order_status); // Thay TextInputEditText bằng Spinner
         TextInputEditText editTotal = view.findViewById(R.id.edit_order_total);
         TextInputEditText editAddress = view.findViewById(R.id.edit_order_address);
         Spinner spinnerProduct = view.findViewById(R.id.spinner_product);
         TextInputEditText editQuantity = view.findViewById(R.id.edit_quantity);
+        Spinner spinnerShippingMethod = view.findViewById(R.id.spinner_shipping_method); // Thêm Spinner mới
+        Spinner spinnerPaymentMethod = view.findViewById(R.id.spinner_payment_method);   // Thêm Spinner mới
 
-        // Thiết lập Spinner cho danh sách sản phẩm
         ArrayAdapter<Product> productAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, productList);
         productAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerProduct.setAdapter(productAdapter);
 
+        ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, VALID_STATUSES);
+        statusAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerStatus.setAdapter(statusAdapter);
+
+        ArrayAdapter<String> shippingAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, SHIPPING_METHODS);
+        shippingAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerShippingMethod.setAdapter(shippingAdapter);
+
+        ArrayAdapter<String> paymentAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, PAYMENT_METHODS);
+        paymentAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerPaymentMethod.setAdapter(paymentAdapter);
+
         builder.setView(view)
-                .setPositiveButton("Thêm", (dialog, which) -> {
+                .setPositiveButton("Add", (dialog, which) -> {
                     try {
                         int userId = Integer.parseInt(editUserId.getText().toString().trim());
                         String orderDate = editOrderDate.getText().toString().trim();
-                        String status = editStatus.getText().toString().trim();
+                        String status = spinnerStatus.getSelectedItem().toString();
                         double totalAmount = Double.parseDouble(editTotal.getText().toString().trim());
                         String shippingAddress = editAddress.getText().toString().trim();
                         Product selectedProduct = (Product) spinnerProduct.getSelectedItem();
                         int quantity = Integer.parseInt(editQuantity.getText().toString().trim());
+                        String shippingMethod = spinnerShippingMethod.getSelectedItem().toString();
+                        String paymentMethod = spinnerPaymentMethod.getSelectedItem().toString();
 
                         if (!isUserExists(userId)) {
-                            editUserId.setError("User ID không tồn tại");
+                            editUserId.setError("User ID does not exist");
                             return;
                         }
                         if (TextUtils.isEmpty(orderDate) || !isValidDateFormat(orderDate)) {
-                            editOrderDate.setError("Ngày đặt hàng không hợp lệ (định dạng: yyyy-MM-dd)");
-                            return;
-                        }
-                        if (TextUtils.isEmpty(status) || !isValidStatus(status)) {
-                            editStatus.setError("Trạng thái không hợp lệ (pending, processing, shipped, delivered, canceled)");
+                            editOrderDate.setError("Invalid order date (format: yyyy-MM-dd)");
                             return;
                         }
                         if (totalAmount <= 0) {
-                            editTotal.setError("Tổng tiền phải lớn hơn 0");
+                            editTotal.setError("Total must be greater than 0");
                             return;
                         }
                         if (TextUtils.isEmpty(shippingAddress)) {
-                            editAddress.setError("Địa chỉ giao hàng không được để trống");
+                            editAddress.setError("Shipping address cannot be empty");
                             return;
                         }
                         if (selectedProduct == null) {
-                            Toast.makeText(requireContext(), "Vui lòng chọn một sản phẩm", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(requireContext(), "Please select a product", Toast.LENGTH_SHORT).show();
                             return;
                         }
                         if (quantity <= 0) {
-                            editQuantity.setError("Số lượng phải lớn hơn 0");
+                            editQuantity.setError("Quantity must be greater than 0");
                             return;
                         }
-                        // Kiểm tra số lượng tồn kho
                         if (quantity > selectedProduct.getStock()) {
-                            editQuantity.setError("Số lượng vượt quá tồn kho (" + selectedProduct.getStock() + ")");
+                            editQuantity.setError("Quantity exceeds stock (" + selectedProduct.getStock() + ")");
                             return;
                         }
 
-                        addOrder(userId, orderDate, status, totalAmount, shippingAddress, selectedProduct.getId(), quantity);
+                        addOrder(userId, orderDate, status, totalAmount, shippingAddress, selectedProduct.getId(), quantity, shippingMethod, paymentMethod);
                         loadOrders();
                     } catch (NumberFormatException e) {
-                        Toast.makeText(requireContext(), "Vui lòng nhập đúng định dạng số", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(requireContext(), "Please enter valid number format", Toast.LENGTH_SHORT).show();
                     }
                 })
-                .setNegativeButton("Hủy", null)
+                .setNegativeButton("Cancel", null)
                 .show();
     }
 
     private void showEditOrderDialog(Order order) {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Sửa Đơn Hàng");
+        builder.setTitle("Edit Order");
         View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_order, null);
-        TextInputEditText editOrderId = view.findViewById(R.id.edit_order_id); // Thêm dòng này
+        TextInputEditText editOrderId = view.findViewById(R.id.edit_order_id);
         TextInputEditText editUserId = view.findViewById(R.id.edit_order_user_id);
         TextInputEditText editOrderDate = view.findViewById(R.id.edit_order_date);
-        TextInputEditText editStatus = view.findViewById(R.id.edit_order_status);
+        Spinner spinnerStatus = view.findViewById(R.id.spinner_order_status); // Thay TextInputEditText bằng Spinner
         TextInputEditText editTotal = view.findViewById(R.id.edit_order_total);
         TextInputEditText editAddress = view.findViewById(R.id.edit_order_address);
         Spinner spinnerProduct = view.findViewById(R.id.spinner_product);
         TextInputEditText editQuantity = view.findViewById(R.id.edit_quantity);
+        Spinner spinnerShippingMethod = view.findViewById(R.id.spinner_shipping_method); // Thêm Spinner mới
+        Spinner spinnerPaymentMethod = view.findViewById(R.id.spinner_payment_method);   // Thêm Spinner mới
 
-        // Thiết lập Spinner cho danh sách sản phẩm
         ArrayAdapter<Product> productAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, productList);
         productAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerProduct.setAdapter(productAdapter);
 
-        // Điền dữ liệu hiện tại
-        editOrderId.setText(String.valueOf(order.getId())); // Thêm dòng này
+        ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, VALID_STATUSES);
+        statusAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerStatus.setAdapter(statusAdapter);
+
+        ArrayAdapter<String> shippingAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, SHIPPING_METHODS);
+        shippingAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerShippingMethod.setAdapter(shippingAdapter);
+
+        ArrayAdapter<String> paymentAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, PAYMENT_METHODS);
+        paymentAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerPaymentMethod.setAdapter(paymentAdapter);
+
+        editOrderId.setText(String.valueOf(order.getId()));
         editUserId.setText(String.valueOf(order.getUserId()));
         editOrderDate.setText(order.getOrderDate());
-        editStatus.setText(order.getStatus());
+        for (int i = 0; i < VALID_STATUSES.length; i++) {
+            if (VALID_STATUSES[i].equals(order.getStatus())) {
+                spinnerStatus.setSelection(i);
+                break;
+            }
+        }
         editTotal.setText(String.valueOf(order.getTotalAmount()));
         editAddress.setText(order.getShippingAddress());
-
-        // Tìm sản phẩm hiện tại trong Order_Items (giả định chỉ có 1 sản phẩm cho đơn giản)
-        try (SQLiteDatabase db = dbHelper.openDatabase()) {
-            Cursor cursor = db.rawQuery("SELECT product_id, quantity FROM Order_Items WHERE order_id = ? LIMIT 1", new String[]{String.valueOf(order.getId())});
-            if (cursor.moveToFirst()) {
-                int productId = cursor.getInt(cursor.getColumnIndexOrThrow("product_id"));
-                int quantity = cursor.getInt(cursor.getColumnIndexOrThrow("quantity"));
-                editQuantity.setText(String.valueOf(quantity));
-                for (int i = 0; i < productList.size(); i++) {
-                    if (productList.get(i).getId() == productId) {
-                        spinnerProduct.setSelection(i);
-                        break;
-                    }
+        if (!order.getOrderItems().isEmpty()) {
+            int productId = order.getOrderItems().get(0).getProductId();
+            int quantity = order.getOrderItems().get(0).getQuantity();
+            for (int i = 0; i < productList.size(); i++) {
+                if (productList.get(i).getId() == productId) {
+                    spinnerProduct.setSelection(i);
+                    break;
                 }
             }
-            cursor.close();
-        } catch (Exception e) {
-            Log.e("OrderManagement", "Lỗi tải Order_Items: " + e.getMessage(), e);
-            Toast.makeText(requireContext(), "Lỗi tải Order_Items: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            editQuantity.setText(String.valueOf(quantity));
+        }
+        for (int i = 0; i < SHIPPING_METHODS.length; i++) {
+            if (SHIPPING_METHODS[i].equals(order.getShippingMethod())) {
+                spinnerShippingMethod.setSelection(i);
+                break;
+            }
+        }
+        for (int i = 0; i < PAYMENT_METHODS.length; i++) {
+            if (PAYMENT_METHODS[i].equals(order.getPaymentMethod())) {
+                spinnerPaymentMethod.setSelection(i);
+                break;
+            }
         }
 
         builder.setView(view)
-                .setPositiveButton("Cập nhật", (dialog, which) -> {
+                .setPositiveButton("Update", (dialog, which) -> {
                     try {
                         int userId = Integer.parseInt(editUserId.getText().toString().trim());
                         String orderDate = editOrderDate.getText().toString().trim();
-                        String status = editStatus.getText().toString().trim();
+                        String status = spinnerStatus.getSelectedItem().toString();
                         double totalAmount = Double.parseDouble(editTotal.getText().toString().trim());
                         String shippingAddress = editAddress.getText().toString().trim();
                         Product selectedProduct = (Product) spinnerProduct.getSelectedItem();
                         int quantity = Integer.parseInt(editQuantity.getText().toString().trim());
+                        String shippingMethod = spinnerShippingMethod.getSelectedItem().toString();
+                        String paymentMethod = spinnerPaymentMethod.getSelectedItem().toString();
 
                         if (!isUserExists(userId)) {
-                            editUserId.setError("User ID không tồn tại");
+                            editUserId.setError("User ID does not exist");
                             return;
                         }
                         if (TextUtils.isEmpty(orderDate) || !isValidDateFormat(orderDate)) {
-                            editOrderDate.setError("Ngày đặt hàng không hợp lệ (định dạng: yyyy-MM-dd)");
-                            return;
-                        }
-                        if (TextUtils.isEmpty(status) || !isValidStatus(status)) {
-                            editStatus.setError("Trạng thái không hợp lệ (pending, processing, shipped, delivered, canceled)");
+                            editOrderDate.setError("Invalid order date (format: yyyy-MM-dd)");
                             return;
                         }
                         if (totalAmount <= 0) {
-                            editTotal.setError("Tổng tiền phải lớn hơn 0");
+                            editTotal.setError("Total must be greater than 0");
                             return;
                         }
                         if (TextUtils.isEmpty(shippingAddress)) {
-                            editAddress.setError("Địa chỉ giao hàng không được để trống");
+                            editAddress.setError("Shipping address cannot be empty");
                             return;
                         }
                         if (selectedProduct == null) {
-                            Toast.makeText(requireContext(), "Vui lòng chọn một sản phẩm", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(requireContext(), "Please select a product", Toast.LENGTH_SHORT).show();
                             return;
                         }
                         if (quantity <= 0) {
-                            editQuantity.setError("Số lượng phải lớn hơn 0");
+                            editQuantity.setError("Quantity must be greater than 0");
                             return;
                         }
-                        // Kiểm tra số lượng tồn kho
                         if (quantity > selectedProduct.getStock()) {
-                            editQuantity.setError("Số lượng vượt quá tồn kho (" + selectedProduct.getStock() + ")");
+                            editQuantity.setError("Quantity exceeds stock (" + selectedProduct.getStock() + ")");
                             return;
                         }
 
-                        updateOrder(order.getId(), userId, orderDate, status, totalAmount, shippingAddress, selectedProduct.getId(), quantity);
+                        updateOrder(order.getId(), userId, orderDate, status, totalAmount, shippingAddress, selectedProduct.getId(), quantity, shippingMethod, paymentMethod);
                         loadOrders();
                     } catch (NumberFormatException e) {
-                        Toast.makeText(requireContext(), "Vui lòng nhập đúng định dạng số", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(requireContext(), "Please enter valid number format", Toast.LENGTH_SHORT).show();
                     }
                 })
-                .setNegativeButton("Hủy", null)
+                .setNegativeButton("Cancel", null)
                 .show();
     }
 
@@ -300,8 +338,7 @@ public class OrderManagementFragment extends Fragment {
             cursor.close();
             return false;
         } catch (Exception e) {
-            Log.e("OrderManagement", "Lỗi kiểm tra user_id: " + e.getMessage(), e);
-            Toast.makeText(requireContext(), "Lỗi kiểm tra user_id: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Log.e("OrderManagement", "Error checking user_id: " + e.getMessage(), e);
             return false;
         }
     }
@@ -317,26 +354,15 @@ public class OrderManagementFragment extends Fragment {
         }
     }
 
-    private boolean isValidStatus(String status) {
-        for (String validStatus : VALID_STATUSES) {
-            if (validStatus.equalsIgnoreCase(status)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void addOrder(int userId, String orderDate, String status, double totalAmount, String shippingAddress, int productId, int quantity) {
+    private void addOrder(int userId, String orderDate, String status, double totalAmount, String shippingAddress, int productId, int quantity, String shippingMethod, String paymentMethod) {
         SQLiteDatabase db = null;
         try {
             db = dbHelper.openDatabase();
             db.beginTransaction();
 
-            // Thêm vào bảng Orders
             db.execSQL("INSERT INTO Orders (user_id, order_date, status, total_amount, shipping_address, shipping_method) VALUES (?, ?, ?, ?, ?, ?)",
-                    new Object[]{userId, orderDate, status, totalAmount, shippingAddress, "home_delivery"});
+                    new Object[]{userId, orderDate, status, totalAmount, shippingAddress, shippingMethod});
 
-            // Lấy order_id vừa thêm
             Cursor cursor = db.rawQuery("SELECT last_insert_rowid()", null);
             int orderId = -1;
             if (cursor.moveToFirst()) {
@@ -344,11 +370,8 @@ public class OrderManagementFragment extends Fragment {
             }
             cursor.close();
 
-            if (orderId == -1) {
-                throw new Exception("Không thể lấy order_id sau khi thêm đơn hàng");
-            }
+            if (orderId == -1) throw new Exception("Failed to get order_id");
 
-            // Lấy giá sản phẩm để tính unit_price
             double unitPrice = 0;
             Cursor priceCursor = db.rawQuery("SELECT price FROM Products WHERE product_id = ?", new String[]{String.valueOf(productId)});
             if (priceCursor.moveToFirst()) {
@@ -356,48 +379,35 @@ public class OrderManagementFragment extends Fragment {
             }
             priceCursor.close();
 
-            // Thêm vào bảng Order_Items
             db.execSQL("INSERT INTO Order_Items (order_id, product_id, quantity, unit_price) VALUES (?, ?, ?, ?)",
                     new Object[]{orderId, productId, quantity, unitPrice});
 
-            // Cập nhật số lượng tồn kho
             db.execSQL("UPDATE Products SET stock = stock - ? WHERE product_id = ?",
                     new Object[]{quantity, productId});
 
+            db.execSQL("INSERT INTO Payments (order_id, payment_method) VALUES (?, ?)",
+                    new Object[]{orderId, paymentMethod});
+
             db.setTransactionSuccessful();
-            Log.d("OrderManagement", "Thêm đơn hàng thành công: " + orderId);
-            Toast.makeText(requireContext(), "Thêm đơn hàng thành công", Toast.LENGTH_SHORT).show();
-        } catch (SQLiteConstraintException e) {
-            Log.e("OrderManagement", "Lỗi ràng buộc: " + e.getMessage(), e);
-            Toast.makeText(requireContext(), "Lỗi: Dữ liệu không hợp lệ (có thể thiếu thông tin bắt buộc)", Toast.LENGTH_LONG).show();
+            Toast.makeText(requireContext(), "Order added successfully", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-            Log.e("OrderManagement", "Lỗi thêm đơn hàng: " + e.getMessage(), e);
-            Toast.makeText(requireContext(), "Lỗi thêm đơn hàng: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Log.e("OrderManagement", "Error adding order: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Error adding order: " + e.getMessage(), Toast.LENGTH_LONG).show();
         } finally {
             if (db != null) {
-                try {
-                    if (db.isOpen() && db.inTransaction()) {
-                        db.endTransaction();
-                    }
-                    if (db.isOpen()) {
-                        dbHelper.closeDatabase(db);
-                    }
-                } catch (Exception e) {
-                    Log.e("OrderManagement", "Lỗi khi đóng database: " + e.getMessage(), e);
-                }
+                if (db.inTransaction()) db.endTransaction();
+                dbHelper.closeDatabase(db);
             }
         }
     }
 
-    private void updateOrder(int id, int userId, String orderDate, String status, double totalAmount, String shippingAddress, int productId, int quantity) {
+    private void updateOrder(int id, int userId, String orderDate, String status, double totalAmount, String shippingAddress, int productId, int quantity, String shippingMethod, String paymentMethod) {
         SQLiteDatabase db = null;
         try {
             db = dbHelper.openDatabase();
             db.beginTransaction();
 
-            // Lấy số lượng cũ từ Order_Items để cập nhật lại stock
-            int oldQuantity = 0;
-            int oldProductId = 0;
+            int oldQuantity = 0, oldProductId = 0;
             Cursor oldItemCursor = db.rawQuery("SELECT product_id, quantity FROM Order_Items WHERE order_id = ? LIMIT 1", new String[]{String.valueOf(id)});
             if (oldItemCursor.moveToFirst()) {
                 oldProductId = oldItemCursor.getInt(oldItemCursor.getColumnIndexOrThrow("product_id"));
@@ -405,20 +415,16 @@ public class OrderManagementFragment extends Fragment {
             }
             oldItemCursor.close();
 
-            // Cập nhật stock cho sản phẩm cũ
             if (oldProductId != 0) {
                 db.execSQL("UPDATE Products SET stock = stock + ? WHERE product_id = ?",
                         new Object[]{oldQuantity, oldProductId});
             }
 
-            // Cập nhật bảng Orders
-            db.execSQL("UPDATE Orders SET user_id = ?, order_date = ?, status = ?, total_amount = ?, shipping_address = ? WHERE order_id = ?",
-                    new Object[]{userId, orderDate, status, totalAmount, shippingAddress, id});
+            db.execSQL("UPDATE Orders SET user_id = ?, order_date = ?, status = ?, total_amount = ?, shipping_address = ?, shipping_method = ? WHERE order_id = ?",
+                    new Object[]{userId, orderDate, status, totalAmount, shippingAddress, shippingMethod, id});
 
-            // Xóa các Order_Items cũ
             db.execSQL("DELETE FROM Order_Items WHERE order_id = ?", new Object[]{id});
 
-            // Lấy giá sản phẩm để tính unit_price
             double unitPrice = 0;
             Cursor priceCursor = db.rawQuery("SELECT price FROM Products WHERE product_id = ?", new String[]{String.valueOf(productId)});
             if (priceCursor.moveToFirst()) {
@@ -426,103 +432,65 @@ public class OrderManagementFragment extends Fragment {
             }
             priceCursor.close();
 
-            // Thêm Order_Items mới
             db.execSQL("INSERT INTO Order_Items (order_id, product_id, quantity, unit_price) VALUES (?, ?, ?, ?)",
                     new Object[]{id, productId, quantity, unitPrice});
 
-            // Cập nhật số lượng tồn kho cho sản phẩm mới
             db.execSQL("UPDATE Products SET stock = stock - ? WHERE product_id = ?",
                     new Object[]{quantity, productId});
 
+            db.execSQL("UPDATE Payments SET payment_method = ? WHERE order_id = ?",
+                    new Object[]{paymentMethod, id});
+
             db.setTransactionSuccessful();
-            Log.d("OrderManagement", "Cập nhật đơn hàng thành công: " + id);
-            Toast.makeText(requireContext(), "Cập nhật đơn hàng thành công", Toast.LENGTH_SHORT).show();
-        } catch (SQLiteConstraintException e) {
-            Log.e("OrderManagement", "Lỗi ràng buộc: " + e.getMessage(), e);
-            Toast.makeText(requireContext(), "Lỗi: Dữ liệu không hợp lệ", Toast.LENGTH_LONG).show();
+            Toast.makeText(requireContext(), "Order updated successfully", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-            Log.e("OrderManagement", "Lỗi cập nhật đơn hàng: " + e.getMessage(), e);
-            Toast.makeText(requireContext(), "Lỗi cập nhật đơn hàng: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Log.e("OrderManagement", "Error updating order: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Error updating order: " + e.getMessage(), Toast.LENGTH_LONG).show();
         } finally {
             if (db != null) {
-                try {
-                    if (db.isOpen() && db.inTransaction()) {
-                        db.endTransaction();
-                    }
-                    if (db.isOpen()) {
-                        dbHelper.closeDatabase(db);
-                    }
-                } catch (Exception e) {
-                    Log.e("OrderManagement", "Lỗi khi đóng database: " + e.getMessage(), e);
-                }
+                if (db.inTransaction()) db.endTransaction();
+                dbHelper.closeDatabase(db);
             }
         }
     }
 
     private void deleteOrder(Order order) {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Xác nhận xóa")
-                .setMessage("Bạn có chắc chắn muốn xóa đơn hàng này? Các thông tin liên quan (Order_Items, Payments, Notifications, Order_Tracking) cũng sẽ bị xóa.")
-                .setPositiveButton("Xóa", (dialog, which) -> {
-                    SQLiteDatabase db = null;
-                    try {
-                        db = dbHelper.openDatabase();
-                        db.beginTransaction();
+        // Giữ nguyên hàm này
+        SQLiteDatabase db = null;
+        try {
+            db = dbHelper.openDatabase();
+            db.beginTransaction();
 
-                        // Lấy số lượng và product_id từ Order_Items để cập nhật stock
-                        int quantity = 0;
-                        int productId = 0;
-                        Cursor itemCursor = db.rawQuery("SELECT product_id, quantity FROM Order_Items WHERE order_id = ?", new String[]{String.valueOf(order.getId())});
-                        if (itemCursor.moveToFirst()) {
-                            productId = itemCursor.getInt(itemCursor.getColumnIndexOrThrow("product_id"));
-                            quantity = itemCursor.getInt(itemCursor.getColumnIndexOrThrow("quantity"));
-                        }
-                        itemCursor.close();
+            int quantity = 0, productId = 0;
+            Cursor itemCursor = db.rawQuery("SELECT product_id, quantity FROM Order_Items WHERE order_id = ?", new String[]{String.valueOf(order.getId())});
+            if (itemCursor.moveToFirst()) {
+                productId = itemCursor.getInt(itemCursor.getColumnIndexOrThrow("product_id"));
+                quantity = itemCursor.getInt(itemCursor.getColumnIndexOrThrow("quantity"));
+            }
+            itemCursor.close();
 
-                        // Cập nhật stock
-                        if (productId != 0) {
-                            db.execSQL("UPDATE Products SET stock = stock + ? WHERE product_id = ?",
-                                    new Object[]{quantity, productId});
-                        }
+            if (productId != 0) {
+                db.execSQL("UPDATE Products SET stock = stock + ? WHERE product_id = ?",
+                        new Object[]{quantity, productId});
+            }
 
-                        // Xóa các bảng liên quan trước
-                        db.execSQL("DELETE FROM Order_Items WHERE order_id = ?", new Object[]{order.getId()});
-                        db.execSQL("DELETE FROM Payments WHERE order_id = ?", new Object[]{order.getId()});
-                        db.execSQL("DELETE FROM Notifications WHERE order_id = ?", new Object[]{order.getId()});
-                        db.execSQL("DELETE FROM Order_Tracking WHERE order_id = ?", new Object[]{order.getId()});
-                        db.execSQL("DELETE FROM Orders WHERE order_id = ?", new Object[]{order.getId()});
+            db.execSQL("DELETE FROM Order_Items WHERE order_id = ?", new Object[]{order.getId()});
+            db.execSQL("DELETE FROM Payments WHERE order_id = ?", new Object[]{order.getId()});
+            db.execSQL("DELETE FROM Notifications WHERE order_id = ?", new Object[]{order.getId()});
+            db.execSQL("DELETE FROM Order_Tracking WHERE order_id = ?", new Object[]{order.getId()});
+            db.execSQL("DELETE FROM Orders WHERE order_id = ?", new Object[]{order.getId()});
 
-                        db.setTransactionSuccessful();
-                        Log.d("OrderManagement", "Xóa đơn hàng thành công: " + order.getId());
-                        Toast.makeText(requireContext(), "Xóa đơn hàng thành công", Toast.LENGTH_SHORT).show();
-                        loadOrders();
-                    } catch (Exception e) {
-                        Log.e("OrderManagement", "Lỗi xóa đơn hàng: " + e.getMessage(), e);
-                        Toast.makeText(requireContext(), "Lỗi xóa đơn hàng: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                    } finally {
-                        if (db != null) {
-                            try {
-                                if (db.isOpen() && db.inTransaction()) {
-                                    db.endTransaction(); // Đảm bảo giao dịch kết thúc ngay cả khi có lỗi
-                                }
-                                if (db.isOpen()) {
-                                    dbHelper.closeDatabase(db);
-                                }
-                            } catch (Exception e) {
-                                Log.e("OrderManagement", "Lỗi khi đóng database: " + e.getMessage(), e);
-                            }
-                        }
-                    }
-                })
-                .setNegativeButton("Hủy", null)
-                .show();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-//        if (dbHelper != null) {
-//            dbHelper.close();
-//        }
+            db.setTransactionSuccessful();
+            Toast.makeText(requireContext(), "Order deleted successfully", Toast.LENGTH_SHORT).show();
+            loadOrders();
+        } catch (Exception e) {
+            Log.e("OrderManagement", "Error deleting order: " + e.getMessage(), e);
+            Toast.makeText(requireContext(), "Error deleting order: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        } finally {
+            if (db != null) {
+                if (db.inTransaction()) db.endTransaction();
+                dbHelper.closeDatabase(db);
+            }
+        }
     }
 }

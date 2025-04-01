@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -21,7 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHolder> {
+public class OrderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+    private static final int VIEW_TYPE_USER = 0;
+    private static final int VIEW_TYPE_ADMIN = 1;
+
     private List<Order> orderList;
     private Consumer<Order> onReviewClick;
     private Consumer<Order> onEditClick;
@@ -41,78 +45,79 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
         this.isAdminMode = true;
     }
 
+    @Override
+    public int getItemViewType(int position) {
+        return isAdminMode ? VIEW_TYPE_ADMIN : VIEW_TYPE_USER;
+    }
+
     @NonNull
     @Override
-    public OrderViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_order_user, parent, false);
-        return new OrderViewHolder(view);
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        if (viewType == VIEW_TYPE_ADMIN) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_order_admin, parent, false);
+            return new AdminOrderViewHolder(view);
+        } else {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_order_user, parent, false);
+            return new UserOrderViewHolder(view);
+        }
     }
 
     @Override
-    public void onBindViewHolder(@NonNull OrderViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         Order order = orderList.get(position);
 
-        // Xử lý null cho các giá trị từ Order
-        String title = order.getTitle() != null ? order.getTitle() : "Unknown Product";
-        String status = order.getStatus() != null ? order.getStatus() : "Unknown";
-        String orderDate = order.getOrderDate() != null ? order.getOrderDate() : "Unknown Date";
+        if (holder instanceof AdminOrderViewHolder) {
+            AdminOrderViewHolder adminHolder = (AdminOrderViewHolder) holder;
+            adminHolder.orderId.setText("Order #" + order.getId());
+            adminHolder.orderStatus.setText("Status: " + order.getStatus());
+            adminHolder.orderDate.setText("Date: " + order.getOrderDate());
+            adminHolder.orderTotal.setText(String.format("Total: %.2f VND", order.getTotalAmount()));
+            adminHolder.shippingAddress.setText("Address: " + order.getShippingAddress());
+            adminHolder.shippingMethod.setText("Shipping: " + order.getShippingMethod());
+            adminHolder.paymentMethod.setText("Payment: " + order.getPaymentMethod());
 
-        holder.orderTitle.setText(title);
-        holder.orderStatus.setText("Trạng thái: " + status);
-        holder.orderDate.setText("Ngày đặt: " + orderDate);
+            OrderItemAdapter itemAdapter = new OrderItemAdapter(order.getOrderItems());
+            adminHolder.orderItemsRecyclerView.setLayoutManager(new LinearLayoutManager(adminHolder.itemView.getContext()));
+            adminHolder.orderItemsRecyclerView.setAdapter(itemAdapter);
 
-        String imageUrl = order.getImageUrl();
-        if (imageUrl != null && !imageUrl.isEmpty()) {
-            Glide.with(holder.itemView.getContext())
-                    .load(imageUrl)
-                    .placeholder(R.drawable.shop)
-                    .error(R.drawable.shop)
-                    .skipMemoryCache(false)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(holder.orderImage);
+            adminHolder.editButton.setOnClickListener(v -> onEditClick.accept(order));
+            adminHolder.deleteButton.setOnClickListener(v -> onDeleteClick.accept(order));
         } else {
-            holder.orderImage.setImageResource(R.drawable.shop);
-        }
+            UserOrderViewHolder userHolder = (UserOrderViewHolder) holder;
+            String title = order.getTitle() != null ? order.getTitle() : "Unknown Product";
+            String status = order.getStatus() != null ? order.getStatus() : "Unknown";
+            String orderDate = order.getOrderDate() != null ? order.getOrderDate() : "Unknown Date";
 
-        if (isAdminMode) {
-            holder.reviewButton.setVisibility(View.GONE);
-            holder.editButton.setVisibility(View.VISIBLE);
-            holder.deleteButton.setVisibility(View.VISIBLE);
+            userHolder.orderTitle.setText(title);
+            userHolder.orderStatus.setText("Status: " + status);
+            userHolder.orderDate.setText("Date: " + orderDate);
+            userHolder.shippingMethod.setText("Shipping: " + order.getShippingMethod());
+            userHolder.paymentMethod.setText("Payment: " + order.getPaymentMethod());
 
-            holder.editButton.setOnClickListener(v -> {
-                if (onEditClick != null) {
-                    onEditClick.accept(order);
-                } else {
-                    // Log hoặc thông báo khi callback không được thiết lập
-                    android.util.Log.w("OrderAdapter", "onEditClick callback is not set for order ID: " + order.getId());
-                }
-            });
-            holder.deleteButton.setOnClickListener(v -> {
-                if (onDeleteClick != null) {
-                    onDeleteClick.accept(order);
-                } else {
-                    android.util.Log.w("OrderAdapter", "onDeleteClick callback is not set for order ID: " + order.getId());
-                }
-            });
-        } else {
-            holder.editButton.setVisibility(View.GONE);
-            holder.deleteButton.setVisibility(View.GONE);
-            if (onReviewClick != null && "delivered".equals(status)) {
-                holder.reviewButton.setVisibility(View.VISIBLE);
-                holder.reviewButton.setOnClickListener(v -> onReviewClick.accept(order));
+            String imageUrl = order.getImageUrl();
+            if (imageUrl != null && !imageUrl.isEmpty()) {
+                Glide.with(userHolder.itemView.getContext())
+                        .load(imageUrl)
+                        .placeholder(R.drawable.shop)
+                        .error(R.drawable.shop)
+                        .skipMemoryCache(false)
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .into(userHolder.orderImage);
             } else {
-                holder.reviewButton.setVisibility(View.GONE);
-                if (onReviewClick == null && "delivered".equals(status)) {
-                    android.util.Log.w("OrderAdapter", "onReviewClick callback is not set for delivered order ID: " + order.getId());
-                }
+                userHolder.orderImage.setImageResource(R.drawable.shop);
             }
-        }
 
-        if (!isAdminMode) {
-            holder.itemView.setOnClickListener(v -> {
-                Intent intent = new Intent(holder.itemView.getContext(), OrderDetailActivity.class);
+            if ("delivered".equals(status) && onReviewClick != null) {
+                userHolder.reviewButton.setVisibility(View.VISIBLE);
+                userHolder.reviewButton.setOnClickListener(v -> onReviewClick.accept(order));
+            } else {
+                userHolder.reviewButton.setVisibility(View.GONE);
+            }
+
+            userHolder.itemView.setOnClickListener(v -> {
+                Intent intent = new Intent(userHolder.itemView.getContext(), OrderDetailActivity.class);
                 intent.putExtra("order", order);
-                holder.itemView.getContext().startActivity(intent);
+                userHolder.itemView.getContext().startActivity(intent);
             });
         }
     }
@@ -122,26 +127,45 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
         return orderList != null ? orderList.size() : 0;
     }
 
-    // Phương thức mới để cập nhật danh sách đơn hàng
     public void updateOrderList(List<Order> newOrderList) {
         this.orderList = newOrderList != null ? newOrderList : new ArrayList<>();
         notifyDataSetChanged();
     }
 
-    public static class OrderViewHolder extends RecyclerView.ViewHolder {
+    static class UserOrderViewHolder extends RecyclerView.ViewHolder {
         ImageView orderImage;
-        TextView orderTitle, orderStatus, orderDate;
-        Button reviewButton, editButton, deleteButton;
+        TextView orderTitle, orderStatus, orderDate, shippingMethod, paymentMethod;
+        Button reviewButton;
 
-        public OrderViewHolder(@NonNull View itemView) {
+        public UserOrderViewHolder(@NonNull View itemView) {
             super(itemView);
             orderImage = itemView.findViewById(R.id.orderImage);
             orderTitle = itemView.findViewById(R.id.orderTitle);
             orderStatus = itemView.findViewById(R.id.orderStatus);
             orderDate = itemView.findViewById(R.id.orderDate);
+            shippingMethod = itemView.findViewById(R.id.shippingMethod);
+            paymentMethod = itemView.findViewById(R.id.paymentMethod);
             reviewButton = itemView.findViewById(R.id.review_button);
-            editButton = itemView.findViewById(R.id.edit_button);
-            deleteButton = itemView.findViewById(R.id.delete_button);
+        }
+    }
+
+    static class AdminOrderViewHolder extends RecyclerView.ViewHolder {
+        TextView orderId, orderStatus, orderDate, orderTotal, shippingAddress, shippingMethod, paymentMethod;
+        RecyclerView orderItemsRecyclerView;
+        Button editButton, deleteButton;
+
+        public AdminOrderViewHolder(@NonNull View itemView) {
+            super(itemView);
+            orderId = itemView.findViewById(R.id.order_id);
+            orderStatus = itemView.findViewById(R.id.order_status);
+            orderDate = itemView.findViewById(R.id.order_date);
+            orderTotal = itemView.findViewById(R.id.order_total);
+            shippingAddress = itemView.findViewById(R.id.shipping_address);
+            shippingMethod = itemView.findViewById(R.id.shipping_method);
+            paymentMethod = itemView.findViewById(R.id.payment_method);
+            orderItemsRecyclerView = itemView.findViewById(R.id.order_items_recycler_view);
+            editButton = itemView.findViewById(R.id.btn_edit_order);
+            deleteButton = itemView.findViewById(R.id.btn_delete_order);
         }
     }
 }
