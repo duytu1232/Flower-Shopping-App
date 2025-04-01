@@ -14,4 +14,8 @@
     <string name="tab_not_reviewed">Not Reviewed</string>
     <string name="tab_returned">Returned</string>
     <string name="tab_canceled">Canceled</string>
+    <string name="select_role_prompt">Chọn vai trò</string>
+    <string name="select_status_prompt">Chọn trạng thái</string>
+    <string name="select_coupon_status_prompt">Chọn trạng thái mã giảm giá</string>
+    <string name="select_category_prompt">Chọn danh mục</string>
 </resources>

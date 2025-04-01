@@ -9,7 +9,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -85,8 +87,8 @@ public class UserManagementFragment extends Fragment {
         EditText editUsername = view.findViewById(R.id.edit_user_username);
         EditText editEmail = view.findViewById(R.id.edit_user_email);
         EditText editPassword = view.findViewById(R.id.edit_user_password);
-        EditText editRole = view.findViewById(R.id.edit_user_role);
-        EditText editStatus = view.findViewById(R.id.edit_user_status);
+        Spinner spinnerRole = view.findViewById(R.id.spinner_user_role); // Sử dụng Spinner
+        Spinner spinnerStatus = view.findViewById(R.id.spinner_user_status); // Sử dụng Spinner
         EditText editFullName = view.findViewById(R.id.edit_user_full_name);
         EditText editPhone = view.findViewById(R.id.edit_user_phone);
 
@@ -95,8 +97,8 @@ public class UserManagementFragment extends Fragment {
                     String username = editUsername.getText().toString().trim();
                     String email = editEmail.getText().toString().trim();
                     String password = editPassword.getText().toString().trim();
-                    String role = editRole.getText().toString().trim();
-                    String status = editStatus.getText().toString().trim();
+                    String role = spinnerRole.getSelectedItem().toString(); // Lấy giá trị từ Spinner
+                    String status = spinnerStatus.getSelectedItem().toString(); // Lấy giá trị từ Spinner
                     String fullName = editFullName.getText().toString().trim();
                     String phone = editPhone.getText().toString().trim();
 
@@ -112,14 +114,7 @@ public class UserManagementFragment extends Fragment {
                         editPassword.setError("Mật khẩu không được để trống");
                         return;
                     }
-                    if (TextUtils.isEmpty(role) || !isValidRole(role)) {
-                        editRole.setError("Vai trò không hợp lệ (customer, admin, staff)");
-                        return;
-                    }
-                    if (TextUtils.isEmpty(status) || !isValidStatus(status)) {
-                        editStatus.setError("Trạng thái không hợp lệ (active, locked)");
-                        return;
-                    }
+                    // Không cần kiểm tra role và status nữa vì Spinner đảm bảo giá trị hợp lệ
 
                     addUser(username, password, email, role, status, fullName, phone, null);
                     loadUsers();
@@ -135,25 +130,30 @@ public class UserManagementFragment extends Fragment {
         EditText editUsername = view.findViewById(R.id.edit_user_username);
         EditText editEmail = view.findViewById(R.id.edit_user_email);
         EditText editPassword = view.findViewById(R.id.edit_user_password);
-        EditText editRole = view.findViewById(R.id.edit_user_role);
-        EditText editStatus = view.findViewById(R.id.edit_user_status);
+        Spinner spinnerRole = view.findViewById(R.id.spinner_user_role); // Sử dụng Spinner
+        Spinner spinnerStatus = view.findViewById(R.id.spinner_user_status); // Sử dụng Spinner
         EditText editFullName = view.findViewById(R.id.edit_user_full_name);
         EditText editPhone = view.findViewById(R.id.edit_user_phone);
 
+        // Đặt giá trị hiện tại cho các trường
         editUsername.setText(user.getUsername());
         editEmail.setText(user.getEmail());
-        editRole.setText(user.getRole());
-        editStatus.setText(user.getStatus());
         editFullName.setText(user.getFullName());
         editPhone.setText(user.getPhone());
+
+        // Đặt giá trị hiện tại cho Spinner
+        ArrayAdapter<String> roleAdapter = (ArrayAdapter<String>) spinnerRole.getAdapter();
+        ArrayAdapter<String> statusAdapter = (ArrayAdapter<String>) spinnerStatus.getAdapter();
+        spinnerRole.setSelection(roleAdapter.getPosition(user.getRole()));
+        spinnerStatus.setSelection(statusAdapter.getPosition(user.getStatus()));
 
         builder.setView(view)
                 .setPositiveButton("Cập nhật", (dialog, which) -> {
                     String username = editUsername.getText().toString().trim();
                     String email = editEmail.getText().toString().trim();
                     String password = editPassword.getText().toString().trim();
-                    String role = editRole.getText().toString().trim();
-                    String status = editStatus.getText().toString().trim();
+                    String role = spinnerRole.getSelectedItem().toString(); // Lấy giá trị từ Spinner
+                    String status = spinnerStatus.getSelectedItem().toString(); // Lấy giá trị từ Spinner
                     String fullName = editFullName.getText().toString().trim();
                     String phone = editPhone.getText().toString().trim();
 
@@ -165,14 +165,7 @@ public class UserManagementFragment extends Fragment {
                         editEmail.setError("Email không được để trống");
                         return;
                     }
-                    if (TextUtils.isEmpty(role) || !isValidRole(role)) {
-                        editRole.setError("Vai trò không hợp lệ (customer, admin, staff)");
-                        return;
-                    }
-                    if (TextUtils.isEmpty(status) || !isValidStatus(status)) {
-                        editStatus.setError("Trạng thái không hợp lệ (active, locked)");
-                        return;
-                    }
+                    // Không cần kiểm tra role và status nữa vì Spinner đảm bảo giá trị hợp lệ
 
                     updateUser(user.getUserId(), username, password, email, role, status, fullName, phone, user.getAvatarUri());
                     loadUsers();
