@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="flower_types">
-        <item>Tất cả</item>
-        <item>Hoa hồng</item>
-        <item>Hoa cẩm chướng</item>
-        <item>Hoa lan</item>
+    <!-- Mảng cho danh mục sản phẩm -->
+    <string-array name="categories">
+        <item>Hoa cưới</item>
+        <item>Hoa sinh nhật</item>
+        <item>Hoa chúc mừng</item>
+        <item>Hoa khai trương</item>
+        <item>Hoa chia buồn</item>
     </string-array>
+
     <string-array name="rating_filters">
         <item>All</item>
         <item>5 Stars</item>
@@ -15,4 +18,16 @@
         <item>1 Star</item>
     </string-array>
     <string name="select_rating">Select Rating</string>
+    <!-- Mảng cho vai trò -->
+    <string-array name="roles">
+        <item>customer</item>
+        <item>admin</item>
+        <item>staff</item>
+    </string-array>
+
+    <!-- Mảng cho trạng thái -->
+    <string-array name="statuses">
+        <item>active</item>
+        <item>locked</item>
+    </string-array>
 </resources>

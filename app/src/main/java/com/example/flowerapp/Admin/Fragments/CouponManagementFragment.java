@@ -9,6 +9,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -84,7 +86,7 @@ public class CouponManagementFragment extends Fragment {
         TextInputEditText editValue = view.findViewById(R.id.edit_coupon_value);
         TextInputEditText editStart = view.findViewById(R.id.edit_coupon_start);
         TextInputEditText editEnd = view.findViewById(R.id.edit_coupon_end);
-        TextInputEditText editStatus = view.findViewById(R.id.edit_coupon_status);
+        Spinner spinnerStatus = view.findViewById(R.id.spinner_coupon_status); // Sử dụng Spinner
         TextInputEditText editMinOrderValue = view.findViewById(R.id.edit_coupon_min_order_value);
 
         // Đặt mặc định nếu cần
@@ -103,7 +105,7 @@ public class CouponManagementFragment extends Fragment {
                         String valueStr = editValue.getText().toString().trim();
                         String startDate = editStart.getText().toString().trim();
                         String endDate = editEnd.getText().toString().trim();
-                        String status = editStatus.getText().toString().trim();
+                        String status = spinnerStatus.getSelectedItem().toString(); // Lấy giá trị từ Spinner
                         String minOrderValueStr = editMinOrderValue.getText().toString().trim();
 
                         if (TextUtils.isEmpty(code)) {
@@ -127,10 +129,7 @@ public class CouponManagementFragment extends Fragment {
                             editEnd.setError("Ngày kết thúc phải sau ngày bắt đầu");
                             return;
                         }
-                        if (TextUtils.isEmpty(status) || !isValidStatus(status)) {
-                            editStatus.setError("Trạng thái không hợp lệ (active, expired)");
-                            return;
-                        }
+                        // Không cần kiểm tra status nữa vì Spinner đảm bảo giá trị hợp lệ
                         double minOrderValue = Double.parseDouble(minOrderValueStr);
                         if (minOrderValue < 0) {
                             editMinOrderValue.setError("Giá trị tối thiểu phải lớn hơn hoặc bằng 0");
@@ -155,15 +154,18 @@ public class CouponManagementFragment extends Fragment {
         TextInputEditText editValue = view.findViewById(R.id.edit_coupon_value);
         TextInputEditText editStart = view.findViewById(R.id.edit_coupon_start);
         TextInputEditText editEnd = view.findViewById(R.id.edit_coupon_end);
-        TextInputEditText editStatus = view.findViewById(R.id.edit_coupon_status);
+        Spinner spinnerStatus = view.findViewById(R.id.spinner_coupon_status); // Sử dụng Spinner
         TextInputEditText editMinOrderValue = view.findViewById(R.id.edit_coupon_min_order_value);
 
         editCode.setText(coupon.getCode());
         editValue.setText(String.valueOf(coupon.getDiscountValue()));
         editStart.setText(coupon.getStartDate());
         editEnd.setText(coupon.getEndDate());
-        editStatus.setText(coupon.getStatus());
         editMinOrderValue.setText(String.valueOf(coupon.getMinOrderValue()));
+
+        // Đặt giá trị hiện tại cho Spinner
+        ArrayAdapter<String> statusAdapter = (ArrayAdapter<String>) spinnerStatus.getAdapter();
+        spinnerStatus.setSelection(statusAdapter.getPosition(coupon.getStatus()));
 
         // Thêm DatePicker cho edit_coupon_start
         editStart.setOnClickListener(v -> showDatePickerDialog(editStart));
@@ -178,7 +180,7 @@ public class CouponManagementFragment extends Fragment {
                         String valueStr = editValue.getText().toString().trim();
                         String startDate = editStart.getText().toString().trim();
                         String endDate = editEnd.getText().toString().trim();
-                        String status = editStatus.getText().toString().trim();
+                        String status = spinnerStatus.getSelectedItem().toString(); // Lấy giá trị từ Spinner
                         String minOrderValueStr = editMinOrderValue.getText().toString().trim();
 
                         if (TextUtils.isEmpty(code)) {
@@ -202,10 +204,7 @@ public class CouponManagementFragment extends Fragment {
                             editEnd.setError("Ngày kết thúc phải sau ngày bắt đầu");
                             return;
                         }
-                        if (TextUtils.isEmpty(status) || !isValidStatus(status)) {
-                            editStatus.setError("Trạng thái không hợp lệ (active, expired)");
-                            return;
-                        }
+                        // Không cần kiểm tra status nữa vì Spinner đảm bảo giá trị hợp lệ
                         double minOrderValue = Double.parseDouble(minOrderValueStr);
                         if (minOrderValue < 0) {
                             editMinOrderValue.setError("Giá trị tối thiểu phải lớn hơn hoặc bằng 0");

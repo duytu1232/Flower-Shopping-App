@@ -84,19 +84,28 @@
                 android:minHeight="48dp" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.textfield.TextInputLayout
+        <!-- Nhãn cho danh mục -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Danh mục"
+            android:textColor="#888888"
+            android:textSize="12sp"
+            android:layout_marginStart="4dp"
+            android:layout_marginBottom="2dp" />
+
+        <!-- Spinner cho danh mục -->
+        <Spinner
+            android:id="@+id/spinner_product_category"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Danh mục"
-            app:hintTextColor="#99BC85">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/edit_product_category"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="text"
-                android:minHeight="48dp" />
-        </com.google.android.material.textfield.TextInputLayout>
+            android:entries="@array/categories"
+            android:minHeight="48dp"
+            android:prompt="@string/select_category_prompt"
+            android:background="@drawable/spinner_background_1"
+            android:spinnerMode="dropdown"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp" />
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

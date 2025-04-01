@@ -34,7 +34,7 @@
             android:entries="@array/time_periods"
             android:minHeight="48dp"
             android:padding="8dp"
-            android:background="@drawable/spinner_background"/>
+            android:background="@drawable/spinner_background_0"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_refresh"

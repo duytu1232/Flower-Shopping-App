@@ -9,7 +9,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -87,7 +89,7 @@ public class ProductManagementFragment extends Fragment implements ProductAdapte
         EditText editStock = view.findViewById(R.id.edit_product_stock);
         EditText editImageUrl = view.findViewById(R.id.edit_product_image_url);
         EditText editDescription = view.findViewById(R.id.edit_product_description);
-        EditText editCategory = view.findViewById(R.id.edit_product_category);
+        Spinner spinnerCategory = view.findViewById(R.id.spinner_product_category); // Sử dụng Spinner
 
         builder.setView(view)
                 .setPositiveButton("Thêm", (dialog, which) -> {
@@ -109,7 +111,7 @@ public class ProductManagementFragment extends Fragment implements ProductAdapte
                         }
                         String imageUrl = editImageUrl.getText().toString().trim();
                         String description = editDescription.getText().toString().trim();
-                        String category = editCategory.getText().toString().trim();
+                        String category = spinnerCategory.getSelectedItem().toString(); // Lấy giá trị từ Spinner
 
                         addProduct(name, description, price, stock, imageUrl, category);
                         loadProducts();
@@ -135,14 +137,17 @@ public class ProductManagementFragment extends Fragment implements ProductAdapte
         EditText editStock = view.findViewById(R.id.edit_product_stock);
         EditText editImageUrl = view.findViewById(R.id.edit_product_image_url);
         EditText editDescription = view.findViewById(R.id.edit_product_description);
-        EditText editCategory = view.findViewById(R.id.edit_product_category);
+        Spinner spinnerCategory = view.findViewById(R.id.spinner_product_category); // Sử dụng Spinner
 
         editName.setText(product.getName());
         editPrice.setText(String.valueOf(product.getPrice()));
         editStock.setText(String.valueOf(product.getStock()));
         editImageUrl.setText(product.getImageUrl());
         editDescription.setText(product.getDescription());
-        editCategory.setText(product.getCategory());
+
+        // Đặt giá trị hiện tại cho Spinner
+        ArrayAdapter<String> categoryAdapter = (ArrayAdapter<String>) spinnerCategory.getAdapter();
+        spinnerCategory.setSelection(categoryAdapter.getPosition(product.getCategory()));
 
         builder.setView(view)
                 .setPositiveButton("Cập nhật", (dialog, which) -> {
@@ -164,7 +169,7 @@ public class ProductManagementFragment extends Fragment implements ProductAdapte
                         }
                         String imageUrl = editImageUrl.getText().toString().trim();
                         String description = editDescription.getText().toString().trim();
-                        String category = editCategory.getText().toString().trim();
+                        String category = spinnerCategory.getSelectedItem().toString(); // Lấy giá trị từ Spinner
 
                         updateProduct(product.getId(), name, description, price, stock, imageUrl, category);
                         loadProducts();

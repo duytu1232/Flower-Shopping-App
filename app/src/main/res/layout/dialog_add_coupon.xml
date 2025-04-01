@@ -72,19 +72,28 @@
                 android:minHeight="48dp" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.textfield.TextInputLayout
+        <!-- Nhãn cho trạng thái -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Trạng thái (active/expired)"
+            android:textColor="#888888"
+            android:textSize="12sp"
+            android:layout_marginStart="4dp"
+            android:layout_marginBottom="2dp" />
+
+        <!-- Spinner cho trạng thái -->
+        <Spinner
+            android:id="@+id/spinner_coupon_status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Trạng thái (active/expired)"
-            app:hintTextColor="#99BC85">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/edit_coupon_status"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="text"
-                android:minHeight="48dp" />
-        </com.google.android.material.textfield.TextInputLayout>
+            android:entries="@array/statuses"
+            android:minHeight="48dp"
+            android:prompt="@string/select_coupon_status_prompt"
+            android:background="@drawable/spinner_background_1"
+            android:spinnerMode="dropdown"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
