@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -18,57 +17,69 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ConfirmationActivity extends AppCompatActivity {
-    private RecyclerView confirmationRecyclerView;
-    private CheckoutAdapter confirmationAdapter;
-    private List<CartItem> cartItems;
-    private TextView totalPriceText, shippingAddressText, shippingMethodText;
+    private RecyclerView recyclerView;
+    private CheckoutAdapter adapter;
+    private TextView shippingAddressText, shippingMethodText, totalPriceText, couponText;
     private Button confirmPaymentButton;
+    private List<CartItem> cartItems;
     private double totalPrice;
     private int couponId;
-    private String shippingAddress, shippingMethod;
+    private String couponCode;
+    private double discountValue;
+    private String shippingAddress;
+    private String shippingMethod;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_confirmation);
 
-        confirmationRecyclerView = findViewById(R.id.confirmation_recycler_view);
-        totalPriceText = findViewById(R.id.confirmation_total_price_text);
+        recyclerView = findViewById(R.id.confirmation_recycler_view);
         shippingAddressText = findViewById(R.id.confirmation_shipping_address_text);
         shippingMethodText = findViewById(R.id.confirmation_shipping_method_text);
+        totalPriceText = findViewById(R.id.confirmation_total_price_text);
+        couponText = findViewById(R.id.confirmation_coupon_text);
         confirmPaymentButton = findViewById(R.id.confirm_payment_button);
 
         // Nhận dữ liệu từ Intent
         Intent intent = getIntent();
         totalPrice = intent.getDoubleExtra("total_price", 0.0);
         couponId = intent.getIntExtra("coupon_id", -1);
+        couponCode = intent.getStringExtra("coupon_code");
+        discountValue = intent.getDoubleExtra("discount_value", 0.0);
         shippingAddress = intent.getStringExtra("shipping_address");
         shippingMethod = intent.getStringExtra("shipping_method");
-        cartItems = (ArrayList<CartItem>) intent.getSerializableExtra("cart_items");
+        cartItems = intent.getParcelableArrayListExtra("cart_items");
 
-        // Kiểm tra cartItems
-        if (cartItems == null || cartItems.isEmpty()) {
-            Toast.makeText(this, "No items in cart", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new CheckoutAdapter(cartItems, this);
+        recyclerView.setAdapter(adapter);
+
+        shippingAddressText.setText("Shipping Address: " + shippingAddress);
+        shippingMethodText.setText("Shipping Method: " + shippingMethod);
+        totalPriceText.setText(String.format("Total: %.2f VND", totalPrice));
+
+        // Hiển thị thông tin coupon
+        if (couponId != -1 && couponCode != null) {
+            double originalTotal = 0;
+            for (CartItem item : cartItems) {
+                originalTotal += item.getPrice() * item.getQuantity();
+            }
+            double discount = originalTotal * (discountValue / 100.0);
+            couponText.setText("Coupon: " + couponCode + " (-" + String.format("%.2f", discount) + " VND)");
+        } else {
+            couponText.setText("Coupon: None");
         }
 
-        confirmationRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        confirmationAdapter = new CheckoutAdapter(cartItems, this);
-        confirmationRecyclerView.setAdapter(confirmationAdapter);
-
-        totalPriceText.setText(String.format("Total: %.2f VND", totalPrice));
-        shippingAddressText.setText("Shipping Address: " + (shippingAddress != null ? shippingAddress : "N/A"));
-        shippingMethodText.setText("Shipping Method: " + (shippingMethod != null ? shippingMethod : "N/A"));
-
         confirmPaymentButton.setOnClickListener(v -> {
-            // Chuyển sang PaymentActivity
             Intent paymentIntent = new Intent(ConfirmationActivity.this, PaymentActivity.class);
             paymentIntent.putExtra("total_price", totalPrice);
             paymentIntent.putExtra("coupon_id", couponId);
+            paymentIntent.putExtra("coupon_code", couponCode);
+            paymentIntent.putExtra("discount_value", discountValue);
             paymentIntent.putExtra("shipping_address", shippingAddress);
             paymentIntent.putExtra("shipping_method", shippingMethod);
-            paymentIntent.putExtra("cart_items", new ArrayList<>(cartItems));
+            paymentIntent.putParcelableArrayListExtra("cart_items", new ArrayList<>(cartItems));
             startActivity(paymentIntent);
         });
     }

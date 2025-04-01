@@ -46,12 +46,15 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(platform(libs.firebase.bom))
-    // Thêm các thư viện mới
-    implementation(libs.jbcrypt)  // Bắt buộc cho BCrypt
-    implementation(libs.firebase.storage)  // Tùy chọn cho hình ảnh
-    implementation(libs.room.runtime)  // Tùy chọn cho Room
-    annotationProcessor(libs.room.compiler)  // Tùy chọn cho Room
-    implementation(libs.lifecycle.livedata)  // Tùy chọn cho LiveData
+    implementation(libs.jbcrypt)
+    implementation(libs.firebase.storage)
+    implementation(libs.room.runtime)
+    annotationProcessor(libs.room.compiler)
+    implementation(libs.lifecycle.livedata)
+    // Thêm Retrofit và Gson
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.gson)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
