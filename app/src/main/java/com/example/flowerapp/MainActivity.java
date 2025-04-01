@@ -66,32 +66,48 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        String openFragment = getIntent().getStringExtra("openFragment");
-        if (savedInstanceState == null) {
-            if ("account".equals(openFragment)) {
-                if (bottomNav != null) {
-                    bottomNav.setSelectedItemId(R.id.bottomItemAccount);
-                }
-            } else if ("shop".equals(openFragment)) {
-                if (bottomNav != null) {
-                    bottomNav.setSelectedItemId(R.id.bottomItemShop);
-                    Bundle args = new Bundle();
-                    String searchQuery = getIntent().getStringExtra("search_query");
-                    String filterType = getIntent().getStringExtra("filter_type");
-                    float filterPriceMin = getIntent().getFloatExtra("filter_price_min", 0f);
-                    float filterPriceMax = getIntent().getFloatExtra("filter_price_max", Float.MAX_VALUE);
-                    if (searchQuery != null) args.putString("search_query", searchQuery);
-                    if (filterType != null) args.putString("filter_type", filterType);
-                    args.putFloat("filter_price_min", filterPriceMin);
-                    args.putFloat("filter_price_max", filterPriceMax);
-                    fragmentShop.setArguments(args);
-                    replaceFragment(fragmentShop);
-                }
-            } else {
-                if (bottomNav != null) {
-                    bottomNav.setSelectedItemId(R.id.bottomItemHome);
-                }
+        // Xử lý Intent từ TimKiem.java
+        handleIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleIntent(intent);
+    }
+
+    private void handleIntent(Intent intent) {
+        String openFragment = intent.getStringExtra("openFragment");
+        if (bottomNav == null) {
+            Log.e(TAG, "Bottom navigation not initialized");
+            return;
+        }
+
+        if ("account".equals(openFragment)) {
+            bottomNav.setSelectedItemId(R.id.bottomItemAccount);
+        } else if ("shop".equals(openFragment)) {
+            bottomNav.setSelectedItemId(R.id.bottomItemShop);
+            Bundle args = new Bundle();
+            String searchQuery = intent.getStringExtra("search_query");
+            String filterType = intent.getStringExtra("filter_type");
+            float filterPriceMin = intent.getFloatExtra("filter_price_min", 0f);
+            float filterPriceMax = intent.getFloatExtra("filter_price_max", Float.MAX_VALUE);
+            if (searchQuery != null) args.putString("search_query", searchQuery);
+            if (filterType != null) args.putString("filter_type", filterType);
+            args.putFloat("filter_price_min", filterPriceMin);
+            args.putFloat("filter_price_max", filterPriceMax);
+
+            // Cập nhật arguments cho fragmentShop
+            fragmentShop.setArguments(args);
+            // Làm mới fragmentShop
+            replaceFragment(fragmentShop);
+            // Gọi loadProducts() để làm mới danh sách sản phẩm
+            if (fragmentShop.isAdded()) {
+                fragmentShop.loadProducts();
             }
+        } else {
+            bottomNav.setSelectedItemId(R.id.bottomItemHome);
         }
     }
 
@@ -174,14 +190,11 @@ public class MainActivity extends AppCompatActivity {
             headerLayout.setVisibility(hideHeader ? View.GONE : View.VISIBLE);
             khoangTrongMenu.setVisibility(hideHeader ? View.GONE : View.VISIBLE);
 
-
         } catch (Exception e) {
             Log.e(TAG, "Error replacing fragment: " + e.getMessage());
             Toast.makeText(this, "Error loading fragment", Toast.LENGTH_SHORT).show();
         }
     }
-
-
 
     public void openNotification(View view) {
         Intent intent = new Intent(MainActivity.this, NotificationActivity.class);
