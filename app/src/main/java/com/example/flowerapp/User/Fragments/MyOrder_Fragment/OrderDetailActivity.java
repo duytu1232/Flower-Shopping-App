@@ -7,8 +7,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.example.flowerapp.Adapters.OrderItemAdapter;
 import com.example.flowerapp.Models.Order;
 import com.example.flowerapp.R;
 import com.example.flowerapp.Security.Helper.DatabaseHelper;
@@ -18,6 +21,7 @@ public class OrderDetailActivity extends AppCompatActivity {
     private TextView orderTitle, orderStatus, orderDate, orderTotal, orderAddress, shippingMethod, paymentMethod;
     private ImageView orderImage;
     private Button btnBack;
+    private RecyclerView orderItemsRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,16 +34,17 @@ public class OrderDetailActivity extends AppCompatActivity {
         orderDate = findViewById(R.id.order_date);
         orderTotal = findViewById(R.id.order_total);
         orderAddress = findViewById(R.id.order_address);
-        shippingMethod = findViewById(R.id.shipping_method); // Thêm TextView mới
-        paymentMethod = findViewById(R.id.payment_method);   // Thêm TextView mới
+        shippingMethod = findViewById(R.id.shipping_method);
+        paymentMethod = findViewById(R.id.payment_method);
         orderImage = findViewById(R.id.order_image);
         btnBack = findViewById(R.id.btn_back);
+        orderItemsRecyclerView = findViewById(R.id.order_items_recycler_view);
 
         btnBack.setOnClickListener(v -> finish());
 
         Order order = (Order) getIntent().getSerializableExtra("order");
         if (order != null) {
-            orderTitle.setText(order.getTitle());
+            orderTitle.setText("Order #" + order.getId());
             orderStatus.setText(order.getStatus());
             orderDate.setText(order.getOrderDate());
             orderTotal.setText(String.format("%.2f VND", order.getTotalAmount()));
@@ -56,6 +61,10 @@ public class OrderDetailActivity extends AppCompatActivity {
             } else {
                 orderImage.setImageResource(R.drawable.rose);
             }
+
+            OrderItemAdapter itemAdapter = new OrderItemAdapter(order.getOrderItems());
+            orderItemsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+            orderItemsRecyclerView.setAdapter(itemAdapter);
         } else {
             Toast.makeText(this, "Order data not found", Toast.LENGTH_SHORT).show();
         }

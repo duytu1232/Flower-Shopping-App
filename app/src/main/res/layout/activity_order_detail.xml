@@ -12,7 +12,6 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Tiêu đề -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -23,7 +22,6 @@
             android:gravity="center"
             android:paddingBottom="16dp" />
 
-        <!-- CardView chứa thông tin đơn hàng -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -38,7 +36,6 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Ảnh sản phẩm -->
                 <ImageView
                     android:id="@+id/order_image"
                     android:layout_width="match_parent"
@@ -49,7 +46,6 @@
                     android:background="@drawable/rounded_image"
                     android:layout_marginBottom="16dp" />
 
-                <!-- Tiêu đề đơn hàng -->
                 <TextView
                     android:id="@+id/order_title"
                     android:layout_width="match_parent"
@@ -60,20 +56,17 @@
                     android:textColor="#1A3C34"
                     android:paddingBottom="8dp" />
 
-                <!-- Trạng thái -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:paddingBottom="8dp">
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Status: "
                         android:textSize="16sp"
                         android:textColor="#666666" />
-
                     <TextView
                         android:id="@+id/order_status"
                         android:layout_width="wrap_content"
@@ -84,20 +77,17 @@
                         android:textStyle="bold" />
                 </LinearLayout>
 
-                <!-- Ngày đặt -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:paddingBottom="8dp">
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Date: "
                         android:textSize="16sp"
                         android:textColor="#666666" />
-
                     <TextView
                         android:id="@+id/order_date"
                         android:layout_width="wrap_content"
@@ -107,20 +97,17 @@
                         android:textColor="#1A3C34" />
                 </LinearLayout>
 
-                <!-- Tổng tiền -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:paddingBottom="8dp">
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Total: "
                         android:textSize="16sp"
                         android:textColor="#666666" />
-
                     <TextView
                         android:id="@+id/order_total"
                         android:layout_width="wrap_content"
@@ -131,20 +118,17 @@
                         android:textStyle="bold" />
                 </LinearLayout>
 
-                <!-- Địa chỉ giao hàng -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:paddingBottom="8dp">
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Address: "
                         android:textSize="16sp"
                         android:textColor="#666666" />
-
                     <TextView
                         android:id="@+id/order_address"
                         android:layout_width="0dp"
@@ -155,20 +139,17 @@
                         android:textColor="#1A3C34" />
                 </LinearLayout>
 
-                <!-- Phương thức vận chuyển -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:paddingBottom="8dp">
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Shipping Method: "
                         android:textSize="16sp"
                         android:textColor="#666666" />
-
                     <TextView
                         android:id="@+id/shipping_method"
                         android:layout_width="0dp"
@@ -179,20 +160,17 @@
                         android:textColor="#1A3C34" />
                 </LinearLayout>
 
-                <!-- Phương thức thanh toán -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:paddingBottom="8dp">
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Payment Method: "
                         android:textSize="16sp"
                         android:textColor="#666666" />
-
                     <TextView
                         android:id="@+id/payment_method"
                         android:layout_width="0dp"
@@ -202,10 +180,15 @@
                         android:textSize="16sp"
                         android:textColor="#1A3C34" />
                 </LinearLayout>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/order_items_recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Nút quay lại -->
         <Button
             android:id="@+id/btn_back"
             android:layout_width="wrap_content"

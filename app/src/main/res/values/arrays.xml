@@ -2,11 +2,12 @@
 <resources>
     <!-- Mảng cho danh mục sản phẩm -->
     <string-array name="categories">
-        <item>Hoa cưới</item>
-        <item>Hoa sinh nhật</item>
-        <item>Hoa chúc mừng</item>
-        <item>Hoa khai trương</item>
-        <item>Hoa chia buồn</item>
+        <item>Hoa thủy sinh</item>
+        <item>Cây cảnh</item>
+        <item>Hoa cắt cành</item>
+        <item>Hoa chậu</item>
+        <item>Hoa hoa thơm</item>
+        <item>Tất cả</item>
     </string-array>
 
     <string-array name="rating_filters">
@@ -30,4 +31,8 @@
         <item>active</item>
         <item>locked</item>
     </string-array>
+    <array name="price_range_default">
+        <item>0</item>
+        <item>1000000</item>
+    </array>
 </resources>

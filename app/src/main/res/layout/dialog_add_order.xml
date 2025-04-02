@@ -14,13 +14,11 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Thêm trường ID đơn hàng (chỉ đọc) -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="ID Đơn Hàng"
+            android:hint="Order ID"
             app:hintTextColor="#99BC85">
-
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/edit_order_id"
                 android:layout_width="match_parent"
@@ -34,9 +32,8 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="ID Người Dùng"
+            android:hint="User ID"
             app:hintTextColor="#99BC85">
-
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/edit_order_user_id"
                 android:layout_width="match_parent"
@@ -48,9 +45,8 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Ngày đặt (YYYY-MM-DD)"
+            android:hint="Order Date (YYYY-MM-DD)"
             app:hintTextColor="#99BC85">
-
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/edit_order_date"
                 android:layout_width="match_parent"
@@ -63,23 +59,20 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Trạng thái (pending/processing/shipped/delivered/canceled)"
+            android:hint="Status"
             app:hintTextColor="#99BC85">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/edit_order_status"
+            <Spinner
+                android:id="@+id/spinner_order_status"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text"
                 android:minHeight="48dp" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Tổng tiền (VND)"
+            android:hint="Total (VND)"
             app:hintTextColor="#99BC85">
-
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/edit_order_total"
                 android:layout_width="match_parent"
@@ -91,9 +84,8 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Địa chỉ giao hàng"
+            android:hint="Shipping Address"
             app:hintTextColor="#99BC85">
-
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/edit_order_address"
                 android:layout_width="match_parent"
@@ -102,13 +94,11 @@
                 android:minHeight="48dp" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Thêm Spinner để chọn sản phẩm -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Chọn sản phẩm"
+            android:hint="Select Product"
             app:hintTextColor="#99BC85">
-
             <Spinner
                 android:id="@+id/spinner_product"
                 android:layout_width="match_parent"
@@ -116,13 +106,11 @@
                 android:minHeight="48dp" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Thêm TextInputLayout để nhập số lượng -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Số lượng"
+            android:hint="Quantity"
             app:hintTextColor="#99BC85">
-
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/edit_quantity"
                 android:layout_width="match_parent"
@@ -131,5 +119,28 @@
                 android:minHeight="48dp" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Shipping Method"
+            app:hintTextColor="#99BC85">
+            <Spinner
+                android:id="@+id/spinner_shipping_method"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Payment Method"
+            app:hintTextColor="#99BC85">
+            <Spinner
+                android:id="@+id/spinner_payment_method"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp" />
+        </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>

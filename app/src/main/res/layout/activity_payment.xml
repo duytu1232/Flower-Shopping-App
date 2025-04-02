@@ -60,7 +60,6 @@
                 android:text="Payment"
                 android:textColor="#4CAF50"
                 android:textStyle="bold" />
-
         </LinearLayout>
 
         <!-- Phần 1: Chọn phương thức thanh toán -->
@@ -254,6 +253,27 @@
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+
+        <!-- Thông tin coupon -->
+        <TextView
+            android:id="@+id/payment_coupon_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Coupon: None"
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:paddingBottom="8dp" />
+
+        <!-- Tổng giá -->
+        <TextView
+            android:id="@+id/payment_total_price_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Total: 0.00 VND"
+            android:textSize="18sp"
+            android:textColor="#4CAF50"
+            android:gravity="end"
+            android:padding="8dp" />
 
         <!-- Nút thanh toán -->
         <Button

@@ -216,57 +216,49 @@
                     android:paddingTop="16dp"
                     android:paddingBottom="8dp" />
 
+                <!-- Dropdown cho tỉnh/thành phố -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Country"
+                    android:hint="Province/City"
                     app:hintTextColor="#99BC85">
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/country_input"
+                    <Spinner
+                        android:id="@+id/province_spinner"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text"
                         android:minHeight="48dp" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <LinearLayout
+                <!-- Dropdown cho quận/huyện -->
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:hint="District"
+                    app:hintTextColor="#99BC85">
 
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="0dp"
+                    <Spinner
+                        android:id="@+id/district_spinner"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:hint="City"
-                        app:hintTextColor="#99BC85">
+                        android:minHeight="48dp" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/city_input"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="text"
-                            android:minHeight="48dp" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                <!-- Dropdown cho phường/xã -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Ward"
+                    app:hintTextColor="#99BC85">
 
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="0dp"
+                    <Spinner
+                        android:id="@+id/ward_spinner"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:hint="Postal code"
-                        app:hintTextColor="#99BC85"
-                        android:layout_marginStart="8dp">
+                        android:minHeight="48dp" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/postal_code_input"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="text"
-                            android:minHeight="48dp" />
-                    </com.google.android.material.textfield.TextInputLayout>
-                </LinearLayout>
-
+                <!-- Trường nhập tay cho đường -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -328,6 +320,35 @@
                     android:paddingTop="8dp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+
+        <!-- Phần chọn coupon -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingBottom="8dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Coupon: "
+                android:textSize="16sp"
+                android:textColor="#333333" />
+            <TextView
+                android:id="@+id/selected_coupon"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="None"
+                android:textSize="16sp"
+                android:textColor="#666666" />
+            <Button
+                android:id="@+id/apply_coupon_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Apply"
+                android:backgroundTint="#4CAF50"
+                android:textColor="@color/white" />
+        </LinearLayout>
 
         <!-- Tổng giá -->
         <TextView

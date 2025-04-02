@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -28,6 +29,7 @@ public class FragmentShop extends Fragment {
     private ProductAdapter adapter;
     private List<Product> productList = new ArrayList<>();
     private TextView emptyMessage;
+    private DatabaseHelper dbHelper;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -38,10 +40,10 @@ public class FragmentShop extends Fragment {
 
         recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 2));
 
-        // Tải danh sách sản phẩm
-        loadProducts();
+        // Khởi tạo DatabaseHelper
+        dbHelper = new DatabaseHelper(requireContext());
 
-        // Truyền OnProductClickListener vào ProductAdapter
+        // Khởi tạo adapter
         adapter = new ProductAdapter(productList, requireContext(), product -> {
             Intent intent = new Intent(requireContext(), ProductDetail.class);
             intent.putExtra("product_id", product.getId());
@@ -49,18 +51,56 @@ public class FragmentShop extends Fragment {
         });
         recyclerView.setAdapter(adapter);
 
+        // Tải danh sách sản phẩm ban đầu
+        loadProducts();
+
         // Cập nhật trạng thái rỗng
         updateEmptyState();
 
         return view;
     }
 
-    private void loadProducts() {
-        DatabaseHelper dbHelper = new DatabaseHelper(requireContext());
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Làm mới danh sách sản phẩm mỗi khi fragment được hiển thị
+        loadProducts();
+        updateEmptyState();
+    }
+
+    public void loadProducts() {
         SQLiteDatabase db = null;
         try {
             db = dbHelper.openDatabase();
-            Cursor cursor = db.rawQuery("SELECT * FROM Products", null);
+            Bundle args = getArguments();
+            String query = "SELECT * FROM Products";
+            List<String> selectionArgs = new ArrayList<>();
+
+            if (args != null) {
+                String searchQuery = args.getString("search_query");
+                String filterType = args.getString("filter_type");
+                float priceMin = args.getFloat("filter_price_min", 0f);
+                float priceMax = args.getFloat("filter_price_max", Float.MAX_VALUE);
+
+                List<String> whereClauses = new ArrayList<>();
+                if (searchQuery != null && !searchQuery.isEmpty()) {
+                    whereClauses.add("name LIKE ?");
+                    selectionArgs.add("%" + searchQuery + "%");
+                }
+                if (filterType != null && !filterType.equals("Tất cả")) {
+                    whereClauses.add("category = ?");
+                    selectionArgs.add(filterType);
+                }
+                whereClauses.add("price BETWEEN ? AND ?");
+                selectionArgs.add(String.valueOf(priceMin));
+                selectionArgs.add(String.valueOf(priceMax));
+
+                if (!whereClauses.isEmpty()) {
+                    query += " WHERE " + String.join(" AND ", whereClauses);
+                }
+            }
+
+            Cursor cursor = db.rawQuery(query, selectionArgs.toArray(new String[0]));
             productList.clear();
             if (cursor.moveToFirst()) {
                 do {
@@ -75,8 +115,10 @@ public class FragmentShop extends Fragment {
                 } while (cursor.moveToNext());
             }
             cursor.close();
+            adapter.notifyDataSetChanged();
         } catch (Exception e) {
             Log.e(TAG, "Error loading products: " + e.getMessage());
+            Toast.makeText(requireContext(), "Error loading products", Toast.LENGTH_SHORT).show();
         } finally {
             if (db != null) {
                 dbHelper.closeDatabase(db);
@@ -88,7 +130,13 @@ public class FragmentShop extends Fragment {
         if (productList.isEmpty()) {
             recyclerView.setVisibility(View.GONE);
             emptyMessage.setVisibility(View.VISIBLE);
-            emptyMessage.setText("No products available");
+            // Kiểm tra xem có bộ lọc nào được áp dụng không
+            Bundle args = getArguments();
+            if (args != null && (args.containsKey("search_query") || args.containsKey("filter_type") || args.containsKey("filter_price_min"))) {
+                emptyMessage.setText("Không tìm thấy sản phẩm phù hợp");
+            } else {
+                emptyMessage.setText("No products available");
+            }
         } else {
             recyclerView.setVisibility(View.VISIBLE);
             emptyMessage.setVisibility(View.GONE);

@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.example.flowerapp.Models.Coupon;
 import com.example.flowerapp.Models.Order;
+import com.example.flowerapp.Models.OrderItem;
 import com.example.flowerapp.Models.Product;
 import com.example.flowerapp.Models.Revenue;
 import com.example.flowerapp.Models.User;
@@ -239,17 +240,47 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                             "LEFT JOIN Payments pm ON o.order_id = pm.order_id", null);
             if (cursor.moveToFirst()) {
                 do {
+                    int orderId = cursor.getInt(cursor.getColumnIndexOrThrow("order_id"));
+                    int userId = cursor.getInt(cursor.getColumnIndexOrThrow("user_id"));
+                    String orderDate = cursor.getString(cursor.getColumnIndexOrThrow("order_date"));
+                    String status = cursor.getString(cursor.getColumnIndexOrThrow("status"));
+                    double totalAmount = cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount"));
+                    String shippingAddress = cursor.getString(cursor.getColumnIndexOrThrow("shipping_address"));
+                    String shippingMethod = cursor.getString(cursor.getColumnIndexOrThrow("shipping_method"));
+                    String paymentMethod = cursor.getString(cursor.getColumnIndexOrThrow("payment_method"));
+                    String productName = cursor.getString(cursor.getColumnIndexOrThrow("product_name"));
+                    String productImage = cursor.getString(cursor.getColumnIndexOrThrow("product_image"));
+
+                    // Lấy danh sách OrderItem cho đơn hàng này
+                    List<OrderItem> orderItems = new ArrayList<>();
+                    Cursor itemCursor = db.rawQuery(
+                            "SELECT oi.order_item_id, oi.product_id, p.name, p.image_url, oi.quantity, oi.unit_price " +
+                                    "FROM Order_Items oi " +
+                                    "JOIN Products p ON oi.product_id = p.product_id " +
+                                    "WHERE oi.order_id = ?", new String[]{String.valueOf(orderId)});
+                    while (itemCursor.moveToNext()) {
+                        int orderItemId = itemCursor.getInt(itemCursor.getColumnIndexOrThrow("order_item_id"));
+                        int productId = itemCursor.getInt(itemCursor.getColumnIndexOrThrow("product_id"));
+                        String itemProductName = itemCursor.getString(itemCursor.getColumnIndexOrThrow("name"));
+                        String itemImageUrl = itemCursor.getString(itemCursor.getColumnIndexOrThrow("image_url"));
+                        int quantity = itemCursor.getInt(itemCursor.getColumnIndexOrThrow("quantity"));
+                        double unitPrice = itemCursor.getDouble(itemCursor.getColumnIndexOrThrow("unit_price"));
+                        orderItems.add(new OrderItem(orderItemId, orderId, productId, itemProductName, itemImageUrl, quantity, unitPrice));
+                    }
+                    itemCursor.close();
+
                     Order order = new Order(
-                            cursor.getInt(cursor.getColumnIndexOrThrow("order_id")),
-                            cursor.getInt(cursor.getColumnIndexOrThrow("user_id")),
-                            cursor.getString(cursor.getColumnIndexOrThrow("order_date")),
-                            cursor.getString(cursor.getColumnIndexOrThrow("status")),
-                            cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount")),
-                            cursor.getString(cursor.getColumnIndexOrThrow("shipping_address")),
-                            cursor.getString(cursor.getColumnIndexOrThrow("shipping_method")),
-                            cursor.getString(cursor.getColumnIndexOrThrow("payment_method")),
-                            cursor.getString(cursor.getColumnIndexOrThrow("product_name")),
-                            cursor.getString(cursor.getColumnIndexOrThrow("product_image"))
+                            orderId,
+                            userId,
+                            orderDate,
+                            status,
+                            totalAmount,
+                            shippingAddress,
+                            shippingMethod,
+                            paymentMethod,
+                            productName,
+                            productImage,
+                            orderItems // Truyền danh sách OrderItem
                     );
                     orderList.add(order);
                 } while (cursor.moveToNext());
@@ -382,9 +413,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public Order getOrderById(int orderId) {
         SQLiteDatabase db = null;
+        Cursor cursor = null;
         try {
             db = openDatabase();
-            Cursor cursor = db.rawQuery(
+            cursor = db.rawQuery(
                     "SELECT o.order_id, o.user_id, o.order_date, o.status, o.total_amount, o.shipping_address, " +
                             "o.shipping_method, pm.payment_method, p.name AS product_name, p.image_url " +
                             "FROM Orders o " +
@@ -407,12 +439,42 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 title = (title != null) ? title : "Unknown Product";
                 imageUrl = (imageUrl != null) ? imageUrl : "";
 
-                return new Order(orderId, userId, orderDate, status, totalAmount, shippingAddress, shippingMethod, paymentMethod, title, imageUrl);
+                // Lấy danh sách OrderItem cho đơn hàng này
+                List<OrderItem> orderItems = new ArrayList<>();
+                Cursor itemCursor = db.rawQuery(
+                        "SELECT oi.order_item_id, oi.product_id, p.name, p.image_url, oi.quantity, oi.unit_price " +
+                                "FROM Order_Items oi " +
+                                "JOIN Products p ON oi.product_id = p.product_id " +
+                                "WHERE oi.order_id = ?", new String[]{String.valueOf(orderId)});
+                while (itemCursor.moveToNext()) {
+                    int orderItemId = itemCursor.getInt(itemCursor.getColumnIndexOrThrow("order_item_id"));
+                    int productId = itemCursor.getInt(itemCursor.getColumnIndexOrThrow("product_id"));
+                    String itemProductName = itemCursor.getString(itemCursor.getColumnIndexOrThrow("name"));
+                    String itemImageUrl = itemCursor.getString(itemCursor.getColumnIndexOrThrow("image_url"));
+                    int quantity = itemCursor.getInt(itemCursor.getColumnIndexOrThrow("quantity"));
+                    double unitPrice = itemCursor.getDouble(itemCursor.getColumnIndexOrThrow("unit_price"));
+                    orderItems.add(new OrderItem(orderItemId, orderId, productId, itemProductName, itemImageUrl, quantity, unitPrice));
+                }
+                itemCursor.close();
+
+                return new Order(
+                        orderId,
+                        userId,
+                        orderDate,
+                        status,
+                        totalAmount,
+                        shippingAddress,
+                        shippingMethod,
+                        paymentMethod,
+                        title,
+                        imageUrl,
+                        orderItems // Truyền danh sách OrderItem
+                );
             }
-            cursor.close();
         } catch (Exception e) {
             Log.e("DatabaseHelper", "Error getting order by ID: " + e.getMessage());
         } finally {
+            if (cursor != null) cursor.close();
             if (db != null) closeDatabase(db);
         }
         return null;

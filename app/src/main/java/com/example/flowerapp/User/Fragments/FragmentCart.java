@@ -1,5 +1,7 @@
 package com.example.flowerapp.User.Fragments;
 
+import static android.app.Activity.RESULT_OK;
+
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -35,7 +37,8 @@ import java.util.List;
 
 public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeListener {
     private static final String TAG = "FragmentCart";
-    private static final double MINIMUM_ORDER_VALUE = 50000.0; // Đơn hàng tối thiểu 50,000 VND
+    private static final double MINIMUM_ORDER_VALUE = 50000.0;
+    private static final int REQUEST_CODE_CHECKOUT = 1001;
 
     private RecyclerView recyclerView;
     private CartAdapter adapter;
@@ -93,13 +96,13 @@ public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeLi
             } else {
                 Intent intent = new Intent(getActivity(), CheckoutActivity.class);
                 intent.putExtra("total_price", cartManager.calculateTotalPrice(cartList));
-                intent.putParcelableArrayListExtra("cart_items", new ArrayList<>(cartList)); // Truyền cartList qua Intent
+                intent.putParcelableArrayListExtra("cart_items", new ArrayList<>(cartList));
                 if (selectedCoupon != null) {
                     intent.putExtra("coupon_id", selectedCoupon.getId());
                     intent.putExtra("coupon_code", selectedCoupon.getCode());
                     intent.putExtra("discount_value", selectedCoupon.getDiscountValue());
                 }
-                startActivity(intent);
+                startActivityForResult(intent, REQUEST_CODE_CHECKOUT);
             }
         });
 
@@ -112,6 +115,22 @@ public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeLi
         });
 
         return view;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_CHECKOUT && resultCode == RESULT_OK && data != null) {
+            int couponId = data.getIntExtra("coupon_id", -1);
+            String couponCode = data.getStringExtra("coupon_code");
+            double discountValue = data.getDoubleExtra("discount_value", 0.0);
+            if (couponId != -1 && couponCode != null) {
+                selectedCoupon = new Coupon(couponId, couponCode, discountValue, "", "", "active", 0.0);
+            } else {
+                selectedCoupon = null;
+            }
+            updateTotalPrice();
+        }
     }
 
     private void loadCartItems() {
@@ -133,11 +152,11 @@ public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeLi
 
         if (selectedCoupon != null) {
             discount = calculateDiscount(totalPrice);
-            if (discount > 0.0 && selectedCoupon != null) { // Kiểm tra lại selectedCoupon sau khi tính discount
+            if (discount > 0.0 && selectedCoupon != null) {
                 totalPrice -= discount;
                 selectedCouponText.setText(selectedCoupon.getCode() + " (-" + String.format("%.2f", discount) + " VND)");
             } else {
-                selectedCoupon = null; // Đảm bảo selectedCoupon là null nếu không áp dụng được
+                selectedCoupon = null;
                 selectedCouponText.setText("None");
             }
         } else {
@@ -152,7 +171,6 @@ public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeLi
     private double calculateDiscount(double totalPrice) {
         if (selectedCoupon == null) return 0.0;
 
-        // Kiểm tra đơn hàng tối thiểu 50,000 VND
         if (totalPrice < MINIMUM_ORDER_VALUE) {
             Toast.makeText(getContext(),
                     String.format("Đơn hàng cần tối thiểu %.0f VND để áp dụng coupon.", MINIMUM_ORDER_VALUE),
@@ -161,7 +179,6 @@ public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeLi
             return 0.0;
         }
 
-        // Kiểm tra giá trị tối thiểu của coupon
         if (totalPrice < selectedCoupon.getMinOrderValue()) {
             Toast.makeText(getContext(),
                     String.format("Đơn hàng cần tối thiểu %.0f VND để sử dụng coupon %s (yêu cầu %.0f VND).",
@@ -171,7 +188,6 @@ public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeLi
             return 0.0;
         }
 
-        // Kiểm tra ngày hợp lệ
         String today = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
         if (today.compareTo(selectedCoupon.getStartDate()) < 0) {
             Toast.makeText(getContext(),
@@ -190,7 +206,6 @@ public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeLi
             return 0.0;
         }
 
-        // Kiểm tra trạng thái coupon
         if (!"active".equals(selectedCoupon.getStatus())) {
             Toast.makeText(getContext(),
                     String.format("Coupon %s hiện không khả dụng (trạng thái: %s).",
@@ -200,7 +215,7 @@ public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeLi
             return 0.0;
         }
 
-        return totalPrice * (selectedCoupon.getDiscountValue() / 100.0); // Giảm giá theo phần trăm
+        return totalPrice * (selectedCoupon.getDiscountValue() / 100.0);
     }
 
     private void showCouponDialog() {
@@ -218,7 +233,7 @@ public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeLi
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Select Coupon")
                 .setItems(couponNames.toArray(new String[0]), (dialog, which) -> {
-                    if (which == couponNames.size() - 1) { // Chọn "None"
+                    if (which == couponNames.size() - 1) {
                         selectedCoupon = null;
                     } else {
                         selectedCoupon = validCoupons.get(which);
@@ -247,7 +262,7 @@ public class FragmentCart extends Fragment implements CartAdapter.OnCartChangeLi
 
     @Override
     public void onCartChanged() {
-        loadCartItems(); // Tải lại để đảm bảo dữ liệu mới nhất
+        loadCartItems();
         updateTotalPrice();
         updateEmptyState();
     }

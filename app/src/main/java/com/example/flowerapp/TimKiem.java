@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -110,7 +111,6 @@ public class TimKiem extends AppCompatActivity {
         String query = searchEditText.getText().toString().trim();
         if (!query.isEmpty()) {
             saveSearchHistory(query);
-            // Chuyển từ khóa tìm kiếm sang MainActivity để hiển thị trong FragmentShop
             Intent intent = new Intent(TimKiem.this, MainActivity.class);
             intent.putExtra("openFragment", "shop");
             intent.putExtra("search_query", query);
@@ -158,30 +158,60 @@ public class TimKiem extends AppCompatActivity {
 
     private void showFilterDialog() {
         BottomSheetDialog dialog = new BottomSheetDialog(this);
-        View view = LayoutInflater.from(this).inflate(R.layout.dialog_filter, findViewById(R.id.main));
-        dialog.setContentView(view);
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_filter, null);
 
-        Spinner flowerTypeSpinner = view.findViewById(R.id.spinner_flower_type);
-        RangeSlider priceRangeSlider = view.findViewById(R.id.price_range_slider);
-        Button applyFilterBtn = view.findViewById(R.id.apply_filter_btn);
-
-        if (applyFilterBtn != null) {
-            applyFilterBtn.setOnClickListener(v -> {
-                String flowerType = flowerTypeSpinner != null && flowerTypeSpinner.getSelectedItem() != null ?
-                        flowerTypeSpinner.getSelectedItem().toString() : "Tất cả";
-                List<Float> priceRange = priceRangeSlider != null ? priceRangeSlider.getValues() : new ArrayList<>(List.of(0f, 1000000f));
-                // Chuyển bộ lọc sang MainActivity để áp dụng trong FragmentShop
-                Intent intent = new Intent(TimKiem.this, MainActivity.class);
-                intent.putExtra("openFragment", "shop");
-                intent.putExtra("filter_type", flowerType);
-                intent.putExtra("filter_price_min", priceRange.get(0));
-                intent.putExtra("filter_price_max", priceRange.get(1));
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                finish();
-                dialog.dismiss();
-            });
+        // Kiểm tra và xóa parent nếu có
+        if (dialogView.getParent() != null) {
+            ((ViewGroup) dialogView.getParent()).removeView(dialogView);
         }
+        dialog.setContentView(dialogView);
+
+        Spinner flowerTypeSpinner = dialogView.findViewById(R.id.spinner_flower_type);
+        RangeSlider priceRangeSlider = dialogView.findViewById(R.id.price_range_slider);
+        Button applyFilterBtn = dialogView.findViewById(R.id.apply_filter_btn);
+
+        // Kiểm tra các thành phần giao diện
+        if (flowerTypeSpinner == null || priceRangeSlider == null || applyFilterBtn == null) {
+            Toast.makeText(this, "Error: Missing filter dialog components", Toast.LENGTH_SHORT).show();
+            dialog.dismiss();
+            return;
+        }
+
+        applyFilterBtn.setOnClickListener(v -> {
+            // Lấy loại hoa từ Spinner
+            String flowerType = flowerTypeSpinner.getSelectedItem() != null ?
+                    flowerTypeSpinner.getSelectedItem().toString() : "Tất cả";
+
+            // Lấy khoảng giá từ RangeSlider
+            List<Float> priceRange = priceRangeSlider.getValues();
+            float minPrice, maxPrice;
+            if (priceRange.size() >= 2) {
+                minPrice = priceRange.get(0);
+                maxPrice = priceRange.get(1);
+                // Đảm bảo minPrice nhỏ hơn maxPrice
+                if (minPrice > maxPrice) {
+                    float temp = minPrice;
+                    minPrice = maxPrice;
+                    maxPrice = temp;
+                }
+            } else {
+                // Sử dụng giá trị mặc định nếu không đủ 2 giá trị
+                minPrice = 0f;
+                maxPrice = 1000000f;
+                Log.w("TimKiem", "Price range not set correctly, using default values: min=" + minPrice + ", max=" + maxPrice);
+            }
+
+            Intent intent = new Intent(TimKiem.this, MainActivity.class);
+            intent.putExtra("openFragment", "shop");
+            intent.putExtra("filter_type", flowerType);
+            intent.putExtra("filter_price_min", minPrice);
+            intent.putExtra("filter_price_max", maxPrice);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
+            dialog.dismiss();
+        });
+
         dialog.show();
     }
 

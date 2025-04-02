@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -34,8 +35,11 @@ public class PaymentActivity extends AppCompatActivity {
     private TextInputEditText cardNumberInput, cardHolderNameInput, expiryDateInput, yearInput, cvvInput;
     private SwitchCompat saveCardSwitch;
     private Button payNowButton;
+    private TextView totalPriceText, couponText;
     private double totalPrice;
     private int couponId;
+    private String couponCode;
+    private double discountValue;
     private String shippingAddress;
     private String shippingMethod;
     private List<CartItem> cartItems;
@@ -55,14 +59,31 @@ public class PaymentActivity extends AppCompatActivity {
         cvvInput = findViewById(R.id.cvv_input);
         saveCardSwitch = findViewById(R.id.save_card_switch);
         payNowButton = findViewById(R.id.pay_now_button);
+        totalPriceText = findViewById(R.id.payment_total_price_text);
+        couponText = findViewById(R.id.payment_coupon_text);
 
         // Nhận dữ liệu từ Intent
         Intent intent = getIntent();
         totalPrice = intent.getDoubleExtra("total_price", 0.0);
         couponId = intent.getIntExtra("coupon_id", -1);
+        couponCode = intent.getStringExtra("coupon_code");
+        discountValue = intent.getDoubleExtra("discount_value", 0.0);
         shippingAddress = intent.getStringExtra("shipping_address");
         shippingMethod = intent.getStringExtra("shipping_method");
-        cartItems = (ArrayList<CartItem>) intent.getSerializableExtra("cart_items");
+        cartItems = intent.getParcelableArrayListExtra("cart_items");
+
+        // Hiển thị tổng giá và thông tin coupon
+        totalPriceText.setText(String.format("Total: %.2f VND", totalPrice));
+        if (couponId != -1 && couponCode != null) {
+            double originalTotal = 0;
+            for (CartItem item : cartItems) {
+                originalTotal += item.getPrice() * item.getQuantity();
+            }
+            double discount = originalTotal * (discountValue / 100.0);
+            couponText.setText("Coupon: " + couponCode + " (-" + String.format("%.2f", discount) + " VND)");
+        } else {
+            couponText.setText("Coupon: None");
+        }
 
         // Ẩn/hiện phần nhập thông tin thẻ dựa trên phương thức thanh toán
         paymentMethodRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
@@ -155,7 +176,7 @@ public class PaymentActivity extends AppCompatActivity {
             orderValues.put("user_id", userId);
             orderValues.put("order_date", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
             orderValues.put("status", paymentMethod.equals("cod") ? "pending" : "processing");
-            orderValues.put("total_amount", totalPrice);
+            orderValues.put("total_amount", totalPrice); // Sử dụng totalPrice đã giảm giá
             orderValues.put("shipping_address", shippingAddress);
             orderValues.put("shipping_method", shippingMethod);
             if (couponId != -1) {
@@ -198,7 +219,7 @@ public class PaymentActivity extends AppCompatActivity {
             ContentValues paymentValues = new ContentValues();
             paymentValues.put("order_id", orderId);
             paymentValues.put("payment_method", paymentMethod);
-            paymentValues.put("amount", totalPrice);
+            paymentValues.put("amount", totalPrice); // Sử dụng totalPrice đã giảm giá
             paymentValues.put("payment_date", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
             paymentValues.put("status", "success");
 
