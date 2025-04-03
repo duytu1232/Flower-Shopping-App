@@ -25,7 +25,8 @@ import com.example.flowerapp.Security.DangNhap;
 import com.example.flowerapp.User.Fragments.ProductDetail;
 import com.example.flowerapp.User.Fragments.ReviewDetail;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-
+import android.view.KeyEvent;
+import android.view.inputmethod.EditorInfo;
 import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
@@ -151,17 +152,38 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (searchEditText != null) {
+            // Xử lý sự kiện nhấn Enter
+            searchEditText.setOnEditorActionListener((v, actionId, event) -> {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH ||
+                        (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
+                    String query = searchEditText.getText().toString().trim();
+                    if (!query.isEmpty()) {
+                        // Chuyển hướng đến FragmentShop với từ khóa tìm kiếm
+                        Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                        intent.putExtra("openFragment", "shop");
+                        intent.putExtra("search_query", query);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        startActivity(intent);
+                        return true; // Sự kiện đã được xử lý
+                    } else {
+                        Toast.makeText(MainActivity.this, "Please enter a search query", Toast.LENGTH_SHORT).show();
+                        return false;
+                    }
+                }
+                return false;
+            });
+
+            // Giữ TextWatcher nếu bạn cần xử lý thay đổi văn bản thời gian thực
             searchEditText.addTextChangedListener(new TextWatcher() {
                 @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
                 @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                }
+                public void onTextChanged(CharSequence s, int start, int before, int count) {}
 
                 @Override
                 public void afterTextChanged(Editable s) {
+                    // Có thể thêm gợi ý tìm kiếm real-time nếu cần
                 }
             });
         }
@@ -208,5 +230,4 @@ public class MainActivity extends AppCompatActivity {
         } else {
             super.onBackPressed();
         }
-    }
-}
+    }    }

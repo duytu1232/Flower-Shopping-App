@@ -6,9 +6,11 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -90,6 +92,16 @@ public class TimKiem extends AppCompatActivity {
         searchIcon.setOnClickListener(v -> performSearch());
 
         filterIcon.setOnClickListener(v -> showFilterDialog());
+
+        // Xử lý sự kiện nhấn Enter trên EditText
+        searchEditText.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH ||
+                    (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
+                performSearch(); // Gọi phương thức tìm kiếm
+                return true; // Sự kiện đã được xử lý
+            }
+            return false;
+        });
 
         searchEditText.addTextChangedListener(new TextWatcher() {
             @Override
