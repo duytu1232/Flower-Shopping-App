@@ -172,13 +172,26 @@ public class PaymentActivity extends AppCompatActivity {
                 return -1;
             }
 
+            // Chuẩn hóa shippingMethod
+            String standardizedShippingMethod;
+            if (shippingMethod.contains("Home delivery")) {
+                standardizedShippingMethod = "home_delivery";
+            } else if (shippingMethod.contains("Pickup point")) {
+                standardizedShippingMethod = "pickup_point";
+            } else if (shippingMethod.contains("Pickup in store")) {
+                standardizedShippingMethod = "pickup_in_store";
+            } else {
+                standardizedShippingMethod = "home_delivery"; // Giá trị mặc định nếu không khớp
+                Log.w(TAG, "Unknown shipping method: " + shippingMethod + ". Defaulting to home_delivery.");
+            }
+
             ContentValues orderValues = new ContentValues();
             orderValues.put("user_id", userId);
             orderValues.put("order_date", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
             orderValues.put("status", paymentMethod.equals("cod") ? "pending" : "processing");
-            orderValues.put("total_amount", totalPrice); // Sử dụng totalPrice đã giảm giá
+            orderValues.put("total_amount", totalPrice);
             orderValues.put("shipping_address", shippingAddress);
-            orderValues.put("shipping_method", shippingMethod);
+            orderValues.put("shipping_method", standardizedShippingMethod); // Sử dụng giá trị chuẩn hóa
             if (couponId != -1) {
                 orderValues.put("discount_code", couponId);
             }
@@ -197,7 +210,6 @@ public class PaymentActivity extends AppCompatActivity {
                 orderItemValues.put("unit_price", item.getPrice());
                 db.insert("Order_Items", null, orderItemValues);
 
-                // Cập nhật số lượng tồn kho
                 db.execSQL("UPDATE Products SET stock = stock - ? WHERE product_id = ?",
                         new Object[]{item.getQuantity(), item.getProductId()});
             }

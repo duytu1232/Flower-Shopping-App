@@ -340,7 +340,17 @@ public class CheckoutActivity extends AppCompatActivity {
     private String getSelectedShippingMethod() {
         int selectedId = shippingMethodRadioGroup.getCheckedRadioButtonId();
         RadioButton selectedRadioButton = findViewById(selectedId);
-        return selectedRadioButton != null ? selectedRadioButton.getText().toString() : "Home delivery";
+        String selectedMethod = selectedRadioButton != null ? selectedRadioButton.getText().toString() : "Home delivery";
+
+        // Chuẩn hóa giá trị về định dạng hợp lệ cho database
+        if (selectedMethod.contains("Home delivery")) {
+            return "home_delivery";
+        } else if (selectedMethod.contains("Pickup point")) {
+            return "pickup_point";
+        } else if (selectedMethod.contains("Pickup in store")) {
+            return "pickup_in_store";
+        }
+        return "home_delivery"; // Giá trị mặc định nếu không khớp
     }
 
     private String buildShippingAddress() {
