@@ -81,7 +81,12 @@
                 android:hint="Search all..."
                 android:minHeight="48dp"
                 android:padding="8dp"
-                android:textSize="16sp" />
+                android:singleLine="true"
+                android:imeOptions="actionSearch"
+                android:paddingStart="8dp"
+                android:textColorHint="#666666"
+                android:textSize="16sp"
+                tools:ignore="TouchTargetSizeCheck" />
 
             <ImageView
                 android:id="@+id/filter_icon"
